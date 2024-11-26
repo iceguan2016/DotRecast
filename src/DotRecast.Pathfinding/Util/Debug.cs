@@ -4,7 +4,7 @@ namespace Game.Utils
 {
     public static class Debug
     {
-        public static void Assert(bool condition, string desc)
+        public static void Assert(bool condition, string desc="")
         { 
         }
 
@@ -23,11 +23,45 @@ namespace Game.Utils
 
         }
 
-        public static void DrawLine(Vector3 a, Vector3 b, Color c, float duration)
+        public static void DrawLine(Vector3 a, Vector3 b, Color c, float duration=0.0f)
         { 
         }
 
-        public static void DrawRay(Vector3 origin, Vector3 direction, Color c, float duration)
+        public static void DrawRay(Vector3 origin, Vector3 direction, Color c, float duration=0.0f)
+        { 
+        }
+
+        public static void DrawCube(Vector3 center, Vector3 extent, Color c, float duration = 0.0f)
+        {
+        }
+
+        public static void DrawObbCube(Vector3 InPosition, Quaternion InRotation, Vector3 InHalfExtent, Color InColor)
+        {
+            Vector3[] Vertices = new Vector3[] {
+                InPosition + InRotation * new Vector3( InHalfExtent.x, -InHalfExtent.y,  InHalfExtent.z), // 0
+                InPosition + InRotation * new Vector3(-InHalfExtent.x, -InHalfExtent.y,  InHalfExtent.z), // 1
+                InPosition + InRotation * new Vector3(-InHalfExtent.x, -InHalfExtent.y, -InHalfExtent.z), // 2
+                InPosition + InRotation * new Vector3( InHalfExtent.x, -InHalfExtent.y, -InHalfExtent.z), // 3
+
+                InPosition + InRotation * new Vector3( InHalfExtent.x,  InHalfExtent.y,  InHalfExtent.z), // 4
+                InPosition + InRotation * new Vector3(-InHalfExtent.x,  InHalfExtent.y,  InHalfExtent.z), // 5
+                InPosition + InRotation * new Vector3(-InHalfExtent.x,  InHalfExtent.y, -InHalfExtent.z), // 6
+                InPosition + InRotation * new Vector3( InHalfExtent.x,  InHalfExtent.y, -InHalfExtent.z), // 7
+            };
+
+            int[] Indices = new int[] {
+                0, 1, 1, 2, 2, 3, 3, 0,
+                4, 5, 5, 6, 6, 7, 7, 4,
+                0, 4, 1, 5, 2, 6, 3, 7
+            };
+
+            for (int i = 0; i < Indices.Length; i += 2)
+            {
+                Debug.DrawLine(Vertices[Indices[i]], Vertices[Indices[i + 1]], InColor);
+            }
+        }
+
+        public static void DrawSphere(Vector3 center, float radius, Color c, float duration = 0.0f)
         { 
         }
     }
