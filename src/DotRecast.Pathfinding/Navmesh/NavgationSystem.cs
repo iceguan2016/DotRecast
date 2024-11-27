@@ -51,7 +51,18 @@ namespace Navmesh
 
 	public class FNavgationSystem
     {
-        public static FNavgationSystem instance = null;
+        private static FNavgationSystem _instance = null;
+        public static FNavgationSystem Instance 
+        {
+            get 
+            {
+                if (_instance == null) 
+                {
+                    _instance = new FNavgationSystem();
+                }
+                return _instance;
+            }
+        }
 
         public FNavGraph[] graphs = new FNavGraph[0];
 
@@ -99,11 +110,6 @@ namespace Navmesh
 		 */
 		public float debugRoof = 20000;
 		#endregion
-
-		public void Awake()
-		{
-			instance = this;
-		}
 
 		/** Adds the specified graph to the #graphs array */
 		public void AddGraph(FNavGraph graph)

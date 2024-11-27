@@ -1018,7 +1018,7 @@ namespace Navmesh
             int tileIndex = TileX + TileZ * navmeshGraph.tileXCount;
             tileIndex <<= FTiledNavmeshGraph.TileIndexOffset;
 
-            var graphIndex = FNavgationSystem.instance.graphs.Length;
+            var graphIndex = FNavgationSystem.Instance.graphs.Length;
             TriangleMeshNode.SetNavmeshHolder(graphIndex, tile);
 
             //Create nodes and assign triangle indices

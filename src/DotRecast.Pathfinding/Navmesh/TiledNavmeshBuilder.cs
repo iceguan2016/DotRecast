@@ -124,7 +124,7 @@ namespace Navmesh
 			}
 
 			// Add new graph to NavgationSystem
-			FNavgationSystem.instance.AddGraph(graph);
+			FNavgationSystem.Instance.AddGraph(graph);
 			// Assign correct graph indices.
 			var graphIndex = graph.graphIndex;
 			TriangleMeshNode.SetNavmeshHolder((int)graphIndex, graph);

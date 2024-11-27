@@ -16,6 +16,7 @@ using Navmesh.Shape;
 using System;
 using DotRecast.Core;
 using UnityEngine;
+using Game.Utils;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -42,14 +43,30 @@ public class TileDelaunayNavmeshToolMode
 public class TileDelaunayTool : IRcToolable
 {
     private List<BoxShape> m_shapes = new List<BoxShape>();
+    private RcRand m_rand = new RcRand(DateTime.Now.Ticks);
+
+    public float m_obstacleSize = 1.0f;
+    public float m_obstacleSizeVariance = 0.0f;
+
+    public float  m_cellSize = 0.2f;
+    public int    m_tileSize = 30;
 
     public string GetName()
     {
         return "Tile Delaunay Navmesh";
     }
 
-    public BoxShape addShape(Vector3 pos, Quaternion rot, Vector3 extent)
-    { 
+    public BoxShape addShape(RcVec3f p)
+    {
+        var pos = new Vector3(p.X, p.Y, p.Z);
+        var angle = m_rand.Next() * 360 * Mathf.Deg2Rad;
+        var rot = Quaternion.AxisAngle(Vector3.up, angle);
+        var extent = new Vector3(
+            m_obstacleSize + m_rand.Next() * m_obstacleSizeVariance,
+            m_obstacleSize + m_rand.Next() * m_obstacleSizeVariance,
+            m_obstacleSize + m_rand.Next() * m_obstacleSizeVariance
+         );
+
         var shape = new BoxShape() { 
             Position = pos,
             Rotation = rot,
@@ -66,6 +83,15 @@ public class TileDelaunayTool : IRcToolable
 
     public BoxShape hitTestShape(RcVec3f s, RcVec3f p)
     { 
+        var pos = new Vector3(p.X, p.Y, p.Z);
+        for (int i = 0; i < m_shapes.Count; ++i)
+        {
+            var shape = m_shapes[i];
+            if (shape.IsContainPoint(pos))
+            {
+                return shape;
+            }
+        }
         return null;
     }
 
@@ -74,17 +100,51 @@ public class TileDelaunayTool : IRcToolable
         return m_shapes;
     }
 
-    public FNavGraph buildNavGraph()
+    public FTiledNavmeshGraph buildNavGraph(Vector3 bmin, Vector3 bmax)
     {
         FTiledNavmeshBuilder builder = new FTiledNavmeshBuilder();
 
         FDebugParams debugParams = new FDebugParams();
+
+        // 
         FTiledNavmeshBuilder.FTiledNavmeshBuilderParams builderParams = new FTiledNavmeshBuilder.FTiledNavmeshBuilderParams();
+        builderParams.MinBounds = bmin;
+        builderParams.MaxBounds = bmax;
+        builderParams.CellSize = m_cellSize;
+        builderParams.TileSize = m_tileSize;
 
+        var obstacles = new List<FObstacle>();
+        for (int i = 0; i < m_shapes.Count; ++i) 
+        {
+            obstacles.Add(new FObstacle() { Shape = m_shapes[i], IsAdd = true });
+        }
+        builderParams.Obstacles = obstacles;
 
-        builder.Build(builderParams, debugParams);
-        // _tool.BuildAllTiles(geom, settings, navMesh);
-        return null;
+        return builder.Build(builderParams, debugParams);
+    }
+}
+
+public class TileDelaunayDebugDraw : DrawInterface
+{
+    private DebugDraw m_draw = null;
+
+    public TileDelaunayDebugDraw(DebugDraw draw)
+    {
+        m_draw = draw;
+        Game.Utils.Debug.drawInterface = this;
+    }
+
+    public void DrawLine(Vector3 a, Vector3 b, Color c)
+    {
+        if (m_draw != null) 
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            m_draw.Begin(DebugDrawPrimitives.LINES);
+            m_draw.Vertex(new float[] { a.x, a.y, a.z }, color);
+            m_draw.Vertex(new float[] { b.x, b.y, b.z }, color);
+            m_draw.End();
+        }
     }
 }
 
@@ -94,15 +154,14 @@ public class TileDelaunayNavmeshTool : ISampleTool
 
     private DemoSample _sample;
 
-    private FNavGraph _graph;
+    private FTiledNavmeshGraph _graph;
 
     private TileDelaunayTool _tool = new TileDelaunayTool();
 
+    private TileDelaunayDebugDraw _draw = null;
+
     private TileDelaunayNavmeshToolMode m_mode = TileDelaunayNavmeshToolMode.ADD_OBSTACLE;
     private int m_modeIdx = TileDelaunayNavmeshToolMode.ADD_OBSTACLE.Idx;
-
-    private float m_obstacleSize = 1.0f;
-    private float m_obstacleSizeVariance = 0.0f;
 
     public IRcToolable GetTool()
     {
@@ -125,24 +184,14 @@ public class TileDelaunayNavmeshTool : ISampleTool
             else
             {
                 // Add
-                var rand = new RcRand(DateTime.Now.Ticks);
-
-                var pos = new Vector3(p.X, p.Y, p.Z);
-                var angle = rand.Next() * 360 * Mathf.Deg2Rad;
-                var rot = Quaternion.AxisAngle(Vector3.up, angle);
-                var extent = new Vector3(
-                    m_obstacleSize + rand.Next() * m_obstacleSizeVariance,
-                    m_obstacleSize + rand.Next() * m_obstacleSizeVariance,
-                    m_obstacleSize + rand.Next() * m_obstacleSizeVariance
-                 );
-                var shape = _tool.addShape(pos, rot, extent);
+                var shape = _tool.addShape(p);
                 if (null == shape)
-                { 
+                {
                     Logger.Error("add obstacle failed!");
                 }
-                else 
+                else
                 {
-                    Logger.Information($"add obstacle success, pos:{pos}, rot:{rot}, extent:{extent}");
+                    Logger.Information($"add obstacle success, pos:{shape.Position}, rot:{shape.Rotation}, half extent:{shape.HalfExtent}");
                 }
             }
         }
@@ -154,12 +203,35 @@ public class TileDelaunayNavmeshTool : ISampleTool
 
     public void HandleRender(NavMeshRenderer renderer)
     {
-        var obstacles = _tool.getAllShapes();
+        var dd = renderer.GetDebugDraw();
 
+        if (_draw == null)
+        {
+            _draw = new TileDelaunayDebugDraw(dd);
+        }
+
+        var geom = _sample.GetInputGeom();
+        var bound_min = geom.GetMeshBoundsMin();
+        var bound_max = geom.GetMeshBoundsMax();
+
+        // draw bounds
+        dd.DebugDrawBoxWire(
+            bound_min.X, bound_min.Y - 3.0f, bound_min.Z, 
+            bound_max.X, bound_max.Y + 3.0f, bound_max.Z,
+            DebugDraw.DuRGBA(255, 255, 255, 128), 1.0f);
+
+        // draw obstacles
+        var obstacles = _tool.getAllShapes();
         for (int i = 0; i < obstacles.Count; i++) 
         {
             var shape = obstacles[i];
             shape.DrawGizmos();
+        }
+
+        // draw tile delaunay navmesh
+        if (null != _graph)
+        {
+            _graph.OnDrawGizmos(true);
         }
     }
 
@@ -183,14 +255,32 @@ public class TileDelaunayNavmeshTool : ISampleTool
 
         if (m_mode == TileDelaunayNavmeshToolMode.ADD_OBSTACLE)
         {
-            ImGui.SliderFloat("Obstacle Size", ref m_obstacleSize, 1f, 20f, "%.2f");
-            ImGui.SliderFloat("Obstacle Size Variance", ref m_obstacleSizeVariance, 0f, 6f, "%.2f");
+            ImGui.SliderFloat("Obstacle Size", ref _tool.m_obstacleSize, 1f, 20f, "%.2f");
+            ImGui.SliderFloat("Obstacle Size Variance", ref _tool.m_obstacleSizeVariance, 0f, 6f, "%.2f");
         }
         else if (m_mode == TileDelaunayNavmeshToolMode.BUILD)
         {
+            ImGui.SliderFloat("Cell Size", ref _tool.m_cellSize, 0.1f, 1.0f, "%.2f");
+            ImGui.SliderInt("Tile Size", ref _tool.m_tileSize, 1, 60);
+
             if (ImGui.Button("Create All Tile"))
             {
-                _graph = _tool.buildNavGraph();
+                var geom = _sample.GetInputGeom();
+                var bmin = geom.GetMeshBoundsMin();
+                var bmax = geom.GetMeshBoundsMax();
+
+                _graph = _tool.buildNavGraph(
+                    new Vector3(bmin.X, bmin.Y, bmin.Z),
+                    new Vector3(bmax.X, bmax.Y, bmax.Z));
+
+                if (null == _graph)
+                {
+                    Logger.Error("build graph failed!");
+                }
+                else
+                {
+                    Logger.Information($"build graph success, tileXCount:{_graph.tileXCount}, tileZCount:{_graph.tileZCount}");
+                }
             }
         }
     }

@@ -353,7 +353,7 @@ namespace Navmesh
 			base.OnDestroy();
 
 			// Cleanup
-			TriangleMeshNode.SetNavmeshHolder(FNavgationSystem.instance.GetGraphIndex(this), null);
+			TriangleMeshNode.SetNavmeshHolder(FNavgationSystem.Instance.GetGraphIndex(this), null);
 		}
 
 		public override void OnDrawGizmos(bool drawNodes)

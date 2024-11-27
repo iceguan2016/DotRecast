@@ -24,6 +24,14 @@ namespace Navmesh.Shape
             return new Navmesh.FConvexShape(Vertices);
         }
 
+        public bool IsContainPoint(Vector3 p)
+        {
+            var local = Quaternion.Inverse(Rotation) * (p - Position);
+            return  Mathf.Abs(local.x) <= HalfExtent.x &&
+                    Mathf.Abs(local.y) <= HalfExtent.y &&
+                    Mathf.Abs(local.z) <= HalfExtent.z;
+        }
+
         public void DrawGizmos()
         {
             Debug.DrawObbCube(Position, Rotation, HalfExtent, Color.green);
