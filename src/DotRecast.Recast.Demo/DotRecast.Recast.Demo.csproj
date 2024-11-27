@@ -38,6 +38,7 @@
     <ProjectReference Include="..\DotRecast.Detour.Extras\DotRecast.Detour.Extras.csproj" />
     <ProjectReference Include="..\DotRecast.Detour.TileCache\DotRecast.Detour.TileCache.csproj" />
     <ProjectReference Include="..\DotRecast.Detour\DotRecast.Detour.csproj" />
+    <ProjectReference Include="..\DotRecast.Pathfinding\DotRecast.Pathfinding.csproj" />
     <ProjectReference Include="..\DotRecast.Recast.Toolset\DotRecast.Recast.Toolset.csproj" />
     <ProjectReference Include="..\DotRecast.Recast\DotRecast.Recast.csproj" />
   </ItemGroup>

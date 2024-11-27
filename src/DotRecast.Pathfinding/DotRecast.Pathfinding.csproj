@@ -1,9 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- <PropertyGroup> -->
+    <!-- <TargetFramework>net6.0;net7.0;net8.0</TargetFramework> -->
+    <!-- <ImplicitUsings>enable</ImplicitUsings> -->
+    <!-- <Nullable>enable</Nullable> -->
+    <!-- <AllowUnsafeBlocks>True</AllowUnsafeBlocks> -->
+  <!-- </PropertyGroup> -->
+  
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <TargetFrameworks>netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
+    <PackageId>DotRecast.Pathfinding</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>ikpil</Authors>
+    <Description>DotRecast - a port of Recast Pathfinding, Industry-standard navigation mesh toolset for .NET, C#, Unity3D, games, servers</Description>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/ikpil/DotRecast</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ikpil/DotRecast</RepositoryUrl>
+    <PackageTags>game gamedev ai csharp server unity navigation game-development unity3d pathfinding pathfinder recast detour navmesh crowd-simulation recastnavigation</PackageTags>
+    <PackageReleaseNotes>https://github.com/ikpil/DotRecast/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 

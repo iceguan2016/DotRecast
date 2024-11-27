@@ -393,7 +393,8 @@ public class RecastDemo : IRecastDemoChannel
             new CrowdSampleTool(),
             new CrowdAgentProfilingSampleTool(),
             new JumpLinkBuilderSampleTool(),
-            new DynamicUpdateSampleTool()
+            new DynamicUpdateSampleTool(),
+            new TileDelaunayNavmeshTool()
         );
         _toolsetView.SetEnabled(true);
         logView = new RcLogView();
