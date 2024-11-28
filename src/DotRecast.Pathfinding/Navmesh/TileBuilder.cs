@@ -21,8 +21,8 @@ namespace Navmesh
         public bool IsDrawTrangulation = true;
 
         public int LimitObstacleClipTimes = -1;
-        public int MinBuildTileIndex = -1;   // Only build tiles between MinBuildTileIndex and MaxBuildTileIndex
-        public int MaxBuildTileIndex = -1;
+        public int MinBuildTileIndex = 0;   // Only build tiles between MinBuildTileIndex and MaxBuildTileIndex
+        public int MaxBuildTileIndex = int.MaxValue;
 
         public bool IsShowNodeConnection = false;
         public Navmesh.GraphDebugMode DebugMode = Navmesh.GraphDebugMode.Areas;

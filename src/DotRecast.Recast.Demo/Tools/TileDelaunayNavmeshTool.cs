@@ -45,11 +45,15 @@ public class TileDelaunayTool : IRcToolable
     private List<BoxShape> m_shapes = new List<BoxShape>();
     private RcRand m_rand = new RcRand(DateTime.Now.Ticks);
 
-    public float m_obstacleSize = 1.0f;
-    public float m_obstacleSizeVariance = 0.0f;
+    private FTiledNavmeshBuilder m_builder;
 
-    public float  m_cellSize = 0.2f;
-    public int    m_tileSize = 30;
+    public FDebugParams m_debugParams = new FDebugParams();
+
+    public float m_obstacleSize = 5.0f;
+    public float m_obstacleSizeVariance = 3.0f;
+
+    public float  m_cellSize = 1.0f;
+    public int    m_tileSize = 60;
 
     public string GetName()
     {
@@ -100,11 +104,14 @@ public class TileDelaunayTool : IRcToolable
         return m_shapes;
     }
 
+    public FTiledNavmeshBuilder getBuilder()
+    {
+        return m_builder;
+    }
+
     public FTiledNavmeshGraph buildNavGraph(Vector3 bmin, Vector3 bmax)
     {
-        FTiledNavmeshBuilder builder = new FTiledNavmeshBuilder();
-
-        FDebugParams debugParams = new FDebugParams();
+        m_builder = new FTiledNavmeshBuilder();
 
         // 
         FTiledNavmeshBuilder.FTiledNavmeshBuilderParams builderParams = new FTiledNavmeshBuilder.FTiledNavmeshBuilderParams();
@@ -120,7 +127,7 @@ public class TileDelaunayTool : IRcToolable
         }
         builderParams.Obstacles = obstacles;
 
-        return builder.Build(builderParams, debugParams);
+        return m_builder.Build(builderParams, m_debugParams);
     }
 }
 
@@ -233,6 +240,13 @@ public class TileDelaunayNavmeshTool : ISampleTool
         {
             _graph.OnDrawGizmos(true);
         }
+
+        // draw builder
+        var builder = _tool.getBuilder();
+        if (null != builder)
+        {
+            builder.DrawGizmos(_tool.m_debugParams);
+        }
     }
 
     public void HandleUpdate(float dt)
@@ -261,7 +275,7 @@ public class TileDelaunayNavmeshTool : ISampleTool
         else if (m_mode == TileDelaunayNavmeshToolMode.BUILD)
         {
             ImGui.SliderFloat("Cell Size", ref _tool.m_cellSize, 0.1f, 1.0f, "%.2f");
-            ImGui.SliderInt("Tile Size", ref _tool.m_tileSize, 1, 60);
+            ImGui.SliderInt("Tile Size", ref _tool.m_tileSize, 1, 100);
 
             if (ImGui.Button("Create All Tile"))
             {

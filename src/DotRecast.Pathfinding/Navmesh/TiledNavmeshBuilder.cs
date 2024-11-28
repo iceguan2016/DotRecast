@@ -62,7 +62,7 @@ namespace Navmesh
 				{
 					var tileIndex = x + z * graph.tileXCount;
 
-					if (indebugPramas.MinBuildTileIndex > tileIndex || tileIndex > indebugPramas.MaxBuildTileIndex) continue;
+					if (tileIndex < indebugPramas.MinBuildTileIndex  || tileIndex > indebugPramas.MaxBuildTileIndex) continue;
 
 					// Calculate tile bounds
 					var forcedBoundsMin = graph.forcedBounds.min;
