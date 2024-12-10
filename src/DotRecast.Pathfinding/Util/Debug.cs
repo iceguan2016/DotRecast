@@ -4,7 +4,13 @@ namespace Game.Utils
 {
     public interface DrawInterface
     {
+        float GetMapHeight();
+
         void DrawLine(Vector3 a, Vector3 b, Color c);
+
+        void DrawCube(Vector3 p, Vector3 size, Color c);
+
+        void DrawCircle(Vector3 p, float r, Color c);
     }
 
     public static class Debug

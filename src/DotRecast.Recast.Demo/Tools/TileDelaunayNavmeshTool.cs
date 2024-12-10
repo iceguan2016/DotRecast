@@ -17,6 +17,7 @@ using System;
 using DotRecast.Core;
 using UnityEngine;
 using Game.Utils;
+using System.Drawing;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -113,6 +114,8 @@ public class TileDelaunayTool : IRcToolable
     {
         m_builder = new FTiledNavmeshBuilder();
 
+        m_debugParams.IsTrangulation = false;
+
         // 
         FTiledNavmeshBuilder.FTiledNavmeshBuilderParams builderParams = new FTiledNavmeshBuilder.FTiledNavmeshBuilderParams();
         builderParams.MinBounds = bmin;
@@ -135,13 +138,38 @@ public class TileDelaunayDebugDraw : DrawInterface
 {
     private DebugDraw m_draw = null;
 
+    public float MapHeight { get; set; }
+
     public TileDelaunayDebugDraw(DebugDraw draw)
     {
         m_draw = draw;
         Game.Utils.Debug.drawInterface = this;
     }
 
-    public void DrawLine(Vector3 a, Vector3 b, Color c)
+    public void DrawCube(Vector3 p, Vector3 size, UnityEngine.Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            var halfSize = size * 0.5f;
+            var min = p - halfSize;
+            var max = p + halfSize;
+            m_draw.DebugDrawBoxWire(min.x, min.y, min.z, max.x, max.y, max.z, color, 1.0f);
+        }
+    }
+
+    public void DrawCircle(Vector3 p, float r, UnityEngine.Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            m_draw.DebugDrawCircle(p.x, p.y, p.z, r, color, 1.0f);
+        }
+    }
+
+    public void DrawLine(Vector3 a, Vector3 b, UnityEngine.Color c)
     {
         if (m_draw != null) 
         {
@@ -152,6 +180,11 @@ public class TileDelaunayDebugDraw : DrawInterface
             m_draw.Vertex(new float[] { b.x, b.y, b.z }, color);
             m_draw.End();
         }
+    }
+
+    public float GetMapHeight()
+    {
+        return MapHeight;
     }
 }
 

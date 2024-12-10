@@ -943,7 +943,7 @@ namespace Navmesh
 
         public FTiledNavmeshGraph.FNavmeshTile CreateNavmeshTile(FTiledNavmeshGraph navmeshGraph)
         {
-            if (Triangulation == null) throw new System.ArgumentNullException("triangulation");
+            if (Triangulation == null) return null;
 
             var discardTriangles = Triangulation.DiscardedTriangles;
             var points = Triangulation.TriangleSet.Points;

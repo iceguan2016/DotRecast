@@ -394,7 +394,8 @@ public class RecastDemo : IRecastDemoChannel
             new CrowdAgentProfilingSampleTool(),
             new JumpLinkBuilderSampleTool(),
             new DynamicUpdateSampleTool(),
-            new TileDelaunayNavmeshTool()
+            new TileDelaunayNavmeshTool(),
+            new TestDaedalusSampleTool()
         );
         _toolsetView.SetEnabled(true);
         logView = new RcLogView();

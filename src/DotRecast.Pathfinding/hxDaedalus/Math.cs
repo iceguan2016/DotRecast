@@ -7,6 +7,8 @@ public class HxMath {
 	}
 	
 	
+	public static readonly double PI = global::System.Math.PI;
+	
 	public static readonly double NaN = global::System.Double.NaN;
 	
 	public static readonly double POSITIVE_INFINITY = global::System.Double.PositiveInfinity;
