@@ -39,6 +39,17 @@ public class TestDaedalusTool : IRcToolable
     public hxDaedalus.ai.EntityAI EntityAI { get; private set; }
     public HxArray<double> Path { get; private set; }
 
+    public float EntityRadius 
+    { 
+        get {
+            return (float)EntityAI.get_radius();
+        } 
+
+        set {
+            EntityAI.set_radius(value);
+        }
+    }
+
     double RandomRange(double min, double max)
     {
         return min + rand.NextDouble() * (max - min);
@@ -57,7 +68,7 @@ public class TestDaedalusTool : IRcToolable
         // populate mesh with many square objects
         hxDaedalus.data.Object hxObject = null;
         HxArray<double> shapeCoords = null;
-        for (int i=0; i<10; ++i)
+        for (int i=0; i<30; ++i)
         {
             hxObject = new hxDaedalus.data.Object();
             shapeCoords = new HxArray<double>(new double[] {
@@ -247,10 +258,13 @@ public class TestDaedalusSampleTool : ISampleTool
         if (_tool.Path.length > 0)
         {
             var v0 = new UnityEngine.Vector3((float)_tool.Path[0], _draw.MapHeight, (float)_tool.Path[1]);
+            var PointSize = UnityEngine.Vector3.one * 0.2f;
+            _draw.DrawCube(v0, PointSize, UnityEngine.Color.red);
             for (var i = 2; i < _tool.Path.length; i += 2)
             {
                 var v1 = new UnityEngine.Vector3((float)_tool.Path[i], _draw.MapHeight, (float)_tool.Path[i+1]);
                 _draw.DrawLine(v0, v1, UnityEngine.Color.green);
+                _draw.DrawCube(v1, PointSize, UnityEngine.Color.red);
                 v0 = v1;
             }
         }
@@ -286,6 +300,9 @@ public class TestDaedalusSampleTool : ISampleTool
         ImGui.Text($"Test Daedalus Tool Mode");
         ImGui.Separator();
 
+        var EntityRadius = _tool.EntityRadius;
+        ImGui.SliderFloat("Obstacle Size", ref EntityRadius, 0.1f, 3.0f, "%.2f");
+        _tool.EntityRadius = EntityRadius;
     }
 
     public void OnSampleChanged()
