@@ -32,7 +32,7 @@ public class TestDaedalusTool : IRcToolable
     public UnityEngine.Vector3? StartPoint { get; set; }
     public UnityEngine.Vector3? EndPoint { get; set; }
 
-    public hxDaedalus.data.Face StartFace { get; set; }
+    public hxDaedalus.data.Face HitFace { get; set; }
 
     // pathfinder
     public hxDaedalus.ai.PathFinder Pathfinder { get; private set; }
@@ -154,6 +154,55 @@ public class TestDaedalusSampleTool : ISampleTool
 
         Logger.Information($"HandleClickRay, hitPos:{hitPos}");
 
+        hxDaedalus.data.math.Intersection loc = hxDaedalus.data.math.Geom2D.locatePosition(hitPos.X, hitPos.Z, _tool.Mesh);
+        switch (loc._hx_index)
+        {
+            case 0:
+                {
+                    //global::hxDaedalus.data.Vertex vertex = (loc as global::hxDaedalus.data.math.Intersection_EVertex).vertex;
+                    //locVertex = vertex;
+                    //return;
+                    break;
+                }
+
+
+            case 1:
+                {
+                    //global::hxDaedalus.data.Edge edge = (loc as global::hxDaedalus.data.math.Intersection_EEdge).edge;
+                    //{
+                    //    locEdge = edge;
+                    //    if (locEdge.get_isConstrained())
+                    //    {
+                    //        return;
+                    //    }
+
+                    //    this.fromFace = locEdge.get_leftFace();
+                    //}
+
+                    break;
+                }
+
+
+            case 2:
+                {
+                    global::hxDaedalus.data.Face face = (loc as global::hxDaedalus.data.math.Intersection_EFace).face;
+                    Logger.Information($"HandleClickRay, hit face:{face._id}");
+                    _tool.HitFace = face;
+                    break;
+                }
+
+
+            case 3:
+                {
+                    break;
+                }
+
+
+        }
+
+        // 只打印hitPos
+        if (shift) return;
+
         if (_tool.StartPoint == null)
         {
             _tool.StartPoint = new UnityEngine.Vector3(hitPos.X, hitPos.Y, hitPos.Z);
@@ -173,53 +222,6 @@ public class TestDaedalusSampleTool : ISampleTool
             _tool.EntityAI._y = _tool.EntityAI.y;
 
             _tool.Pathfinder.findPath(_tool.EndPoint.Value.x, _tool.EndPoint.Value.z, _tool.Path);
-
-            hxDaedalus.data.math.Intersection loc = hxDaedalus.data.math.Geom2D.locatePosition(_tool.EntityAI.x, _tool.EntityAI.y, _tool.Mesh);
-            switch (loc._hx_index)
-            {
-                case 0:
-                    {
-                        //global::hxDaedalus.data.Vertex vertex = (loc as global::hxDaedalus.data.math.Intersection_EVertex).vertex;
-                        //locVertex = vertex;
-                        //return;
-                        break;
-                    }
-
-
-                case 1:
-                    {
-                        //global::hxDaedalus.data.Edge edge = (loc as global::hxDaedalus.data.math.Intersection_EEdge).edge;
-                        //{
-                        //    locEdge = edge;
-                        //    if (locEdge.get_isConstrained())
-                        //    {
-                        //        return;
-                        //    }
-
-                        //    this.fromFace = locEdge.get_leftFace();
-                        //}
-
-                        break;
-                    }
-
-
-                case 2:
-                    {
-                        global::hxDaedalus.data.Face face = (loc as global::hxDaedalus.data.math.Intersection_EFace).face;
-                        Logger.Information($"HandleClickRay, start face:{face._id}");
-
-                        _tool.StartFace = face;
-                        break;
-                    }
-
-
-                case 3:
-                    {
-                        break;
-                    }
-
-
-            }
 
             Logger.Information($"HandleClickRay, findPath length:{_tool.Path.length}");
         }
@@ -273,8 +275,11 @@ public class TestDaedalusSampleTool : ISampleTool
         for (var i=0; i<_tool.Mesh._faces.length; ++i)
         {
             var face = (hxDaedalus.data.Face)_tool.Mesh._faces[i];
-            if ( face == _tool.StartFace)
+            if ( face == _tool.HitFace)
             {
+                var h = _draw.MapHeight;
+                _draw.MapHeight = h + 0.5f;
+
                 global::hxDaedalus.iterators.FromFaceToInnerEdges iterEdge = new hxDaedalus.iterators.FromFaceToInnerEdges();
                 iterEdge.set_fromFace(face);
                 while (true) {
@@ -284,8 +289,12 @@ public class TestDaedalusSampleTool : ISampleTool
 						break;
 					}
 
-                    _view.drawEdge(innerEdge, UnityEngine.Color.magenta);
+                    _view.drawEdge(innerEdge, UnityEngine.Color.magenta, 10.0f);
                 }
+
+                _draw.MapHeight = h;
+
+                _view.drawFace(face, UnityEngine.Color.yellow);
                 break;
             }
         }

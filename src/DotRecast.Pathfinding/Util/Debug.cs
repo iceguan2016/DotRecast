@@ -6,11 +6,13 @@ namespace Game.Utils
     {
         float GetMapHeight();
 
-        void DrawLine(Vector3 a, Vector3 b, Color c);
+        void DrawLine(Vector3 a, Vector3 b, Color c, float lineWidth=1.0f);
 
         void DrawCube(Vector3 p, Vector3 size, Color c);
 
         void DrawCircle(Vector3 p, float r, Color c);
+
+        void DrawTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Color c);
     }
 
     public static class Debug
