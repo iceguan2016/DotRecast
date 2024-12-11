@@ -64,17 +64,20 @@ namespace hxDaedalus.view
 
         public void drawMesh(Mesh mesh)
 	    {
-            // var all = mesh.getVerticesAndEdges();
-            // var vertices = HxReflect.field(all, "_vertices");
-		    
-            for (var i=0; i<mesh._vertices.length; ++i)
+            var all = mesh.getVerticesAndEdges();
+            var vertices = HxReflect.field(all, "vertices") as HxArray<object>;
+            var edges = HxReflect.field(all, "edges") as HxArray<object>;
+            //var vertices = mesh._vertices;
+            //var edges = mesh._edges;
+
+            for (var i = 0; i < vertices.length; ++i)
             {
-                drawVertex((Vertex)mesh._vertices[i]);
+                drawVertex((Vertex)vertices[i]);
             }
 
-            for (var i = 0; i < mesh._edges.length; ++i)
+            for (var i = 0; i < edges.length; ++i)
             {
-                var edge = (Edge)mesh._edges[i];
+                var edge = (Edge)edges[i];
                 drawEdge(edge, edge.get_isConstrained() ? UnityEngine.Color.red : UnityEngine.Color.blue);
             }
         }

@@ -164,8 +164,6 @@ public class TestDaedalusSampleTool : ISampleTool
                     //return;
                     break;
                 }
-
-
             case 1:
                 {
                     //global::hxDaedalus.data.Edge edge = (loc as global::hxDaedalus.data.math.Intersection_EEdge).edge;
@@ -181,8 +179,6 @@ public class TestDaedalusSampleTool : ISampleTool
 
                     break;
                 }
-
-
             case 2:
                 {
                     global::hxDaedalus.data.Face face = (loc as global::hxDaedalus.data.math.Intersection_EFace).face;
@@ -190,14 +186,10 @@ public class TestDaedalusSampleTool : ISampleTool
                     _tool.HitFace = face;
                     break;
                 }
-
-
             case 3:
                 {
                     break;
                 }
-
-
         }
 
         // 只打印hitPos
@@ -207,13 +199,9 @@ public class TestDaedalusSampleTool : ISampleTool
         {
             _tool.StartPoint = new UnityEngine.Vector3(hitPos.X, hitPos.Y, hitPos.Z);
         }
-        else if (_tool.EndPoint == null)
-        {
-            _tool.EndPoint = new UnityEngine.Vector3(hitPos.X, hitPos.Y, hitPos.Z);
-        }
         else
         {
-            _tool.StartPoint = _tool.EndPoint;
+            if (_tool.EndPoint != null) _tool.StartPoint = _tool.EndPoint;
             _tool.EndPoint = new UnityEngine.Vector3(hitPos.X, hitPos.Y, hitPos.Z);
 
             _tool.EntityAI.x = _tool.StartPoint.Value.x;
