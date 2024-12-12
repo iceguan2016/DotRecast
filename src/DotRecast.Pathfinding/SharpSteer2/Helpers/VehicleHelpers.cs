@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -156,7 +156,7 @@ namespace SharpSteer2.Helpers
         /// <returns></returns>
         public static Vector3 SteerToAvoidObstacle(this IVehicle vehicle, float minTimeToCollision, IObstacle obstacle, IAnnotationService annotation = null)
         {
-            Vector3 avoidance = obstacle.SteerToAvoid(vehicle, minTimeToCollision);
+            Vector3 avoidance = obstacle.steerToAvoid(vehicle as BaseVehicle, minTimeToCollision);
 
             // XXX more annotation modularity problems (assumes spherical obstacle)
             if (avoidance != Vector3.Zero && annotation != null)
@@ -167,35 +167,17 @@ namespace SharpSteer2.Helpers
 
         public static Vector3 SteerToAvoidObstacles(this IVehicle vehicle, float minTimeToCollision, IEnumerable<IObstacle> obstacles, IAnnotationService annotation = null)
         {
-            PathIntersection? nearest = null;
-            float minDistanceToCollision = minTimeToCollision * vehicle.Speed;
+            var avoidance = Obstacle.steerToAvoidObstacles(vehicle as BaseVehicle, 
+                                                           minTimeToCollision,
+                                                           obstacles,
+                                                           out var nearest,
+                                                           null);
 
-            // test all obstacles for intersection with my forward axis,
-            // select the one whose point of intersection is nearest
-            foreach (var o in obstacles)
-            {
-                var next = o.NextIntersection(vehicle);
-                if (!next.HasValue)
-                    continue;
+            // XXX more annotation modularity problems (assumes spherical obstacle)
+            if (annotation != null && avoidance != Vector3.Zero)
+                annotation.AvoidObstacle(minTimeToCollision * vehicle.Speed, nearest);
 
-                if (!nearest.HasValue || (next.Value < nearest.Value.Distance))
-                    nearest = new PathIntersection { Distance = next.Value, Obstacle = o };
-            }
-
-            if (nearest.HasValue)
-            {
-                if (annotation != null)
-                    annotation.AvoidObstacle(minDistanceToCollision);
-
-                return nearest.Value.Obstacle.SteerToAvoid(vehicle, minTimeToCollision);
-            }
-            return Vector3.Zero;
-        }
-
-        private struct PathIntersection
-        {
-            public float Distance;
-            public IObstacle Obstacle;
+            return avoidance;
         }
 
         public static Vector3 SteerForSeparation(this IVehicle vehicle, float maxDistance, float cosMaxAngle, IEnumerable<IVehicle> others, IAnnotationService annotation = null)

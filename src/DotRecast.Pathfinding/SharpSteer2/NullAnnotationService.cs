@@ -1,4 +1,5 @@
 ﻿
+using SharpSteer2.Obstacles;
 using System.Numerics;
 
 namespace SharpSteer2
@@ -60,6 +61,10 @@ namespace SharpSteer2
         public void AvoidObstacle(float minDistanceToCollision)
         {
 
+        }
+
+        public void AvoidObstacle(float minDistanceToCollision, PathIntersection nearest)
+        {
         }
 
         public void PathFollowing(Vector3 future, Vector3 onPath, Vector3 target, float outside)

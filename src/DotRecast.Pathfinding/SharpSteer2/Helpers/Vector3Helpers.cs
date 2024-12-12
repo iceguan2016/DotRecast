@@ -305,5 +305,13 @@ namespace SharpSteer2.Helpers
 
             return result;
         }
+
+        public static Vector3 Forward { get { return Vector3.UnitZ; } }
+        public static Vector3 Right { get { return Vector3.UnitX; } }
+        public static Vector3 Up { get { return Vector3.UnitY; } }
+
+        public static float Dot(this Vector3 a, Vector3 b) { return Vector3.Dot(a, b); }
+
+        public static Vector3 Normalize(this Vector3 a) { return Vector3.Normalize(a); }
     }
 }

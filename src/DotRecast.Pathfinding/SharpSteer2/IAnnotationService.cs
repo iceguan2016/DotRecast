@@ -120,6 +120,10 @@ namespace SharpSteer2
 		/// <param name="minDistanceToCollision"></param>
 		void AvoidObstacle(float minDistanceToCollision);
 
+        // called when steerToAvoidObstacles decides steering is required
+        // (default action is to do nothing, layered classes can overload it)
+        void AvoidObstacle(float minDistanceToCollision, Obstacles.PathIntersection nearest);
+
 		/// <summary>
 		/// Called when steerToFollowPath decides steering is required.
 		/// </summary>

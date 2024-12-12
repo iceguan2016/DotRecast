@@ -8,12 +8,23 @@
 // you should have received as part of this distribution. The terms
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
+using System;
 using System.Numerics;
 
 namespace SharpSteer2.Helpers
 {
 	public class Utilities
 	{
+		public static float square(float x) { return x * x; }
+        public static float floorXXX(float x) { return (float)Math.Floor(x); }
+        public static float sqrtXXX(float x) { return (float)Math.Sqrt(x); }
+        public static float sinXXX(float x) { return (float)Math.Sin(x); }
+        public static float cosXXX(float x) { return (float)Math.Cos(x); }
+        public static float absXXX(float x) { return (float)Math.Abs(x); }
+        public static int absXXX(int x) { return Math.Abs(x); }
+        public static float maxXXX(float x, float y) { if (x > y) return x; else return y; }
+        public static float minXXX(float x, float y) { if (x < y) return x; else return y; }
+
         /// <summary>
         /// Linearly interpolate from A to B by amount T
         /// </summary>
