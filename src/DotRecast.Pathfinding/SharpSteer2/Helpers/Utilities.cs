@@ -9,6 +9,7 @@
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace SharpSteer2.Helpers
@@ -138,5 +139,19 @@ namespace SharpSteer2.Helpers
 		{
             smoothedAccumulator = Vector3.Lerp(smoothedAccumulator, newValue, Clamp(smoothRate, 0, 1));
 		}
-	}
+
+        public static void Swap<T>(List<T> list, int i, int j)
+        {
+            T temp = list[i];
+            list[i] = list[j];
+            list[j] = temp;
+        }
+
+        public static void RemoveAtSwap<T>(List<T> list, int i)
+        {
+            var lastIndex = list.Count - 1;
+            Swap(list, i, lastIndex);
+            list.RemoveAt(lastIndex);
+        }
+    }
 }

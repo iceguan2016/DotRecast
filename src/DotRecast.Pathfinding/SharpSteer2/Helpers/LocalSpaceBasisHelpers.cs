@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace SharpSteer2.Helpers
 {
@@ -157,6 +157,13 @@ namespace SharpSteer2.Helpers
             side = MatrixHelpers.Right(ref transformation);
             up = MatrixHelpers.Up(ref transformation);
             forward = MatrixHelpers.Backward(ref transformation);
+        }
+
+        public static void FromUnityRotation(UnityEngine.Quaternion rot, out Vector3 forward, out Vector3 side, out Vector3 up)
+        {
+            forward = Vector3Helpers.FromUntiyVector(rot * UnityEngine.Vector3.forward);
+            side = Vector3Helpers.FromUntiyVector(rot * UnityEngine.Vector3.right);
+            up = Vector3Helpers.FromUntiyVector(rot * UnityEngine.Vector3.up);
         }
     }
 }

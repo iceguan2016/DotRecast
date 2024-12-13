@@ -313,5 +313,10 @@ namespace SharpSteer2.Helpers
         public static float Dot(this Vector3 a, Vector3 b) { return Vector3.Dot(a, b); }
 
         public static Vector3 Normalize(this Vector3 a) { return Vector3.Normalize(a); }
+
+        public static Vector3 FromUntiyVector(UnityEngine.Vector3 v)
+        {
+            return new Vector3(v.x, v.y, v.z);
+        }
     }
 }

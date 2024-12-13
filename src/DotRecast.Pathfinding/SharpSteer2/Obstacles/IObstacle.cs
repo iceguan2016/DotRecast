@@ -89,7 +89,7 @@ namespace SharpSteer2.Obstacles
     /// </summary>
     public interface IObstacle
 	{
-        Vector3 steerToAvoid(BaseVehicle v, float minTimeToCollision, Vector3? referencePoint = null);
+        Vector3 steerToAvoid(BaseVehicle vehicle, float minTimeToCollision, Vector3? referencePoint = null);
 
         // find first intersection of a vehicle's path with this obstacle
         // (this must be specialized for each new obstacle shape class)
