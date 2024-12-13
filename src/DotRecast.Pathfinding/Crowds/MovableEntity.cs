@@ -60,7 +60,7 @@ namespace DotRecast.Pathfinding.Crowds
         public UniqueId ID { get; set; }
 
         // Move destination
-        public UnityEngine.Vector3 TargetLocation { get; set; }
+        public Vector3 TargetLocation { get; set; }
 
         public MovableEntityDebuger Debuger { get; private set; }
 
@@ -163,6 +163,8 @@ namespace DotRecast.Pathfinding.Crowds
 
         public virtual void OnUpdate(float inDeltaTime)
         {
+            if (!HasEntityState(eEntityState.Moving)) return;
+
             // update pathway
             if (null != PathwayQuerier)
             {
@@ -192,11 +194,17 @@ namespace DotRecast.Pathfinding.Crowds
             info.forward = Forward;
             info.side = Side;
             info.up = Up;
-            info.steerPosition = _pathReferencePosition?? Vector3Helpers.FromUntiyVector(TargetLocation);
+            info.steerPosition = _pathReferencePosition?? TargetLocation;
 #endif
 
             var steerForce = determineCombinedSteering(inDeltaTime);
-            ApplySteeringForce(steerForce, inDeltaTime);
+            if (steerForce != Vector3.Zero)
+            {
+                ApplySteeringForce(steerForce, inDeltaTime);
+
+                if (null != _proximityToken)
+                    _proximityToken.UpdateForNewPosition(Position);
+            }
         }
 
         // compute combined steering force: move forward, avoid obstacles
@@ -233,7 +241,7 @@ namespace DotRecast.Pathfinding.Crowds
             }
             else
             {
-                steeringForce = SteerForSeek(Vector3Helpers.FromUntiyVector(TargetLocation)) * Template.FollowPathWeight;
+                steeringForce = SteerForSeek(TargetLocation) * Template.FollowPathWeight;
             }
             steeringForce = steeringForce.TruncateLength(MaxForce);
             _pathReferencePosition = referencePoint;
