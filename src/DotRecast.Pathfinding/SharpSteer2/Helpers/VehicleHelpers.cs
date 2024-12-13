@@ -165,13 +165,13 @@ namespace SharpSteer2.Helpers
             return avoidance;
         }
 
-        public static Vector3 SteerToAvoidObstacles(this IVehicle vehicle, float minTimeToCollision, IEnumerable<IObstacle> obstacles, IAnnotationService annotation = null)
+        public static Vector3 SteerToAvoidObstacles(this IVehicle vehicle, float minTimeToCollision, IEnumerable<IObstacle> obstacles, Vector3? referencePoint, IAnnotationService annotation = null)
         {
             var avoidance = Obstacle.steerToAvoidObstacles(vehicle as BaseVehicle, 
                                                            minTimeToCollision,
                                                            obstacles,
                                                            out var nearest,
-                                                           null);
+                                                           referencePoint);
 
             // XXX more annotation modularity problems (assumes spherical obstacle)
             if (annotation != null && avoidance != Vector3.Zero)
@@ -436,7 +436,8 @@ namespace SharpSteer2.Helpers
                     {
                         // if the two will be close enough to collide,
                         // make a note of it
-                        if (ComputeNearestApproachPositions(vehicle, other, time) < collisionDangerThreshold)
+                        if (ComputeNearestApproachPositions(vehicle, other, time, out var ourPositionAtNearestApproach, out var hisPositionAtNearestApproach) 
+                            < collisionDangerThreshold)
                         {
                             minTime = time;
                             threat = other;
@@ -488,6 +489,104 @@ namespace SharpSteer2.Helpers
             return vehicle.Side * steer;
         }
 
+        public static Vector3 SteerToAvoidNeighbors2(this IVehicle vehicle, float minTimeToCollision, IEnumerable<IVehicle> others, IAnnotationService annotation = null)
+        {
+            // https://www.jdxdev.com/blog/2021/03/19/boids-for-rts/
+            // https://howtorts.github.io/2014/01/14/avoidance-behaviours.html
+            // 
+
+            System.Func<IVehicle, Vector3> avoidThreatEntity = threat =>
+            {
+                Vector3 resultVector = Vector3.Zero;
+                var obstacle = new SphericalObstacle(threat.Radius, threat.Position);
+                PathIntersection intersection = PathIntersection.DEFAULT;
+                obstacle.findIntersectionWithVehiclePath(vehicle as BaseVehicle, ref intersection);
+                if (intersection.intersect)
+                {
+                    // Choose right direction
+                    resultVector = new Vector3(intersection.surfaceNormal.Z, 0.0f, -intersection.surfaceNormal.X);
+                    resultVector.Normalize();
+
+                    //Move it out based on our radius + theirs
+                    resultVector *= vehicle.Radius + threat.Radius;
+
+                    if (null != annotation) annotation.AvoidNeighbor2(threat, intersection);
+                }
+                return resultVector;
+            };
+
+            // Find min distance entity
+            const float minSeparationDistance = 0.0f;
+            foreach (var other in others)
+            {
+                if (other != vehicle)
+                {
+                    float sumOfRadii = vehicle.Radius + other.Radius;
+                    float minCenterToCenter = minSeparationDistance + sumOfRadii;
+                    Vector3 offset = other.Position - vehicle.Position;
+                    float currentDistance = offset.Length();
+
+                    if (currentDistance < minCenterToCenter)
+                    {
+                        return avoidThreatEntity(other);
+                    }
+                }
+            }
+
+            // otherwise, go on to consider potential future collisions
+            IVehicle threat = null;
+
+            // Time (in seconds) until the most immediate collision threat found
+            // so far.  Initial value is a threshold: don't look more than this
+            // many frames into the future.
+            float minTime = minTimeToCollision;
+
+            // xxx solely for annotation
+            Vector3 xxxThreatPositionAtNearestApproach = Vector3.Zero;
+            Vector3 xxxOurPositionAtNearestApproach = Vector3.Zero;
+
+            // for each of the other vehicles, determine which (if any)
+            // pose the most immediate threat of collision.
+            foreach (var other in others)
+            {
+                if (other != vehicle)
+                {
+                    // avoid when future positions are this close (or less)
+                    float collisionDangerThreshold = vehicle.Radius * 2;
+
+                    // predicted time until nearest approach of "this" and "other"
+                    float time = PredictNearestApproachTime(vehicle, other);
+
+                    // If the time is in the future, sooner than any other
+                    // threatened collision...
+                    if ((time >= 0) && (time < minTime))
+                    {
+                        // if the two will be close enough to collide,
+                        // make a note of it
+                        if (ComputeNearestApproachPositions(vehicle, other, time, out var ourPositionAtNearestApproach, out var hisPositionAtNearestApproach)
+                            < collisionDangerThreshold)
+                        {
+                            minTime = time;
+                            threat = other;
+                            xxxThreatPositionAtNearestApproach
+                                = hisPositionAtNearestApproach?? Vector3.Zero;
+                            xxxOurPositionAtNearestApproach
+                                = ourPositionAtNearestApproach?? Vector3.Zero;
+                        }
+                    }
+                }
+            }
+
+            // if a potential collision was found, compute steering to avoid
+            if (threat != null)
+            {
+                return avoidThreatEntity(threat);
+            }
+
+            // otherwise return zero
+            return Vector3.Zero;
+        }
+
         /// <summary>
         /// Given two vehicles, based on their current positions and velocities,
         /// determine the time until nearest approach
@@ -534,13 +633,18 @@ namespace SharpSteer2.Helpers
         /// <param name="other"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        private static float ComputeNearestApproachPositions(IVehicle vehicle, IVehicle other, float time)
+        private static float ComputeNearestApproachPositions(IVehicle vehicle, IVehicle other, float time, 
+            out Vector3? ourPositionAtNearestApproach, out Vector3? hisPositionAtNearestApproach)
         {
             Vector3 myTravel = vehicle.Forward * vehicle.Speed * time;
             Vector3 otherTravel = other.Forward * other.Speed * time;
 
             Vector3 myFinal = vehicle.Position + myTravel;
             Vector3 otherFinal = other.Position + otherTravel;
+
+            // xxx for annotation
+            ourPositionAtNearestApproach = myFinal;
+            hisPositionAtNearestApproach = otherFinal;
 
             return Vector3.Distance(myFinal, otherFinal);
         }

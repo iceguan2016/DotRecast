@@ -80,9 +80,9 @@ namespace SharpSteer2
             return this.SteerToAvoidObstacle(minTimeToCollision, obstacle, annotation);
         }
 
-	    protected Vector3 SteerToAvoidObstacles(float minTimeToCollision, IEnumerable<IObstacle> obstacles)
+	    protected Vector3 SteerToAvoidObstacles(float minTimeToCollision, IEnumerable<IObstacle> obstacles, Vector3? referencePoint)
 	    {
-	        return this.SteerToAvoidObstacles(minTimeToCollision, obstacles, annotation);
+	        return this.SteerToAvoidObstacles(minTimeToCollision, obstacles, referencePoint, annotation);
 	    }
 
 	    protected Vector3 SteerToAvoidNeighbors(float minTimeToCollision, IEnumerable<IVehicle> others)

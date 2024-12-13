@@ -1,4 +1,4 @@
-﻿
+
 using SharpSteer2.Obstacles;
 using System.Numerics;
 
@@ -78,6 +78,11 @@ namespace SharpSteer2
         }
 
         public void AvoidNeighbor(IVehicle threat, float steer, Vector3 ourFuture, Vector3 threatFuture)
+        {
+
+        }
+
+        public void AvoidNeighbor2(IVehicle threat, PathIntersection intersection)
         {
 
         }

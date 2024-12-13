@@ -39,9 +39,11 @@ namespace DotRecast.Pathfinding.Crowds
         private bool _initialized = false;
         private uint _entityIdCounter = 1;
 
+        public int FrameNo { get; set; }
+
         public UniqueId CreateEntity(CreateEntityParams inParams)
         {
-            var entity = new MovableEntity(this, _pd, inParams.AnnotationService);
+            var entity = new MovableEntity(this, inParams.PathwayQuerier, inParams.LocalBoundaryQuerier, inParams.AnnotationService);
             if (null == entity) return UniqueId.InvalidID;
 
             entity.ID = inParams.EntityId.IsValid()? inParams.EntityId : new UniqueId(_entityIdCounter++);
@@ -61,8 +63,8 @@ namespace DotRecast.Pathfinding.Crowds
 
             // add to pd
             entity.NewPD(_pd);
+            entity.OnCreate();
 
-            entity.Reset();
             return entity.ID;
         }
 
@@ -74,6 +76,7 @@ namespace DotRecast.Pathfinding.Crowds
                 var entity = MovableEntities[slotIndex];
 
                 entity.NewPD(null);
+                entity.OnDelete();
 
                 if ((slotIndex + 1) < MovableEntities.Count)
                 {
@@ -89,9 +92,42 @@ namespace DotRecast.Pathfinding.Crowds
             return false;
         }
 
+        public MovableEntity GetEntityById(UniqueId inEntityId)
+        {
+            if (EntityId2Index.TryGetValue(inEntityId, out var entityIndex))
+            {
+                return MovableEntities[entityIndex];
+            }
+            return null;
+        }
+        public MovableEntity[] GetEntitiesInCircle(UnityEngine.Vector3 inCenter, float inRadius)
+        {
+            var createEntityParams = new CreateEntityParams() 
+            {
+                SpawnPosition = inCenter,
+            };
+            var entityId = CreateEntity(createEntityParams);
+            if (!entityId.IsValid()) return null;
+
+            var entity = GetEntityById(entityId);
+            var result = entity.FindNeighbors(inRadius);
+            DeleteEntity(entityId);
+
+            if (result == null) return null;
+
+            var entities = new List<MovableEntity>();
+            foreach ( var neighbor in result ) 
+            {
+                if (neighbor is MovableEntity) entities.Add(neighbor as MovableEntity);
+            }
+            return entities.ToArray();
+        }
+
         public bool Initialize()
         {
             if (_initialized) return true;
+
+            FrameNo = 1;
 
             AllocPD();
             return true;
@@ -102,6 +138,11 @@ namespace DotRecast.Pathfinding.Crowds
             if (!_initialized) return true;
 
             return true;
+        }
+
+        public void Tick(float inDelteTime)
+        {
+            ++FrameNo;
         }
     }
 }

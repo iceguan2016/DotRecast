@@ -9,6 +9,7 @@
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
 using System.Numerics;
+using SharpSteer2.Obstacles;
 
 namespace SharpSteer2
 {
@@ -148,12 +149,13 @@ namespace SharpSteer2
 		/// <param name="ourFuture"></param>
 		/// <param name="threatFuture"></param>
 		void AvoidNeighbor(IVehicle threat, float steer, Vector3 ourFuture, Vector3 threatFuture);
+        void AvoidNeighbor2(IVehicle threat, PathIntersection intersection);
 
-		/// <summary>
-		/// Draws lines from the vehicle's position showing its velocity and acceleration.
-		/// </summary>
-		/// <param name="vehicle">The vehicle to annotate.</param>
-		void VelocityAcceleration(IVehicle vehicle);
+        /// <summary>
+        /// Draws lines from the vehicle's position showing its velocity and acceleration.
+        /// </summary>
+        /// <param name="vehicle">The vehicle to annotate.</param>
+        void VelocityAcceleration(IVehicle vehicle);
 
 		/// <summary>
 		/// Draws lines from the vehicle's position showing its velocity and acceleration.
