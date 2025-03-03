@@ -35,6 +35,9 @@ namespace DotRecast.Pathfinding.Crowds
         MovableEntity GetEntityById(UniqueId inEntityId);
         MovableEntity[] GetEntitiesInCircle(FixMath.F64Vec3 inCenter, FixMath.F64 inRadius);
 
+        // entity iteration
+        void ForEachEntity(System.Action<MovableEntity> InAction);
+
         // tick
         void Tick(FixMath.F64 inDelteTime);
     }

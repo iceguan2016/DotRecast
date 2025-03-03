@@ -143,5 +143,13 @@ namespace DotRecast.Pathfinding.Crowds
                 MovableEntities[i].OnUpdate(inDelteTime);
             }
         }
+
+        public void ForEachEntity(System.Action<MovableEntity> InAction)
+        {
+            for (var i = 0; i < MovableEntities.Count; i++)
+            {
+                InAction(MovableEntities[i]);
+            }
+        }
     }
 }

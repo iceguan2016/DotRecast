@@ -20,6 +20,12 @@ using System.IO;
 using UnityEngine;
 using DotRecast.Core.Collections;
 using haxe.lang;
+using DotRecast.Pathfinding.Crowds;
+using DotRecast.Pathfinding.Util;
+using hxDaedalus.ai;
+using Serilog.Core;
+using Silk.NET.Windowing;
+using SharpSteer2.Helpers;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -43,7 +49,7 @@ public class TestDaedalusToolMode
     }
 }
 
-public class TestDaedalusTool : IRcToolable
+public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuerier
 {
     // pseudo random generator
     Random rand = new Random((int)DateTime.Now.Ticks);
@@ -56,6 +62,9 @@ public class TestDaedalusTool : IRcToolable
 
     public hxDaedalus.data.Face HitFace { get; set; }
 
+    // map height
+    public float MapHeight { get; set; }
+
     // pathfinder
     public hxDaedalus.ai.PathFinder Pathfinder { get; private set; }
     public hxDaedalus.ai.EntityAI EntityAI { get; private set; }
@@ -63,6 +72,9 @@ public class TestDaedalusTool : IRcToolable
 
     // obstacles
     private HxArray<hxDaedalus.data.Object> _obstacles = new HxArray<hxDaedalus.data.Object>();
+
+    // crowd entities
+    private IMovableEntityManager _entityManager = new MovableEntityManager();
 
     public float EntityRadius 
     { 
@@ -226,6 +238,180 @@ public class TestDaedalusTool : IRcToolable
 
         return true;
     }
+
+    // IPathwayQuerier interface
+    public virtual SharpSteer2.Pathway.PolylinePathway FindPath(SharpSteer2.IVehicle vehicle, FixMath.F64Vec3 target)
+    {
+        var pathfinder = Pathfinder;
+        if (null == pathfinder) return null;
+
+        var start = vehicle.PredictFuturePosition(FixMath.F64.Zero);
+        // 1.Create template entity
+        var entityAI = new hxDaedalus.ai.EntityAI();
+        EntityAI.set_radius(vehicle.Radius.Double);
+        EntityAI.x = start.X.Double;
+        EntityAI.y = start.Z.Double;
+
+        // 2.Set pathfinder params
+        pathfinder.entity = EntityAI;
+
+        var resultPath = new HxArray<double>();
+        pathfinder.findPath(target.X.Double, target.Z.Double, resultPath);
+
+        // 3.Convert to PolylinePathway 
+        if (resultPath.length > 0)
+        {
+            var points = new List<FixMath.F64Vec3>();
+            for (var i = 0; i < resultPath.length; i += 2)
+            {
+                var v = FixMath.F64Vec3.FromFloat((float)resultPath[0], MapHeight, (float)resultPath[1]);
+                points.Add(v);
+            }
+            return new SharpSteer2.Pathway.PolylinePathway(points, FixMath.F64.Zero, false);
+        }
+        return null;
+    }
+    // End
+
+    // ILocalBoundaryQuerier interface
+    public virtual int QueryBoundaryInCircle(SharpSteer2.IVehicle vehicle, FixMath.F64 inRadius, BoundarySegement[] outResults)
+    {
+        if (null == outResults) return 0;
+        var center = vehicle.PredictFuturePosition(FixMath.F64.Zero);
+        hxDaedalus.data.math.Intersection loc = hxDaedalus.data.math.Geom2D.locatePosition(center.X.Double, center.Z.Double, Mesh);
+        hxDaedalus.data.Face refFace = null;
+        switch (loc._hx_index)
+        {
+            case 0:
+                {
+                    break;
+                }
+            case 1:
+                {
+                    break;
+                }
+            case 2:
+                {
+                    global::hxDaedalus.data.Face face = (loc as global::hxDaedalus.data.math.Intersection_EFace).face;
+                    refFace = face;
+                    break;
+                }
+        }
+
+        var radiusSqured = inRadius * inRadius;
+
+        System.Func<hxDaedalus.data.Vertex, FixMath.F64Vec3> VertextToF64Vec3 = (vertex) => {
+            var pos = vertex.get_pos();
+            return FixMath.F64Vec3.FromDouble(pos.x, MapHeight, pos.y);
+        };
+
+        System.Func<hxDaedalus.data.Face, bool> CheckVertexInRadius = (face) => {
+            global::hxDaedalus.iterators.FromFaceToInnerEdges iterEdge = new hxDaedalus.iterators.FromFaceToInnerEdges();
+            iterEdge.set_fromFace(face);
+            while (true)
+            {
+                var innerEdge = iterEdge.next();
+                if (innerEdge == null)
+                {
+                    break;
+                }
+
+                var pos = VertextToF64Vec3(innerEdge.get_originVertex());
+                var distSq = center.Distance2D(pos);
+                if (distSq <= radiusSqured) return true;
+            }
+            return false;
+        };
+
+        if (null != refFace)
+        {
+            // Boundary edges
+            var boundaryEdges = new List<hxDaedalus.data.Edge>();
+            // Visit adjacent triangles
+            var pendingVisitFaces = new Queue<hxDaedalus.data.Face>();
+            var visiedFaces = new HashSet<hxDaedalus.data.Face>();
+
+            pendingVisitFaces.Enqueue(refFace);
+            var innerEdges = new hxDaedalus.iterators.FromFaceToInnerEdges();
+            while (pendingVisitFaces.Count > 0)
+            {
+                var face = pendingVisitFaces.Dequeue();
+                visiedFaces.Add(face);
+                // 遍历相邻的face
+                innerEdges.set_fromFace(face);
+                while (true)
+                {
+                    var innerEdge = innerEdges.next();
+                    if (innerEdge == null) break;
+                    // 判断是否是Boundary
+                    if (innerEdge.get_isConstrained())
+                    {
+                        boundaryEdges.Add(innerEdge);
+                    }
+                    else
+                    {
+                        //  获取邻接face
+                        var outterEdge = innerEdge.get_oppositeEdge();
+                        if (outterEdge == null)
+                            continue;
+                        var adjacentFace = outterEdge.get_leftFace();
+                        if (adjacentFace == null)
+                            continue;
+                        // 检查是否已经访问过
+                        if (visiedFaces.Contains(face))
+                            continue;
+                        // 检查是否在范围内
+                        if (!CheckVertexInRadius(adjacentFace))
+                            continue;
+                        pendingVisitFaces.Enqueue(adjacentFace);
+                    }
+                }
+            }
+
+            // 输出boundary
+            if (boundaryEdges.Count > 0)
+            {
+                var count = Math.Min(boundaryEdges.Count, outResults.Length);
+                for (int i = 0; i < count; ++i)
+                {
+                    outResults[i].Start = VertextToF64Vec3(boundaryEdges[i].get_originVertex());
+                    outResults[i].End = VertextToF64Vec3(boundaryEdges[i].get_destinationVertex());
+                }
+                return count;
+            }
+        }
+
+        return 0;
+    }
+    // End
+
+    // Crowd entity interface
+    public UniqueId AddCrowdEntity(double x, double y, double r)
+    {
+        var Params = new CreateEntityParams() 
+        {
+            EntityId = UniqueId.InvalidID,
+            SpawnPosition = FixMath.F64Vec3.Zero,
+            SpawnRotation = FixMath.F64Quat.Identity,
+
+            PathwayQuerier = null,
+            LocalBoundaryQuerier = null,
+            AnnotationService = null,
+        };
+
+        return _entityManager.CreateEntity(Params);
+    }
+
+    public void RemoveCrowdEntity(UniqueId InEntityId)
+    {
+        _entityManager.DeleteEntity(InEntityId);
+    }
+
+    public UniqueId HitCrowdEntity(double x, double y)
+    {
+        return UniqueId.InvalidID;
+    }
+    // End
 }
 
 public class TestDaedalusSampleTool : ISampleTool

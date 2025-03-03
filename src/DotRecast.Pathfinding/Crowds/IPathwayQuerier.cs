@@ -9,6 +9,6 @@ namespace DotRecast.Pathfinding.Crowds
     // Path finder for vehicle
     public interface IPathwayQuerier
     {
-        PolylinePathway FindPath(IVehicle vehicle);
+        PolylinePathway FindPath(IVehicle vehicle, FixMath.F64Vec3 target);
     }
 }

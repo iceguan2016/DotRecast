@@ -1,4 +1,6 @@
 
+using SharpSteer2;
+
 namespace DotRecast.Pathfinding.Crowds
 {
     public struct BoundarySegement
@@ -12,6 +14,6 @@ namespace DotRecast.Pathfinding.Crowds
     public interface ILocalBoundaryQuerier
     {
         // Query the boundary information in the nearby range (those closer are returned first)
-        int QueryBoundaryInCircle(FixMath.F64 inRadius, BoundarySegement[] outResults, int inMaxBuffSize);
+        int QueryBoundaryInCircle(IVehicle vehicle, FixMath.F64 inRadius, BoundarySegement[] outResults);
     }
 }

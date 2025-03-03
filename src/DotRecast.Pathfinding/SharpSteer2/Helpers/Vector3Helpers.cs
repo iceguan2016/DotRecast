@@ -313,6 +313,8 @@ namespace SharpSteer2.Helpers
         public static FixMath.F64Vec3 Normalize(this FixMath.F64Vec3 a) { return FixMath.F64Vec3.NormalizeFast(a); }
         public static FixMath.F64 Length(this FixMath.F64Vec3 a) { return FixMath.F64Vec3.LengthFast(a); }
         public static FixMath.F64 Length2D(this FixMath.F64Vec3 a) { var b = new FixMath.F64Vec3(a.X, FixMath.F64.Zero, a.Z); return FixMath.F64Vec3.LengthFast(b); }
+        public static FixMath.F64 Distance(this FixMath.F64Vec3 a, FixMath.F64Vec3 b) { return FixMath.F64Vec3.DistanceFast(a, b); }
+        public static FixMath.F64 Distance2D(this FixMath.F64Vec3 a, FixMath.F64Vec3 b) { var c = a - b; c.Y = FixMath.F64.Zero; return FixMath.F64Vec3.LengthFast(c); }
         public static FixMath.F64Vec3 SetYtoZero(this FixMath.F64Vec3 a) { return new FixMath.F64Vec3(a.X, FixMath.F64.Zero, a.Z); }
     }
 }

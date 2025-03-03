@@ -58,7 +58,24 @@ namespace DotRecast.Pathfinding.Crowds
         public UniqueId ID { get; set; }
 
         // Move destination
-        public FixMath.F64Vec3 TargetLocation { get; set; }
+        protected bool isTargetDirty { get; private set; }
+        protected FixMath.F64Vec3? targetLocation = null;
+        public FixMath.F64Vec3? TargetLocation { 
+            get
+            {
+                return targetLocation;
+            }
+            
+            set 
+            {
+                isTargetDirty = null == targetLocation || FixMath.F64Vec3.DistanceFast(targetLocation.Value, value.Value) > FixMath.F64.Two;
+                if (isTargetDirty) 
+                {
+                    targetLocation = value;
+                    SetEntityState(null != targetLocation? eEntityState.Moving : eEntityState.Idle);
+                }
+            }
+        }
 
         public MovableEntityDebuger Debuger { get; private set; }
 
@@ -162,11 +179,13 @@ namespace DotRecast.Pathfinding.Crowds
         public virtual void OnUpdate(FixMath.F64 inDeltaTime)
         {
             if (!HasEntityState(eEntityState.Moving)) return;
+            if (null == targetLocation) return;
 
-            // update pathway
-            if (null != PathwayQuerier)
+            // update pathway, check destination still valid?
+            if (isTargetDirty && null != PathwayQuerier && null != TargetLocation)
             {
-                Pathway = PathwayQuerier.FindPath(this);
+                isTargetDirty = false;
+                Pathway = PathwayQuerier.FindPath(this, targetLocation.Value);
             }
 
             // update neighbors
@@ -179,7 +198,7 @@ namespace DotRecast.Pathfinding.Crowds
             // update local boundary
             if (null != LocalBoundaryQuerier)
             {
-                _boundarySegmentNum = LocalBoundaryQuerier.QueryBoundaryInCircle(Template.QueryLocalBoundaryRadius, _boundarySegements, MaxBoundarySegmentNum);
+                _boundarySegmentNum = LocalBoundaryQuerier.QueryBoundaryInCircle(this, Template.QueryLocalBoundaryRadius, _boundarySegements);
             }
 
             // determine steering force
@@ -192,7 +211,7 @@ namespace DotRecast.Pathfinding.Crowds
             info.forward = Forward;
             info.side = Side;
             info.up = Up;
-            info.steerPosition = _pathReferencePosition?? TargetLocation;
+            info.steerPosition = _pathReferencePosition?? TargetLocation.Value;
 #endif
 
             var steerForce = determineCombinedSteering(inDeltaTime);
@@ -209,7 +228,7 @@ namespace DotRecast.Pathfinding.Crowds
         // or neighbors if needed, otherwise follow the path and wander
         FixMath.F64Vec3 determineCombinedSteering(FixMath.F64 elapsedTime)
         {
-            if (null == EntityManager)
+            if (null == EntityManager || null == targetLocation)
                 return FixMath.F64Vec3.Zero;
 
             var forceScale = FixMath.F64.FromFloat(1.0f);
@@ -239,7 +258,7 @@ namespace DotRecast.Pathfinding.Crowds
             }
             else
             {
-                steeringForce = SteerForSeek(TargetLocation) * Template.FollowPathWeight;
+                steeringForce = SteerForSeek(targetLocation.Value) * Template.FollowPathWeight;
             }
             steeringForce = steeringForce.TruncateLength(MaxForce);
             _pathReferencePosition = referencePoint;
