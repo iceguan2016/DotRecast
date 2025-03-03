@@ -21,7 +21,7 @@ namespace SharpSteer2.Database
 	class LocalityQueryDatabase
 	{
 		// type for a pointer to a function used to map over client objects
-		public delegate void LQCallBackFunction(Object clientObject, float distanceSquared, Object clientQueryState);
+		public delegate void LQCallBackFunction(Object clientObject, FixMath.F64 distanceSquared, Object clientQueryState);
 
 		/// <summary>
 		/// This structure is a proxy for (and contains a pointer to) a client
@@ -46,7 +46,7 @@ namespace SharpSteer2.Database
 			public readonly Object Obj;
 
 			// the obj's location ("key point") used for spatial sorting
-			public Vector3 Position;
+			public FixMath.F64Vec3 Position;
 
 			public ClientProxy(Object obj)
 			{
@@ -54,11 +54,11 @@ namespace SharpSteer2.Database
 			}
 		}
 
-		// the origin is the super-brick corner minimum coordinates
-		Vector3 _origin;
+        // the origin is the super-brick corner minimum coordinates
+        FixMath.F64Vec3 _origin;
 
-		// length of the edges of the super-brick
-		Vector3 _size;
+        // length of the edges of the super-brick
+        FixMath.F64Vec3 _size;
 
 		// number of sub-brick divisions in each direction
 	    readonly int _divX;
@@ -83,7 +83,7 @@ namespace SharpSteer2.Database
 		 * This routine also allocates the bin array, and initialize its
 		 * contents.
 		 */
-		public LocalityQueryDatabase(Vector3 origin, Vector3 size, int divx, int divy, int divz)
+		public LocalityQueryDatabase(FixMath.F64Vec3 origin, FixMath.F64Vec3 size, int divx, int divy, int divz)
 		{
 			_origin = origin;
 			_size = size;
@@ -110,7 +110,7 @@ namespace SharpSteer2.Database
 		/* Call for each client obj every time its location changes.  For
 		   example, in an animation application, this would be called each
 		   frame for every moving obj.  */
-		public void UpdateForNewLocation(ClientProxy obj, Vector3 position)
+		public void UpdateForNewLocation(ClientProxy obj, FixMath.F64Vec3 position)
 		{
 			/* find bin for new location */
 			int newBin = BinForLocation(position);
@@ -154,7 +154,7 @@ namespace SharpSteer2.Database
 		   terms of its XYZ coordinates.  The bin ID is a pointer to a pointer
 		   to the bin contents list.  */
 
-	    private /*lqClientProxy*/int BinForLocation(Vector3 position)
+	    private /*lqClientProxy*/int BinForLocation(FixMath.F64Vec3 position)
 		{
 			/* if point outside super-brick, return the "other" bin */
 			if (position.X < _origin.X || position.Y < _origin.Y || position.Z < _origin.Z ||
@@ -164,9 +164,9 @@ namespace SharpSteer2.Database
 			}
 
 			/* if point inside super-brick, compute the bin coordinates */
-			int ix = (int)(((position.X - _origin.X) / _size.X) * _divX);
-			int iy = (int)(((position.Y - _origin.Y) / _size.Y) * _divY);
-			int iz = (int)(((position.Z - _origin.Z) / _size.Z) * _divZ);
+			int ix = FixMath.F64.FloorToInt(((position.X - _origin.X) / _size.X) * _divX);
+			int iy = FixMath.F64.FloorToInt(((position.Y - _origin.Y) / _size.Y) * _divY);
+			int iz = FixMath.F64.FloorToInt(((position.Z - _origin.Z) / _size.Z) * _divZ);
 
 			/* convert to linear bin number */
 			int i = BinCoordsToBinIndex(ix, iy, iz);
@@ -192,7 +192,7 @@ namespace SharpSteer2.Database
 		   bins which do not overlap with the sphere of interest.  Incremental
 		   calculation of index values is used to efficiently traverse the
 		   bins of interest. */
-		public void MapOverAllObjectsInLocality(Vector3 center, float radius, LQCallBackFunction func, Object clientQueryState)
+		public void MapOverAllObjectsInLocality(FixMath.F64Vec3 center, FixMath.F64 radius, LQCallBackFunction func, Object clientQueryState)
 		{
 			int partlyOut = 0;
 			bool completelyOutside =
@@ -211,12 +211,12 @@ namespace SharpSteer2.Database
 			}
 
 			/* compute min and max bin coordinates for each dimension */
-			int minBinX = (int)((((center.X - radius) - _origin.X) / _size.X) * _divX);
-			int minBinY = (int)((((center.Y - radius) - _origin.Y) / _size.Y) * _divY);
-			int minBinZ = (int)((((center.Z - radius) - _origin.Z) / _size.Z) * _divZ);
-			int maxBinX = (int)((((center.X + radius) - _origin.X) / _size.X) * _divX);
-			int maxBinY = (int)((((center.Y + radius) - _origin.Y) / _size.Y) * _divY);
-			int maxBinZ = (int)((((center.Z + radius) - _origin.Z) / _size.Z) * _divZ);
+			int minBinX = FixMath.F64.FloorToInt((((center.X - radius) - _origin.X) / _size.X) * _divX);
+			int minBinY = FixMath.F64.FloorToInt((((center.Y - radius) - _origin.Y) / _size.Y) * _divY);
+			int minBinZ = FixMath.F64.FloorToInt((((center.Z - radius) - _origin.Z) / _size.Z) * _divZ);
+			int maxBinX = FixMath.F64.FloorToInt((((center.X + radius) - _origin.X) / _size.X) * _divX);
+			int maxBinY = FixMath.F64.FloorToInt((((center.Y + radius) - _origin.Y) / _size.Y) * _divY);
+			int maxBinZ = FixMath.F64.FloorToInt((((center.Z + radius) - _origin.Z) / _size.Z) * _divZ);
 
 			/* clip bin coordinates */
 			if (minBinX < 0) { partlyOut = 1; minBinX = 0; }
@@ -249,14 +249,14 @@ namespace SharpSteer2.Database
 		/// <param name="func"></param>
 		/// <param name="state"></param>
 		/// <param name="position"></param>
-	    private static void TraverseBinClientObjectList(ClientProxy co, float radiusSquared, LQCallBackFunction func, Object state, Vector3 position)
+	    private static void TraverseBinClientObjectList(ClientProxy co, FixMath.F64 radiusSquared, LQCallBackFunction func, Object state, FixMath.F64Vec3 position)
 		{
 			while (co != null)
 			{
 				// compute distance (squared) from this client obj to given
 				// locality sphere's centerpoint
-				Vector3 d = position - co.Position;
-				float distanceSquared = d.LengthSquared();
+				var d = position - co.Position;
+				var distanceSquared = FixMath.F64Vec3.LengthSqr(d);
 
 				// apply function if client obj within sphere
 				if (distanceSquared < radiusSquared)
@@ -282,7 +282,7 @@ namespace SharpSteer2.Database
         /// <param name="maxBinX"></param>
         /// <param name="maxBinY"></param>
         /// <param name="maxBinZ"></param>
-	    private void MapOverAllObjectsInLocalityClipped(Vector3 center, float radius,
+	    private void MapOverAllObjectsInLocalityClipped(FixMath.F64Vec3 center, FixMath.F64 radius,
 							   LQCallBackFunction func,
 							   Object clientQueryState,
 							   int minBinX, int minBinY, int minBinZ,
@@ -294,7 +294,7 @@ namespace SharpSteer2.Database
 			int istart = minBinX * slab;
 			int jstart = minBinY * row;
 			int kstart = minBinZ;
-		    float radiusSquared = radius * radius;
+		    var radiusSquared = radius * radius;
 
 			/* loop for x bins across diameter of sphere */
 			int iindex = istart;
@@ -337,10 +337,10 @@ namespace SharpSteer2.Database
         /// <param name="radius"></param>
         /// <param name="func"></param>
         /// <param name="clientQueryState"></param>
-	    private void MapOverAllOutsideObjects(Vector3 center, float radius, LQCallBackFunction func, Object clientQueryState)
+	    private void MapOverAllOutsideObjects(FixMath.F64Vec3 center, FixMath.F64 radius, LQCallBackFunction func, Object clientQueryState)
 		{
 			ClientProxy co = _bins[_bins.Length - 1];
-			float radiusSquared = radius * radius;
+			var radiusSquared = radius * radius;
 
 			// traverse the "other" bin's client object list
 			TraverseBinClientObjectList(co, radiusSquared, func, clientQueryState, center);
@@ -351,7 +351,7 @@ namespace SharpSteer2.Database
 			// walk down proxy list, applying call-back function to each one
 			while (binProxyList != null)
 			{
-				func(binProxyList.Obj, 0, clientQueryState);
+				func(binProxyList.Obj, FixMath.F64.Zero, clientQueryState);
 				binProxyList = binProxyList.Next;
 			}
 		}

@@ -21,45 +21,45 @@ namespace SharpSteer2
     public class LocalSpaceBasis
         : ILocalSpaceBasis
     {
-        protected Vector3 SideField;
+        protected FixMath.F64Vec3 SideField;
 
         /// <summary>
         /// side-pointing unit basis vector
         /// </summary>
-        public Vector3 Side
+        public FixMath.F64Vec3 Side
         {
             get { return SideField; }
             set { SideField = value; }
         }
 
-        protected Vector3 UpField;
+        protected FixMath.F64Vec3 UpField;
 
         /// <summary>
         /// upward-pointing unit basis vector
         /// </summary>
-        public Vector3 Up
+        public FixMath.F64Vec3 Up
         {
             get { return UpField; }
             set { UpField = value; }
         }
 
-        protected Vector3 ForwardField;
+        protected FixMath.F64Vec3 ForwardField;
 
         /// <summary>
         /// forward-pointing unit basis vector
         /// </summary>
-        public Vector3 Forward
+        public FixMath.F64Vec3 Forward
         {
             get { return ForwardField; }
             set { ForwardField = value; }
         }
 
-        protected Vector3 PositionField;
+        protected FixMath.F64Vec3 PositionField;
 
         /// <summary>
         /// origin of local space
         /// </summary>
-        public Vector3 Position
+        public FixMath.F64Vec3 Position
         {
             get { return PositionField; }
             set { PositionField = value; }
@@ -77,7 +77,7 @@ namespace SharpSteer2
 			ResetLocalSpace();
 		}
 
-        public LocalSpace(Vector3 up, Vector3 forward, Vector3 position)
+        public LocalSpace(FixMath.F64Vec3 up, FixMath.F64Vec3 forward, FixMath.F64Vec3 position)
 		{
 			Up = up;
 			Forward = forward;
@@ -85,7 +85,7 @@ namespace SharpSteer2
 			SetUnitSideFromForwardAndUp();
 		}
 
-        public LocalSpace(Matrix4x4 transformation)
+        public LocalSpace(FixMath.F64Matrix transformation)
         {
             LocalSpaceBasisHelpers.FromMatrix(transformation, out ForwardField, out SideField, out UpField, out PositionField);
         }
@@ -115,19 +115,19 @@ namespace SharpSteer2
 	    // ------------------------------------------------------------------------
 		// regenerate the orthonormal basis vectors given a new forward
 		//(which is expected to have unit length)
-        public void RegenerateOrthonormalBasisUF(Vector3 newUnitForward)
+        public void RegenerateOrthonormalBasisUF(FixMath.F64Vec3 newUnitForward)
         {
             LocalSpaceBasisHelpers.RegenerateOrthonormalBasisUF(newUnitForward, out ForwardField, out SideField, ref UpField);
         }
 
 		// for when the new forward is NOT know to have unit length
-        public void RegenerateOrthonormalBasis(Vector3 newForward)
+        public void RegenerateOrthonormalBasis(FixMath.F64Vec3 newForward)
         {
             LocalSpaceBasisHelpers.RegenerateOrthonormalBasis(newForward, out ForwardField, out SideField, ref UpField);
         }
 
 		// for supplying both a new forward and and new up
-        public void RegenerateOrthonormalBasis(Vector3 newForward, Vector3 newUp)
+        public void RegenerateOrthonormalBasis(FixMath.F64Vec3 newForward, FixMath.F64Vec3 newUp)
         {
             LocalSpaceBasisHelpers.RegenerateOrthonormalBasis(newForward, newUp, out ForwardField, out SideField, out UpField);
         }

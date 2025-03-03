@@ -18,66 +18,66 @@ namespace SharpSteer2
             }
         }
 
-        public void Line(Vector3 startPoint, Vector3 endPoint, Vector3 color, float opacity = 1)
+        public void Line(FixMath.F64Vec3 startPoint, FixMath.F64Vec3 endPoint, FixMath.F64Vec3 color, FixMath.F64 opacity /*= 1*/)
         {
 
         }
 
-        public void CircleXZ(float radius, Vector3 center, Vector3 color, int segments)
+        public void CircleXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments)
         {
 
         }
 
-        public void DiskXZ(float radius, Vector3 center, Vector3 color, int segments)
+        public void DiskXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments)
         {
 
         }
 
-        public void Circle3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments)
+        public void Circle3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments)
         {
 
         }
 
-        public void Disk3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments)
+        public void Disk3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments)
         {
 
         }
 
-        public void CircleOrDiskXZ(float radius, Vector3 center, Vector3 color, int segments, bool filled)
+        public void CircleOrDiskXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments, bool filled)
         {
 
         }
 
-        public void CircleOrDisk3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments, bool filled)
+        public void CircleOrDisk3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments, bool filled)
         {
 
         }
 
-        public void CircleOrDisk(float radius, Vector3 axis, Vector3 center, Vector3 color, int segments, bool filled, bool in3D)
+        public void CircleOrDisk(FixMath.F64 radius, FixMath.F64Vec3 axis, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments, bool filled, bool in3D)
         {
 
         }
 
-        public void AvoidObstacle(float minDistanceToCollision)
+        public void AvoidObstacle(FixMath.F64 minDistanceToCollision)
         {
 
         }
 
-        public void AvoidObstacle(float minDistanceToCollision, PathIntersection nearest)
+        public void AvoidObstacle(FixMath.F64 minDistanceToCollision, PathIntersection nearest)
         {
         }
 
-        public void PathFollowing(Vector3 future, Vector3 onPath, Vector3 target, float outside)
-        {
-
-        }
-
-        public void AvoidCloseNeighbor(IVehicle other, float additionalDistance)
+        public void PathFollowing(FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside)
         {
 
         }
 
-        public void AvoidNeighbor(IVehicle threat, float steer, Vector3 ourFuture, Vector3 threatFuture)
+        public void AvoidCloseNeighbor(IVehicle other, FixMath.F64 additionalDistance)
+        {
+
+        }
+
+        public void AvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture)
         {
 
         }
@@ -92,12 +92,12 @@ namespace SharpSteer2
 
         }
 
-        public void VelocityAcceleration(IVehicle vehicle, float maxLength)
+        public void VelocityAcceleration(IVehicle vehicle, FixMath.F64 maxLength)
         {
 
         }
 
-        public void VelocityAcceleration(IVehicle vehicle, float maxLengthAcceleration, float maxLengthVelocity)
+        public void VelocityAcceleration(IVehicle vehicle, FixMath.F64 maxLengthAcceleration, FixMath.F64 maxLengthVelocity)
         {
 
         }

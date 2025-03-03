@@ -9,8 +9,6 @@
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
 using SharpSteer2.Helpers;
-using System.Collections;
-using System.Collections.Generic;
 using System.Numerics;
 
 namespace SharpSteer2.Obstacles
@@ -22,20 +20,20 @@ namespace SharpSteer2.Obstacles
         public static PathIntersection DEFAULT = new PathIntersection();
 
         public bool intersect; // was an intersection found?
-        public float distance; // how far was intersection point from vehicle?
-        public Vector3 surfacePoint; // position of intersection
-        public Vector3 surfaceNormal; // unit normal at point of intersection
-        public Vector3 steerHint; // where to steer away from intersection
+        public FixMath.F64 distance; // how far was intersection point from vehicle?
+        public FixMath.F64Vec3 surfacePoint; // position of intersection
+        public FixMath.F64Vec3 surfaceNormal; // unit normal at point of intersection
+        public FixMath.F64Vec3 steerHint; // where to steer away from intersection
         public bool vehicleOutside; // is the vehicle outside the obstacle?
         public IObstacle obstacle; // obstacle the path intersects
 
         // determine steering based on path intersection tests
-        public Vector3 steerToAvoidIfNeeded(IVehicle vehicle,
-                                       float minTimeToCollision,
-                                       Vector3? referencePoint = null)
+        public FixMath.F64Vec3 steerToAvoidIfNeeded(IVehicle vehicle,
+                                       FixMath.F64 minTimeToCollision,
+                                       FixMath.F64Vec3? referencePoint = null)
         {
             // if nearby intersection found, steer away from it, otherwise no steering
-            float minDistanceToCollision = minTimeToCollision * vehicle.Speed;
+            var minDistanceToCollision = minTimeToCollision * vehicle.Speed;
             if (intersect && (distance < minDistanceToCollision))
             {
                 // compute avoidance steering force: take the component of
@@ -44,20 +42,20 @@ namespace SharpSteer2.Obstacles
                 if (referencePoint != null)
                 {
                     // Select the direction that is closer to the reference point
-                    Vector3 d = referencePoint.Value - surfacePoint;
-                    Vector3 hintDir = Vector3.Dot(d, steerHint) >= 0 ? steerHint : (2 * Vector3.Dot(steerHint, surfaceNormal) * surfaceNormal - steerHint);
-                    Vector3 lateral = Vector3Helpers.PerpendicularComponent(hintDir, vehicle.Forward);
-                    return Vector3.Normalize(lateral) * vehicle.MaxForce;
+                    var d = referencePoint.Value - surfacePoint;
+                    var hintDir = FixMath.F64Vec3.Dot(d, steerHint) >= 0 ? steerHint : (2 * FixMath.F64Vec3.Dot(steerHint, surfaceNormal) * surfaceNormal - steerHint);
+                    var lateral = Vector3Helpers.PerpendicularComponent(hintDir, vehicle.Forward);
+                    return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
                 }
                 else
                 {
-                    Vector3 lateral = Vector3Helpers.PerpendicularComponent(steerHint, vehicle.Forward);
-                    return Vector3.Normalize(lateral) * vehicle.MaxForce;
+                    var lateral = Vector3Helpers.PerpendicularComponent(steerHint, vehicle.Forward);
+                    return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
                 }
             }
             else
             {
-                return Vector3.Zero;
+                return FixMath.F64Vec3.Zero;
             }
         }
     };
@@ -89,7 +87,7 @@ namespace SharpSteer2.Obstacles
     /// </summary>
     public interface IObstacle
 	{
-        Vector3 steerToAvoid(BaseVehicle vehicle, float minTimeToCollision, Vector3? referencePoint = null);
+        FixMath.F64Vec3 steerToAvoid(BaseVehicle v, FixMath.F64 minTimeToCollision, FixMath.F64Vec3? referencePoint = null);
 
         // find first intersection of a vehicle's path with this obstacle
         // (this must be specialized for each new obstacle shape class)
@@ -97,7 +95,7 @@ namespace SharpSteer2.Obstacles
 
         // virtual function for drawing -- normally does nothing, can be
         // specialized by derived types to provide graphics for obstacles
-        void draw(bool filled, Vector4 color, Vector3 viewpoint);
+        void draw(bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint);
 
         seenFromState seenFrom();
         void setSeenFrom(seenFromState s);

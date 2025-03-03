@@ -10,44 +10,44 @@ namespace SharpSteer2.Obstacles
     // with a local space.
     public class BoxObstacle : LocalSpaceObstacle
     {
-        public float width = 1.0f;  // width  of box centered on local X (side)    axis
-        public float height = 1.0f; // height of box centered on local Y (up)      axis
-        public float depth = 1.0f;  // depth  of box centered on local Z (forward) axis
+        public FixMath.F64 width = FixMath.F64.One;  // width  of box centered on local X (side)    axis
+        public FixMath.F64 height = FixMath.F64.One; // height of box centered on local Y (up)      axis
+        public FixMath.F64 depth = FixMath.F64.One;  // depth  of box centered on local Z (forward) axis
 
         // constructors
-        BoxObstacle(float w, float h, float d)
+        BoxObstacle(FixMath.F64 w, FixMath.F64 h, FixMath.F64 d)
         {
             width = w;
             height = h;
             depth = d;
         }
 
-        public override void draw(bool filled, Vector4 color, Vector3 viewpoint)
+        public override void draw(bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)
         {
         }
 
         public override void findIntersectionWithVehiclePath(BaseVehicle vehicle, ref PathIntersection pi)
         {
             // abbreviations
-            float w = width; // dimensions
-            float h = height;
-            float d = depth;
-            Vector3 s = Side; // local space
-            Vector3 u = Up;
-            Vector3 f = Forward;
-            Vector3 p = Position;
-            Vector3 hw = s * (0.5f * width); // offsets for face centers
-            Vector3 hh = u * (0.5f * height);
-            Vector3 hd = f * (0.5f * depth);
+            var w = width; // dimensions
+            var h = height;
+            var d = depth;
+            var s = Side; // local space
+            var u = Up;
+            var f = Forward;
+            var p = Position;
+            var hw = s * (FixMath.F64.Half * width); // offsets for face centers
+            var hh = u * (FixMath.F64.Half * height);
+            var hd = f * (FixMath.F64.Half * depth);
             seenFromState sf = seenFrom();
 
             // the box's six rectangular faces
-            RectangleObstacle r1 = new RectangleObstacle(w, h, s, u, f, p + hd, sf); // front
-            RectangleObstacle r2 = new RectangleObstacle(w, h, -s,  u, -f, p - hd, sf); // back
-            RectangleObstacle r3 = new RectangleObstacle(d, h, -f,  u,  s, p + hw, sf); // side
-            RectangleObstacle r4 = new RectangleObstacle(d, h, f, u, -s, p - hw, sf); // other side
-            RectangleObstacle r5 = new RectangleObstacle(w, d, s, -f,  u, p + hh, sf); // top
-            RectangleObstacle r6 = new RectangleObstacle(w, d, -s, -f, -u, p - hh, sf); // bottom
+            var r1 = new RectangleObstacle(w, h, s, u, f, p + hd, sf); // front
+            var r2 = new RectangleObstacle(w, h, -s,  u, -f, p - hd, sf); // back
+            var r3 = new RectangleObstacle(d, h, -f,  u,  s, p + hw, sf); // side
+            var r4 = new RectangleObstacle(d, h, f, u, -s, p - hw, sf); // other side
+            var r5 = new RectangleObstacle(w, d, s, -f,  u, p + hh, sf); // top
+            var r6 = new RectangleObstacle(w, d, -s, -f, -u, p - hh, sf); // bottom
 
             // group the six RectangleObstacle faces together
             ObstacleGroup faces = new ObstacleGroup();
@@ -66,7 +66,7 @@ namespace SharpSteer2.Obstacles
             {
                 pi.obstacle = this;
                 pi.steerHint = ((pi.surfacePoint - Position).Normalize() *
-                                (pi.vehicleOutside ? 1.0f : -1.0f));
+                                (pi.vehicleOutside ? FixMath.F64.One : -FixMath.F64.One));
             }
         }
 

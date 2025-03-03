@@ -11,10 +11,10 @@ namespace SharpSteer2.Helpers
         /// <param name="pathway"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static bool IsInsidePath(this IPathway pathway, Vector3 point)
+        public static bool IsInsidePath(this IPathway pathway, FixMath.F64Vec3 point)
 		{
-			float outside;
-			Vector3 tangent;
+			FixMath.F64 outside;
+			FixMath.F64Vec3 tangent;
             pathway.MapPointToPath(point, out tangent, out outside);
 			return outside < 0;
 		}
@@ -25,10 +25,10 @@ namespace SharpSteer2.Helpers
         /// <param name="pathway"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static float HowFarOutsidePath(this IPathway pathway, Vector3 point)
+        public static FixMath.F64 HowFarOutsidePath(this IPathway pathway, FixMath.F64Vec3 point)
 		{
-			float outside;
-			Vector3 tangent;
+			FixMath.F64 outside;
+			FixMath.F64Vec3 tangent;
             pathway.MapPointToPath(point, out tangent, out outside);
 			return outside;
 		}

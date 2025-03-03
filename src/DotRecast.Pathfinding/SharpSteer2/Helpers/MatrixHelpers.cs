@@ -6,57 +6,39 @@ namespace SharpSteer2.Helpers
     public static class MatrixHelpers
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Right(ref Matrix4x4 m, ref Vector3 v)
+        public static void Right(ref FixMath.F64Matrix m, ref FixMath.F64Vec3 v)
         {
-            m.M11 = v.X;
-            m.M12 = v.Y;
-            m.M13 = v.Z;
+            m.SetScaledAxis(FixMath.F64Matrix.eAxis.X, v);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 Right(ref Matrix4x4 m)
+        public static FixMath.F64Vec3 Right(ref FixMath.F64Matrix m)
         {
-            return new Vector3 {
-                X = m.M11,
-                Y = m.M12,
-                Z = m.M13
-            };
+            return m.GetScaledAxis(FixMath.F64Matrix.eAxis.X);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Up(ref Matrix4x4 m, ref Vector3 v)
+        public static void Up(ref FixMath.F64Matrix m, ref FixMath.F64Vec3 v)
         {
-            m.M21 = v.X;
-            m.M22 = v.Y;
-            m.M23 = v.Z;
+            m.SetScaledAxis(FixMath.F64Matrix.eAxis.Y, v);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 Up(ref Matrix4x4 m)
+        public static FixMath.F64Vec3 Up(ref FixMath.F64Matrix m)
         {
-            return new Vector3 {
-                X = m.M21,
-                Y = m.M22,
-                Z = m.M23
-            };
+            return m.GetScaledAxis(FixMath.F64Matrix.eAxis.Y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Backward(ref Matrix4x4 m, ref Vector3 v)
+        public static void Backward(ref FixMath.F64Matrix m, ref FixMath.F64Vec3 v)
         {
-            m.M31 = v.X;
-            m.M32 = v.Y;
-            m.M33 = v.Z;
+            m.SetScaledAxis(FixMath.F64Matrix.eAxis.Z, v);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 Backward(ref Matrix4x4 m)
+        public static FixMath.F64Vec3 Backward(ref FixMath.F64Matrix m)
         {
-            return new Vector3 {
-                X = m.M31,
-                Y = m.M32,
-                Z = m.M33
-            };
+            return m.GetScaledAxis(FixMath.F64Matrix.eAxis.Z);
         }
     }
 }

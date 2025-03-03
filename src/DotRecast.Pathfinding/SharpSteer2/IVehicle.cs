@@ -17,43 +17,43 @@ namespace SharpSteer2
         /// <summary>
         /// mass (defaults to unity so acceleration=force)
         /// </summary>
-		float Mass { get; }
+		FixMath.F64 Mass { get; }
 
         /// <summary>
         /// size of bounding sphere, for obstacle avoidance, etc.
         /// </summary>
-		float Radius { get; }
+		FixMath.F64 Radius { get; }
 
         /// <summary>
         /// velocity of vehicle
         /// </summary>
-        Vector3 Velocity { get; }
+        FixMath.F64Vec3 Velocity { get; }
 
 		/// <summary>
 		/// Gets the acceleration of the vehicle.
 		/// </summary>
-		Vector3 Acceleration { get; }
+		FixMath.F64Vec3 Acceleration { get; }
 		
 		/// <summary>
         /// speed of vehicle (may be faster than taking magnitude of velocity)
 		/// </summary>
-		float Speed { get; }
+		FixMath.F64 Speed { get; }
 
         /// <summary>
         /// predict position of this vehicle at some time in the future (assumes velocity remains constant)
         /// </summary>
         /// <param name="predictionTime"></param>
         /// <returns></returns>
-        Vector3 PredictFuturePosition(float predictionTime);
+        FixMath.F64Vec3 PredictFuturePosition(FixMath.F64 predictionTime);
 
         /// <summary>
         /// the maximum steering force this vehicle can apply
         /// </summary>
-		float MaxForce { get; }
+		FixMath.F64 MaxForce { get; }
 
         /// <summary>
         /// the maximum speed this vehicle is allowed to move
         /// </summary>
-		float MaxSpeed { get; }
+		FixMath.F64 MaxSpeed { get; }
 	}
 }

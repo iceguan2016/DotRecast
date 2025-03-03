@@ -12,6 +12,6 @@ namespace SharpSteer2
         /// </summary>
         /// <param name="location"></param>
         /// <returns></returns>
-        Vector3 Sample(Vector3 location);
+        FixMath.F64Vec3 Sample(FixMath.F64Vec3 location);
     }
 }

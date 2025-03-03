@@ -14,20 +14,20 @@ namespace SharpSteer2.Pathway
         /// <param name="tangent"></param>
         /// <param name="outside"></param>
         /// <returns></returns>
-        Vector3 MapPointToPath(Vector3 point, out Vector3 tangent, out float outside);
+        FixMath.F64Vec3 MapPointToPath(FixMath.F64Vec3 point, out FixMath.F64Vec3 tangent, out FixMath.F64 outside);
 
         /// <summary>
         /// given a distance along the path, convert it to a point on the path
         /// </summary>
         /// <param name="pathDistance"></param>
         /// <returns></returns>
-        Vector3 MapPathDistanceToPoint(float pathDistance);
+        FixMath.F64Vec3 MapPathDistanceToPoint(FixMath.F64 pathDistance);
 
         /// <summary>
         /// Given an arbitrary point, convert it to a distance along the path.
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        float MapPointToPathDistance(Vector3 point);
+        FixMath.F64 MapPointToPathDistance(FixMath.F64Vec3 point);
     }
 }

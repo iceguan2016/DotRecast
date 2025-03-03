@@ -98,36 +98,36 @@ namespace DotRecast.Pathfinding.Crowds
         // 缓存历史entity的信息
         public struct EntityDebugInfo
         {
-            public float maxSpeed;
-            public float radius;
-            public Vector3 position;
-            public Vector3 velocity;
-            public Vector3 steerPosition;
+            public FixMath.F64 maxSpeed;
+            public FixMath.F64 radius;
+            public FixMath.F64Vec3 position;
+            public FixMath.F64Vec3 velocity;
+            public FixMath.F64Vec3 steerPosition;
 
-            public Vector3 forward;
-            public Vector3 side;
-            public Vector3 up;
+            public FixMath.F64Vec3 forward;
+            public FixMath.F64Vec3 side;
+            public FixMath.F64Vec3 up;
         };
         public FCycleDataBuffer<EntityDebugInfo> EntityDebugInfoBuff = new FCycleDataBuffer<EntityDebugInfo>(1024);
 
         // Steer force
         public struct SteerForceInfo
         {
-            public Vector3 position;
-            public Vector3 steerForce;
-            public float maxForce;
+            public FixMath.F64Vec3 position;
+            public FixMath.F64Vec3 steerForce;
+            public FixMath.F64 maxForce;
             
-            public Vector3 obstacleForce;
-            public Vector3 targetForce;
-            public Vector3 avoidNeighborFoce;
+            public FixMath.F64Vec3 obstacleForce;
+            public FixMath.F64Vec3 targetForce;
+            public FixMath.F64Vec3 avoidNeighborFoce;
 
             public void reset()
             {
-                position = Vector3.Zero;
-                steerForce = Vector3.Zero;
-                obstacleForce = Vector3.Zero;
-                targetForce = Vector3.Zero;
-                avoidNeighborFoce = Vector3.Zero;
+                position = FixMath.F64Vec3.Zero;
+                steerForce = FixMath.F64Vec3.Zero;
+                obstacleForce = FixMath.F64Vec3.Zero;
+                targetForce = FixMath.F64Vec3.Zero;
+                avoidNeighborFoce = FixMath.F64Vec3.Zero;
             }
         };
         public FCycleDataBuffer<SteerForceInfo> SteerFoceInfoBuff = new FCycleDataBuffer<SteerForceInfo>(1024);
@@ -135,10 +135,10 @@ namespace DotRecast.Pathfinding.Crowds
         // Steer avoid neighbors
         public struct SteerAvoidNeighborInfo
         {
-            public Vector3 threatPosition;
-            public float threatRadius;
-            public Vector3 ourFuturePosition;     // 相交位置(self)
-            public Vector3 threatFuturePosition;  // 相交位置(neighbor)
+            public FixMath.F64Vec3 threatPosition;
+            public FixMath.F64 threatRadius;
+            public FixMath.F64Vec3 ourFuturePosition;     // 相交位置(self)
+            public FixMath.F64Vec3 threatFuturePosition;  // 相交位置(neighbor)
             public PathIntersection pathIntersection;
         };
         public FCycleDataBuffer<SteerAvoidNeighborInfo> SteerAvoidNeighborInfoBuff = new FCycleDataBuffer<SteerAvoidNeighborInfo>(1024);

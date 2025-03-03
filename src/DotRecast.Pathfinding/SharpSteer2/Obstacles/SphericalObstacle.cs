@@ -19,15 +19,15 @@ namespace SharpSteer2.Obstacles
 	/// </summary>
 	public class SphericalObstacle : Obstacle
     {
-	    public float Radius;
-	    public Vector3 Center;
+	    public FixMath.F64 Radius;
+	    public FixMath.F64Vec3 Center;
 
 	    public SphericalObstacle()
-			: this(1, Vector3.Zero)
+			: this(FixMath.F64.One, FixMath.F64Vec3.Zero)
 		{
 		}
 
-        public SphericalObstacle(float r, Vector3 c)
+        public SphericalObstacle(FixMath.F64 r, FixMath.F64Vec3 c)
 		{
 			Radius = r;
 			Center = c;
@@ -42,28 +42,28 @@ namespace SharpSteer2.Obstacles
             // the line in question is the Z (Forward) axis of the space which
             // simplifies some of the calculations.
 
-            float b, c, d, p, q, s;
-            Vector3 lc = Vector3.Zero;
+            FixMath.F64 b, c, d, p, q, s;
+            FixMath.F64Vec3 lc = FixMath.F64Vec3.Zero;
 
             // initialize pathIntersection object to "no intersection found"
             pi.intersect = false;
 
             // find sphere's "local center" (lc) in the vehicle's coordinate space
             lc = vehicle.LocalizePosition(Center);
-            pi.vehicleOutside = lc.Length() > Radius;
+            pi.vehicleOutside = FixMath.F64Vec3.LengthFast(lc) > Radius;
 
             // if obstacle is seen from inside, but vehicle is outside, must avoid
             // (noticed once a vehicle got outside it ignored the obstacle 2008-5-20)
             if (pi.vehicleOutside && (seenFrom() == seenFromState.inside))
             {
                 pi.intersect = true;
-                pi.distance = 0.0f;
+                pi.distance = FixMath.F64.Zero;
                 pi.steerHint = (Center - vehicle.Position).Normalize();
                 return;
             }
 
             // compute line-sphere intersection parameters
-            float r = Radius + vehicle.Radius;
+            var r = Radius + vehicle.Radius;
             b = -2 * lc.Z;
             c = Utilities.square(lc.X) + Utilities.square(lc.Y) + Utilities.square(lc.Z) - Utilities.square(r);
             d = (b * b) - (4 * c);
@@ -92,7 +92,7 @@ namespace SharpSteer2.Obstacles
                 // otherwise one is ahead and one is behind: we are INSIDE obstacle
                 (seenFrom() ==  seenFromState.outside?
                  // inside a solid obstacle, so distance to obstacle is zero
-                 0.0f :
+                 FixMath.F64.Zero :
                  // hollow obstacle (or "both"), pick point that is in front
                  ((p > 0) ? p : q));
             pi.surfacePoint =
@@ -107,12 +107,12 @@ namespace SharpSteer2.Obstacles
                     pi.steerHint = -pi.surfaceNormal;
                     break;
                 case seenFromState.both:
-                    pi.steerHint = pi.surfaceNormal * (pi.vehicleOutside ? 1.0f : -1.0f);
+                    pi.steerHint = pi.surfaceNormal * (pi.vehicleOutside ? FixMath.F64.One : -FixMath.F64.One);
                     break;
             }
         }
 
-        public override void draw(bool filled, Vector4 color, Vector3 viewpoint)
+        public override void draw(bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)
         {
         }
 

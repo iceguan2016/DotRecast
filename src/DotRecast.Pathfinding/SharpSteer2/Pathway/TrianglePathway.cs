@@ -34,7 +34,7 @@ namespace SharpSteer2.Pathway
 
             //Calculate center points
             for (int i = 0; i < _path.Length; i++)
-                _path[i].PointOnPath = (2 * _path[i].A + _path[i].Edge0) / 2;
+                _path[i].PointOnPath = (FixMath.F64.Two * _path[i].A + _path[i].Edge0) / FixMath.F64.Two;
 
             //Calculate tangents along path
             for (int i = 0; i < _path.Length; i++)
@@ -42,27 +42,27 @@ namespace SharpSteer2.Pathway
                 var bIndex = cyclic ? ((i + 1) % _path.Length) : Math.Min(i + 1, _path.Length - 1);
 
                 var vectorToNextTriangle = _path[bIndex].PointOnPath - _path[i].PointOnPath;
-                var l = vectorToNextTriangle.Length();
+                var l = FixMath.F64Vec3.LengthFast(vectorToNextTriangle);
 
                 _path[i].Tangent = vectorToNextTriangle / l;
 
-                if (Math.Abs(l) < float.Epsilon)
-                    _path[i].Tangent = Vector3.Zero;
+                if (FixMath.F64.Abs(l) < FixMath.F64.Epsilon)
+                    _path[i].Tangent = FixMath.F64Vec3.Zero;
             }
 
-            _centerline = new PolylinePathway(_path.Select(a => a.PointOnPath).ToArray(), 0.1f, cyclic);
+            _centerline = new PolylinePathway(_path.Select(a => a.PointOnPath).ToArray(), FixMath.F64.FromFloat(0.1f), cyclic);
         }
 
-        public Vector3 MapPointToPath(Vector3 point, out Vector3 tangent, out float outside)
+        public FixMath.F64Vec3 MapPointToPath(FixMath.F64Vec3 point, out FixMath.F64Vec3 tangent, out FixMath.F64 outside)
         {
             int index;
             return MapPointToPath(point, out tangent, out outside, out index);
         }
 
-        private Vector3 MapPointToPath(Vector3 point, out Vector3 tangent, out float outside, out int segmentIndex)
+        private FixMath.F64Vec3 MapPointToPath(FixMath.F64Vec3 point, out FixMath.F64Vec3 tangent, out FixMath.F64 outside, out int segmentIndex)
         {
-            float distanceSqr = float.PositiveInfinity;
-            Vector3 closestPoint = Vector3.Zero;
+            var distanceSqr = FixMath.F64.MaxValue;
+            var closestPoint = FixMath.F64Vec3.Zero;
             bool inside = false;
             segmentIndex = -1;
 
@@ -72,7 +72,7 @@ namespace SharpSteer2.Pathway
                 var p = ClosestPointOnTriangle(ref _path[i], point, out isInside);
 
                 var normal = (point - p);
-                var dSqr = normal.LengthSquared();
+                var dSqr = FixMath.F64Vec3.LengthSqr(normal);
 
                 if (dSqr < distanceSqr)
                 {
@@ -90,11 +90,11 @@ namespace SharpSteer2.Pathway
                 throw new InvalidOperationException("Closest Path Segment Not Found (Zero Length Path?");
 
             tangent = _path[segmentIndex].Tangent;
-            outside = (float)Math.Sqrt(distanceSqr) * (inside ? -1 : 1);
+            outside = FixMath.F64.SqrtFast(distanceSqr) * (inside ? -1 : 1);
             return closestPoint;
         }
 
-        public Vector3 MapPathDistanceToPoint(float pathDistance)
+        public FixMath.F64Vec3 MapPathDistanceToPoint(FixMath.F64 pathDistance)
         {
             return _centerline.MapPathDistanceToPoint(pathDistance);
 
@@ -130,62 +130,62 @@ namespace SharpSteer2.Pathway
             //return Vector3.Zero;
         }
 
-        public float MapPointToPathDistance(Vector3 point)
+        public FixMath.F64 MapPointToPathDistance(FixMath.F64Vec3 point)
         {
             return _centerline.MapPointToPathDistance(point);
         }
 
         public struct Triangle
         {
-            public readonly Vector3 A;
-            public readonly Vector3 Edge0;
-            public readonly Vector3 Edge1;
+            public readonly FixMath.F64Vec3 A;
+            public readonly FixMath.F64Vec3 Edge0;
+            public readonly FixMath.F64Vec3 Edge1;
 
-            internal Vector3 Tangent;
-            internal Vector3 PointOnPath;
+            internal FixMath.F64Vec3 Tangent;
+            internal FixMath.F64Vec3 PointOnPath;
 
-            internal readonly float Determinant;
+            internal readonly FixMath.F64 Determinant;
 
-            public Triangle(Vector3 a, Vector3 b, Vector3 c)
+            public Triangle(FixMath.F64Vec3 a, FixMath.F64Vec3 b, FixMath.F64Vec3 c)
             {
                 A = a;
                 Edge0 = b - a;
                 Edge1 = c - a;
 
-                PointOnPath = Vector3.Zero;
-                Tangent = Vector3.Zero;
+                PointOnPath = FixMath.F64Vec3.Zero;
+                Tangent = FixMath.F64Vec3.Zero;
 
                 // ReSharper disable once ImpureMethodCallOnReadonlyValueField
-                var edge0LengthSquared = Edge0.LengthSquared();
+                var edge0LengthSquared = FixMath.F64Vec3.LengthSqr(Edge0);
 
-                var edge0DotEdge1 = Vector3.Dot(Edge0, Edge1);
-                var edge1LengthSquared = Vector3.Dot(Edge1, Edge1);
+                var edge0DotEdge1 = FixMath.F64Vec3.Dot(Edge0, Edge1);
+                var edge1LengthSquared = FixMath.F64Vec3.Dot(Edge1, Edge1);
 
                 Determinant = edge0LengthSquared * edge1LengthSquared - edge0DotEdge1 * edge0DotEdge1;
             }
         }
 
-        private static Vector3 ClosestPointOnTriangle(ref Triangle triangle, Vector3 sourcePosition, out bool inside)
+        private static FixMath.F64Vec3 ClosestPointOnTriangle(ref Triangle triangle, FixMath.F64Vec3 sourcePosition, out bool inside)
         {
-            float a, b;
+            FixMath.F64 a, b;
             return ClosestPointOnTriangle(ref triangle, sourcePosition, out a, out b, out inside);
         }
 
-        internal static Vector3 ClosestPointOnTriangle(ref Triangle triangle, Vector3 sourcePosition, out float edge0Distance, out float edge1Distance, out bool inside)
+        internal static FixMath.F64Vec3 ClosestPointOnTriangle(ref Triangle triangle, FixMath.F64Vec3 sourcePosition, out FixMath.F64 edge0Distance, out FixMath.F64 edge1Distance, out bool inside)
         {
-            Vector3 v0 = triangle.A - sourcePosition;
+            FixMath.F64Vec3 v0 = triangle.A - sourcePosition;
 
             // ReSharper disable once ImpureMethodCallOnReadonlyValueField
-            float a = triangle.Edge0.LengthSquared();
-            float b = Vector3.Dot(triangle.Edge0, triangle.Edge1);
+            var a = FixMath.F64Vec3.LengthSqr(triangle.Edge0);
+            var b = FixMath.F64Vec3.Dot(triangle.Edge0, triangle.Edge1);
             // ReSharper disable once ImpureMethodCallOnReadonlyValueField
-            float c = triangle.Edge1.LengthSquared();
-            float d = Vector3.Dot(triangle.Edge0, v0);
-            float e = Vector3.Dot(triangle.Edge1, v0);
+            var c = FixMath.F64Vec3.LengthSqr(triangle.Edge1);
+            var d = FixMath.F64Vec3.Dot(triangle.Edge0, v0);
+            var e = FixMath.F64Vec3.Dot(triangle.Edge1, v0);
 
-            float det = triangle.Determinant;
-            float s = b * e - c * d;
-            float t = b * d - a * e;
+            var det = triangle.Determinant;
+            var s = b * e - c * d;
+            var t = b * d - a * e;
 
             inside = false;
             if (s + t < det)
@@ -196,29 +196,29 @@ namespace SharpSteer2.Pathway
                     {
                         if (d < 0)
                         {
-                            s = Utilities.Clamp(-d / a, 0, 1);
-                            t = 0;
+                            s = Utilities.Clamp(-d / a, FixMath.F64.Zero, FixMath.F64.One);
+                            t = FixMath.F64.Zero;
                         }
                         else
                         {
-                            s = 0;
-                            t = Utilities.Clamp(-e / c, 0, 1);
+                            s = FixMath.F64.Zero;
+                            t = Utilities.Clamp(-e / c, FixMath.F64.Zero, FixMath.F64.One);
                         }
                     }
                     else
                     {
-                        s = 0;
-                        t = Utilities.Clamp(-e / c, 0, 1);
+                        s = FixMath.F64.Zero;
+                        t = Utilities.Clamp(-e / c, FixMath.F64.Zero, FixMath.F64.One);
                     }
                 }
                 else if (t < 0)
                 {
-                    s = Utilities.Clamp(-d / a, 0, 1);
-                    t = 0;
+                    s = Utilities.Clamp(-d / a, FixMath.F64.Zero, FixMath.F64.One);
+                    t = FixMath.F64.Zero;
                 }
                 else
                 {
-                    float invDet = 1 / det;
+                    var invDet = 1 / det;
                     s *= invDet;
                     t *= invDet;
                     inside = true;
@@ -228,41 +228,41 @@ namespace SharpSteer2.Pathway
             {
                 if (s < 0)
                 {
-                    float tmp0 = b + d;
-                    float tmp1 = c + e;
+                    var tmp0 = b + d;
+                    var tmp1 = c + e;
                     if (tmp1 > tmp0)
                     {
-                        float numer = tmp1 - tmp0;
-                        float denom = a - 2 * b + c;
-                        s = Utilities.Clamp(numer / denom, 0, 1);
+                        var numer = tmp1 - tmp0;
+                        var denom = a - 2 * b + c;
+                        s = Utilities.Clamp(numer / denom, FixMath.F64.Zero, FixMath.F64.One);
                         t = 1 - s;
                     }
                     else
                     {
-                        t = Utilities.Clamp(-e / c, 0, 1);
-                        s = 0;
+                        t = Utilities.Clamp(-e / c, FixMath.F64.Zero, FixMath.F64.One);
+                        s = FixMath.F64.Zero;
                     }
                 }
                 else if (t < 0)
                 {
                     if (a + d > b + e)
                     {
-                        float numer = c + e - b - d;
-                        float denom = a - 2 * b + c;
-                        s = Utilities.Clamp(numer / denom, 0, 1);
+                        var numer = c + e - b - d;
+                        var denom = a - 2 * b + c;
+                        s = Utilities.Clamp(numer / denom, FixMath.F64.Zero, FixMath.F64.One);
                         t = 1 - s;
                     }
                     else
                     {
-                        s = Utilities.Clamp(-e / c, 0, 1);
-                        t = 0;
+                        s = Utilities.Clamp(-e / c, FixMath.F64.Zero, FixMath.F64.One);
+                        t = FixMath.F64.Zero;
                     }
                 }
                 else
                 {
-                    float numer = c + e - b - d;
-                    float denom = a - 2 * b + c;
-                    s = Utilities.Clamp(numer / denom, 0, 1);
+                    var numer = c + e - b - d;
+                    var denom = a - 2 * b + c;
+                    s = Utilities.Clamp(numer / denom, FixMath.F64.Zero, FixMath.F64.One);
                     t = 1 - s;
                 }
             }

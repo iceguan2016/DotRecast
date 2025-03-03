@@ -42,7 +42,7 @@ namespace SharpSteer2
 	    /// <param name="endPoint">The end point of the line.</param>
 	    /// <param name="color">The color of the line.</param>
 	    /// <param name="opacity"></param>
-	    void Line(Vector3 startPoint, Vector3 endPoint, Vector3 color, float opacity = 1);
+	    void Line(FixMath.F64Vec3 startPoint, FixMath.F64Vec3 endPoint, FixMath.F64Vec3 color, FixMath.F64 opacity /*= 1.0f*/);
 
 		/// <summary>
 		/// Draws a circle on the XZ plane.
@@ -51,7 +51,7 @@ namespace SharpSteer2
 		/// <param name="center">The center of the circle.</param>
 		/// <param name="color">The color of the circle.</param>
 		/// <param name="segments">The number of segments to use to draw the circle.</param>
-        void CircleXZ(float radius, Vector3 center, Vector3 color, int segments);
+        void CircleXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments);
 
 		/// <summary>
 		/// Draws a disk on the XZ plane.
@@ -60,7 +60,7 @@ namespace SharpSteer2
 		/// <param name="center">The center of the disk.</param>
 		/// <param name="color">The color of the disk.</param>
 		/// <param name="segments">The number of segments to use to draw the disk.</param>
-        void DiskXZ(float radius, Vector3 center, Vector3 color, int segments);
+        void DiskXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments);
 
 		/// <summary>
 		/// Draws a circle perpendicular to the given axis.
@@ -70,7 +70,7 @@ namespace SharpSteer2
 		/// <param name="axis">The axis of the circle.</param>
 		/// <param name="color">The color of the circle.</param>
 		/// <param name="segments">The number of segments to use to draw the circle.</param>
-        void Circle3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments);
+        void Circle3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments);
 
 		/// <summary>
 		/// Draws a disk perpendicular to the given axis.
@@ -80,7 +80,7 @@ namespace SharpSteer2
 		/// <param name="axis">The axis of the disk.</param>
 		/// <param name="color">The color of the disk.</param>
 		/// <param name="segments">The number of segments to use to draw the disk.</param>
-        void Disk3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments);
+        void Disk3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments);
 
 		/// <summary>
 		/// Draws a circle (not filled) or disk (filled) on the XZ plane.
@@ -90,7 +90,7 @@ namespace SharpSteer2
 		/// <param name="color">The color of the circle/disk.</param>
 		/// <param name="segments">The number of segments to use to draw the circle/disk.</param>
 		/// <param name="filled">Flag indicating whether to draw a disk or circle.</param>
-        void CircleOrDiskXZ(float radius, Vector3 center, Vector3 color, int segments, bool filled);
+        void CircleOrDiskXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments, bool filled);
 
 		/// <summary>
 		/// Draws a circle (not filled) or disk (filled) perpendicular to the given axis.
@@ -101,7 +101,7 @@ namespace SharpSteer2
 		/// <param name="color">The color of the circle/disk.</param>
 		/// <param name="segments">The number of segments to use to draw the circle/disk.</param>
 		/// <param name="filled">Flag indicating whether to draw a disk or circle.</param>
-        void CircleOrDisk3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments, bool filled);
+        void CircleOrDisk3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments, bool filled);
 
 		/// <summary>
 		/// Draws a circle (not filled) or disk (filled) perpendicular to the given axis.
@@ -113,17 +113,17 @@ namespace SharpSteer2
 		/// <param name="segments">The number of segments to use to draw the circle/disk.</param>
 		/// <param name="filled">Flag indicating whether to draw a disk or circle.</param>
 		/// <param name="in3D">Flag indicating whether to draw the disk/circle in 3D or the XZ plane.</param>
-        void CircleOrDisk(float radius, Vector3 axis, Vector3 center, Vector3 color, int segments, bool filled, bool in3D);
+        void CircleOrDisk(FixMath.F64 radius, FixMath.F64Vec3 axis, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments, bool filled, bool in3D);
 
 		/// <summary>
 		/// Called when steerToAvoidObstacles decides steering is required.
 		/// </summary>
 		/// <param name="minDistanceToCollision"></param>
-		void AvoidObstacle(float minDistanceToCollision);
+		void AvoidObstacle(FixMath.F64 minDistanceToCollision);
 
         // called when steerToAvoidObstacles decides steering is required
         // (default action is to do nothing, layered classes can overload it)
-        void AvoidObstacle(float minDistanceToCollision, Obstacles.PathIntersection nearest);
+        void AvoidObstacle(FixMath.F64 minDistanceToCollision, Obstacles.PathIntersection nearest);
 
 		/// <summary>
 		/// Called when steerToFollowPath decides steering is required.
@@ -132,14 +132,14 @@ namespace SharpSteer2
 		/// <param name="onPath"></param>
 		/// <param name="target"></param>
 		/// <param name="outside"></param>
-		void PathFollowing(Vector3 future, Vector3 onPath, Vector3 target, float outside);
+		void PathFollowing(FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside);
 
 		/// <summary>
 		/// Called when steerToAvoidCloseNeighbors decides steering is required.
 		/// </summary>
 		/// <param name="other"></param>
 		/// <param name="additionalDistance"></param>
-		void AvoidCloseNeighbor(IVehicle other, float additionalDistance);
+		void AvoidCloseNeighbor(IVehicle other, FixMath.F64 additionalDistance);
 
 		/// <summary>
 		/// Called when steerToAvoidNeighbors decides steering is required.
@@ -148,21 +148,21 @@ namespace SharpSteer2
 		/// <param name="steer"></param>
 		/// <param name="ourFuture"></param>
 		/// <param name="threatFuture"></param>
-		void AvoidNeighbor(IVehicle threat, float steer, Vector3 ourFuture, Vector3 threatFuture);
+		void AvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
         void AvoidNeighbor2(IVehicle threat, PathIntersection intersection);
 
-        /// <summary>
-        /// Draws lines from the vehicle's position showing its velocity and acceleration.
-        /// </summary>
-        /// <param name="vehicle">The vehicle to annotate.</param>
-        void VelocityAcceleration(IVehicle vehicle);
+		/// <summary>
+		/// Draws lines from the vehicle's position showing its velocity and acceleration.
+		/// </summary>
+		/// <param name="vehicle">The vehicle to annotate.</param>
+		void VelocityAcceleration(IVehicle vehicle);
 
 		/// <summary>
 		/// Draws lines from the vehicle's position showing its velocity and acceleration.
 		/// </summary>
 		/// <param name="vehicle">The vehicle to annotate.</param>
 		/// <param name="maxLength">The maximum length for the acceleration and velocity lines.</param>
-		void VelocityAcceleration(IVehicle vehicle, float maxLength);
+		void VelocityAcceleration(IVehicle vehicle, FixMath.F64 maxLength);
 
 		/// <summary>
 		/// Draws lines from the vehicle's position showing its velocity and acceleration.
@@ -170,6 +170,6 @@ namespace SharpSteer2
 		/// <param name="vehicle">The vehicle to annotate.</param>
 		/// <param name="maxLengthAcceleration">The maximum length for the acceleration line.</param>
 		/// <param name="maxLengthVelocity">The maximum length for the velocity line.</param>
-		void VelocityAcceleration(IVehicle vehicle, float maxLengthAcceleration, float maxLengthVelocity);
+		void VelocityAcceleration(IVehicle vehicle, FixMath.F64 maxLengthAcceleration, FixMath.F64 maxLengthVelocity);
 	}
 }

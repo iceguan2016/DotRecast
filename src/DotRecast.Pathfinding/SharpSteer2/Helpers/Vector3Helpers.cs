@@ -8,9 +8,6 @@
 // you should have received as part of this distribution. The terms
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
-using System;
-using System.Numerics;
-
 namespace SharpSteer2.Helpers
 {
     public static class Vector3Helpers
@@ -21,9 +18,9 @@ namespace SharpSteer2.Helpers
         /// <param name="vector"></param>
         /// <param name="unitBasis">A unit length basis vector</param>
         /// <returns></returns>
-        public static Vector3 ParallelComponent(Vector3 vector, Vector3 unitBasis)
+        public static FixMath.F64Vec3 ParallelComponent(FixMath.F64Vec3 vector, FixMath.F64Vec3 unitBasis)
         {
-            float projection = Vector3.Dot(vector, unitBasis);
+            var projection = FixMath.F64Vec3.Dot(vector, unitBasis);
             return unitBasis * projection;
         }
 
@@ -33,7 +30,7 @@ namespace SharpSteer2.Helpers
         /// <param name="vector"></param>
         /// <param name="unitBasis">A unit length basis vector</param>
         /// <returns></returns>
-        public static Vector3 PerpendicularComponent(Vector3 vector, Vector3 unitBasis)
+        public static FixMath.F64Vec3 PerpendicularComponent(FixMath.F64Vec3 vector, FixMath.F64Vec3 unitBasis)
         {
             return (vector - ParallelComponent(vector, unitBasis));
         }
@@ -47,14 +44,14 @@ namespace SharpSteer2.Helpers
         /// <param name="vector"></param>
         /// <param name="maxLength"></param>
         /// <returns></returns>
-        public static Vector3 TruncateLength(this Vector3 vector, float maxLength)
+        public static FixMath.F64Vec3 TruncateLength(this FixMath.F64Vec3 vector, FixMath.F64 maxLength)
         {
-            float maxLengthSquared = maxLength * maxLength;
-            float vecLengthSquared = vector.LengthSquared();
+            var maxLengthSquared = maxLength * maxLength;
+            var vecLengthSquared = FixMath.F64Vec3.LengthSqr(vector);
             if (vecLengthSquared <= maxLengthSquared)
                 return vector;
 
-            return (vector * (maxLength / (float)Math.Sqrt(vecLengthSquared)));
+            return (vector * (maxLength / FixMath.F64.SqrtFast(vecLengthSquared)));
         }
 
         /// <summary>
@@ -63,10 +60,10 @@ namespace SharpSteer2.Helpers
         /// <param name="vector"></param>
         /// <param name="radians"></param>
         /// <returns></returns>
-        public static Vector3 RotateAboutGlobalY(this Vector3 vector, float radians)
+        public static FixMath.F64Vec3 RotateAboutGlobalY(this FixMath.F64Vec3 vector, FixMath.F64 radians)
         {
-            float s = 0;
-            float c = 0;
+            var s = FixMath.F64.Zero;
+            var c = FixMath.F64.Zero;
             return RotateAboutGlobalY(vector, radians, ref s, ref c);
         }
 
@@ -78,17 +75,17 @@ namespace SharpSteer2.Helpers
         /// <param name="sin">Either Sin(radians) or default(float), if default(float) this value will be initialized with Sin(radians)</param>
         /// <param name="cos">Either Cos(radians) or default(float), if default(float) this value will be initialized with Cos(radians)</param>
         /// <returns></returns>
-        public static Vector3 RotateAboutGlobalY(this Vector3 vector, float radians, ref float sin, ref float cos)
+        public static FixMath.F64Vec3 RotateAboutGlobalY(this FixMath.F64Vec3 vector, FixMath.F64 radians, ref FixMath.F64 sin, ref FixMath.F64 cos)
         {
             // if both are default, they have not been initialized yet
 // ReSharper disable CompareOfFloatsByEqualityOperator
-            if (sin == default(float) && cos == default(float))
+            if (sin == FixMath.F64.Zero && cos == FixMath.F64.Zero)
 // ReSharper restore CompareOfFloatsByEqualityOperator
             {
-                sin = (float)Math.Sin(radians);
-                cos = (float)Math.Cos(radians);
+                sin = FixMath.F64.Sin(radians);
+                cos = FixMath.F64.Cos(radians);
             }
-            return new Vector3((vector.X * cos) + (vector.Z * sin), vector.Y, (vector.Z * cos) - (vector.X * sin));
+            return new FixMath.F64Vec3((vector.X * cos) + (vector.Z * sin), vector.Y, (vector.Z * cos) - (vector.X * sin));
         }
 
         /// <summary>
@@ -98,16 +95,16 @@ namespace SharpSteer2.Helpers
         /// <param name="center"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        public static Vector3 SphericalWrapAround(this Vector3 vector, Vector3 center, float radius)
+        public static FixMath.F64Vec3 SphericalWrapAround(this FixMath.F64Vec3 vector, FixMath.F64Vec3 center, FixMath.F64 radius)
         {
-            float r;
+            var r = FixMath.F64.Zero;
             do
             {
-                Vector3 offset = vector - center;
-                r = offset.Length();
+                var offset = vector - center;
+                r = FixMath.F64Vec3.LengthFast(offset);
 
                 if (r > radius)
-                    vector = vector + ((offset / r) * radius * -2);
+                    vector = vector + ((offset / r) * radius * (-FixMath.F64.Two));
 
             } while (r > radius);
 
@@ -120,16 +117,16 @@ namespace SharpSteer2.Helpers
         /// random and length will range between 0 and 1
         /// </summary>
         /// <returns></returns>
-        public static Vector3 RandomVectorOnUnitRadiusXZDisk()
+        public static FixMath.F64Vec3 RandomVectorOnUnitRadiusXZDisk()
         {
-            Vector3 v;
+            var v = FixMath.F64Vec3.Zero;
             do
             {
                 v.X = (RandomHelpers.Random() * 2) - 1;
-                v.Y = 0;
+                v.Y = FixMath.F64.Zero;
                 v.Z = (RandomHelpers.Random() * 2) - 1;
             }
-            while (v.Length() >= 1);
+            while (FixMath.F64Vec3.LengthFast(v) >= 1);
 
             return v;
         }
@@ -140,16 +137,16 @@ namespace SharpSteer2.Helpers
         /// between 0 and 1
         /// </summary>
         /// <returns></returns>
-        public static Vector3 RandomVectorInUnitRadiusSphere()
+        public static FixMath.F64Vec3 RandomVectorInUnitRadiusSphere()
         {
-            Vector3 v = new Vector3();
+            var v = FixMath.F64Vec3.Zero;
             do
             {
                 v.X = (RandomHelpers.Random() * 2) - 1;
                 v.Y = (RandomHelpers.Random() * 2) - 1;
                 v.Z = (RandomHelpers.Random() * 2) - 1;
             }
-            while (v.Length() >= 1);
+            while (FixMath.F64Vec3.LengthFast(v) >= 1);
 
             return v;
         }
@@ -160,9 +157,9 @@ namespace SharpSteer2.Helpers
         /// and length will be 1
         /// </summary>
         /// <returns></returns>
-        public static Vector3 RandomUnitVector()
+        public static FixMath.F64Vec3 RandomUnitVector()
         {
-            return Vector3.Normalize(RandomVectorInUnitRadiusSphere());
+            return FixMath.F64Vec3.Normalize(RandomVectorInUnitRadiusSphere());
         }
 
         /// <summary>
@@ -171,11 +168,11 @@ namespace SharpSteer2.Helpers
         /// random and length will be 1
         /// </summary>
         /// <returns></returns>
-        public static Vector3 RandomUnitVectorOnXZPlane()
+        public static FixMath.F64Vec3 RandomUnitVectorOnXZPlane()
         {
-            Vector3 temp = RandomVectorInUnitRadiusSphere();
-            temp.Y = 0;
-            temp = Vector3.Normalize(temp);
+            var temp = RandomVectorInUnitRadiusSphere();
+            temp.Y = FixMath.F64.Zero;
+            temp = FixMath.F64Vec3.NormalizeFast(temp);
 
             return temp;
         }
@@ -187,7 +184,7 @@ namespace SharpSteer2.Helpers
         /// <param name="cosineOfConeAngle">The cosine of the cone angle</param>
         /// <param name="basis">The vector along the middle of the cone</param>
         /// <returns></returns>
-        public static Vector3 LimitMaxDeviationAngle(this Vector3 source, float cosineOfConeAngle, Vector3 basis)
+        public static FixMath.F64Vec3 LimitMaxDeviationAngle(this FixMath.F64Vec3 source, FixMath.F64 cosineOfConeAngle, FixMath.F64Vec3 basis)
         {
             return LimitDeviationAngleUtility(true, // force source INSIDE cone
                 source, cosineOfConeAngle, basis);
@@ -200,7 +197,7 @@ namespace SharpSteer2.Helpers
         /// <param name="cosineOfConeAngle">The cosine of the cone angle</param>
         /// <param name="basis">The vector along the middle of the cone</param>
         /// <returns></returns>
-        public static Vector3 LimitMinDeviationAngle(this Vector3 source, float cosineOfConeAngle, Vector3 basis)
+        public static FixMath.F64Vec3 LimitMinDeviationAngle(this FixMath.F64Vec3 source, FixMath.F64 cosineOfConeAngle, FixMath.F64Vec3 basis)
         {
             return LimitDeviationAngleUtility(false, // force source OUTSIDE cone
                 source, cosineOfConeAngle, basis);
@@ -214,17 +211,17 @@ namespace SharpSteer2.Helpers
         /// <param name="cosineOfConeAngle"></param>
         /// <param name="basis"></param>
         /// <returns></returns>
-        private static Vector3 LimitDeviationAngleUtility(bool insideOrOutside, Vector3 source, float cosineOfConeAngle, Vector3 basis)
+        private static FixMath.F64Vec3 LimitDeviationAngleUtility(bool insideOrOutside, FixMath.F64Vec3 source, FixMath.F64 cosineOfConeAngle, FixMath.F64Vec3 basis)
         {
             // immediately return zero length input vectors
-            float sourceLength = source.Length();
-            if (sourceLength < float.Epsilon)
+            var sourceLength = FixMath.F64Vec3.LengthFast(source);
+            if (sourceLength < FixMath.F64.Epsilon)
                 return source;
 
             // measure the angular diviation of "source" from "basis"
-            Vector3 direction = source / sourceLength;
+            var direction = source / sourceLength;
 
-            float cosineOfSourceAngle = Vector3.Dot(direction, basis);
+            var cosineOfSourceAngle = FixMath.F64Vec3.Dot(direction, basis);
 
             // Simply return "source" if it already meets the angle criteria.
             // (note: we hope this top "if" gets compiled out since the flag
@@ -239,20 +236,20 @@ namespace SharpSteer2.Helpers
                 return source;
 
             // find the portion of "source" that is perpendicular to "basis"
-            Vector3 perp = PerpendicularComponent(source, basis);
-            if (perp == Vector3.Zero)
-                return Vector3.Zero;
+            var perp = PerpendicularComponent(source, basis);
+            if (perp == FixMath.F64Vec3.Zero)
+                return FixMath.F64Vec3.Zero;
 
             // normalize that perpendicular
-            Vector3 unitPerp = Vector3.Normalize(perp);
+            var unitPerp = FixMath.F64Vec3.NormalizeFast(perp);
 
             // construct a new vector whose length equals the source vector,
             // and lies on the intersection of a plane (formed the source and
             // basis vectors) and a cone (whose axis is "basis" and whose
             // angle corresponds to cosineOfConeAngle)
-            float perpDist = (float)Math.Sqrt(1 - (cosineOfConeAngle * cosineOfConeAngle));
-            Vector3 c0 = basis * cosineOfConeAngle;
-            Vector3 c1 = unitPerp * perpDist;
+            var perpDist = FixMath.F64.Sqrt(1 - (cosineOfConeAngle * cosineOfConeAngle));
+            var c0 = basis * cosineOfConeAngle;
+            var c1 = unitPerp * perpDist;
             return (c0 + c1) * sourceLength;
         }
 
@@ -263,11 +260,11 @@ namespace SharpSteer2.Helpers
         /// <param name="lineOrigin">A point on the line</param>
         /// <param name="lineUnitTangent">A UNIT vector parallel to the line</param>
         /// <returns></returns>
-        public static float DistanceFromLine(this Vector3 point, Vector3 lineOrigin, Vector3 lineUnitTangent)
+        public static FixMath.F64 DistanceFromLine(this FixMath.F64Vec3 point, FixMath.F64Vec3 lineOrigin, FixMath.F64Vec3 lineUnitTangent)
         {
-            Vector3 offset = point - lineOrigin;
-            Vector3 perp = PerpendicularComponent(offset, lineUnitTangent);
-            return perp.Length();
+            var offset = point - lineOrigin;
+            var perp = PerpendicularComponent(offset, lineUnitTangent);
+            return FixMath.F64Vec3.LengthFast(perp);
         }
 
         /// <summary>
@@ -275,21 +272,21 @@ namespace SharpSteer2.Helpers
         /// </summary>
         /// <param name="direction"></param>
         /// <returns></returns>
-        public static Vector3 FindPerpendicularIn3d(this Vector3 direction)
+        public static FixMath.F64Vec3 FindPerpendicularIn3d(this FixMath.F64Vec3 direction)
         {
             // to be filled in:
-            Vector3 quasiPerp;  // a direction which is "almost perpendicular"
-            Vector3 result;     // the computed perpendicular to be returned
+            FixMath.F64Vec3 quasiPerp;  // a direction which is "almost perpendicular"
+            FixMath.F64Vec3 result;     // the computed perpendicular to be returned
 
             // three mutually perpendicular basis vectors
-            Vector3 i = Vector3.UnitX;
-            Vector3 j = Vector3.UnitY;
-            Vector3 k = Vector3.UnitZ;
+            FixMath.F64Vec3 i = FixMath.F64Vec3.AxisX;
+            FixMath.F64Vec3 j = FixMath.F64Vec3.AxisY;
+            FixMath.F64Vec3 k = FixMath.F64Vec3.AxisZ;
 
             // measure the projection of "direction" onto each of the axes
-            float id = Vector3.Dot(i, direction);
-            float jd = Vector3.Dot(j, direction);
-            float kd = Vector3.Dot(k, direction);
+            var id = FixMath.F64Vec3.Dot(i, direction);
+            var jd = FixMath.F64Vec3.Dot(j, direction);
+            var kd = FixMath.F64Vec3.Dot(k, direction);
 
             // set quasiPerp to the basis which is least parallel to "direction"
             if ((id <= jd) && (id <= kd))
@@ -301,27 +298,21 @@ namespace SharpSteer2.Helpers
 
             // return the cross product (direction x quasiPerp)
             // which is guaranteed to be perpendicular to both of them
-            result = Vector3.Cross(direction, quasiPerp);
+            result = FixMath.F64Vec3.Cross(direction, quasiPerp);
 
             return result;
         }
 
-        public static Vector3 Forward { get { return Vector3.UnitZ; } }
-        public static Vector3 Right { get { return Vector3.UnitX; } }
-        public static Vector3 Up { get { return Vector3.UnitY; } }
+        public static FixMath.F64Vec3 Forward { get { return FixMath.F64Vec3.AxisZ; } }
+        public static FixMath.F64Vec3 Right { get { return FixMath.F64Vec3.AxisX; } }
+        public static FixMath.F64Vec3 Up { get { return FixMath.F64Vec3.AxisY; } }
 
-        public static float Dot(this Vector3 a, Vector3 b) { return Vector3.Dot(a, b); }
-        public static Vector3 Cross(this Vector3 a, Vector3 b) { return Vector3.Cross(a, b); }
+        public static FixMath.F64 Dot(this FixMath.F64Vec3 a, FixMath.F64Vec3 b) { return FixMath.F64Vec3.Dot(a, b); }
+        public static FixMath.F64Vec3 Cross(this FixMath.F64Vec3 a, FixMath.F64Vec3 b) { return FixMath.F64Vec3.Cross(a, b); }
 
-        public static Vector3 Normalize(this Vector3 a) { return Vector3.Normalize(a); }
-
-        public static float Length2D(this Vector3 a) { return Utilities.sqrtXXX(a.X * a.X + a.Z * a.Z); }
-
-        public static Vector3 SetYtoZero(this Vector3 a) { return new Vector3(a.X, 0.0f, a.Z); }
-
-        public static Vector3 FromUntiyVector(UnityEngine.Vector3 v)
-        {
-            return new Vector3(v.x, v.y, v.z);
-        }
+        public static FixMath.F64Vec3 Normalize(this FixMath.F64Vec3 a) { return FixMath.F64Vec3.NormalizeFast(a); }
+        public static FixMath.F64 Length(this FixMath.F64Vec3 a) { return FixMath.F64Vec3.LengthFast(a); }
+        public static FixMath.F64 Length2D(this FixMath.F64Vec3 a) { var b = new FixMath.F64Vec3(a.X, FixMath.F64.Zero, a.Z); return FixMath.F64Vec3.LengthFast(b); }
+        public static FixMath.F64Vec3 SetYtoZero(this FixMath.F64Vec3 a) { return new FixMath.F64Vec3(a.X, FixMath.F64.Zero, a.Z); }
     }
 }

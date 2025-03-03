@@ -32,14 +32,14 @@ namespace SharpSteer2.Pathway
 
             bool first = true;
             Gateway previous = default(Gateway);
-            Vector3 previousNormalized = Vector3.Zero;
+            var previousNormalized = FixMath.F64Vec3.Zero;
             foreach (var gateway in gateways)
             {
-                var n = Vector3.Normalize(gateway.B - gateway.A);
+                var n = FixMath.F64Vec3.NormalizeFast(gateway.B - gateway.A);
 
                 if (!first)
                 {
-                    if (Vector3.Dot(n, previousNormalized) < 0)
+                    if (FixMath.F64Vec3.Dot(n, previousNormalized) < 0)
                     {
                         triangles.Add(new TrianglePathway.Triangle(previous.A, previous.B, gateway.A));
                         triangles.Add(new TrianglePathway.Triangle(previous.A, gateway.A, gateway.B));
@@ -62,10 +62,10 @@ namespace SharpSteer2.Pathway
 
         public struct Gateway
         {
-            public readonly Vector3 A;
-            public readonly Vector3 B;
+            public readonly FixMath.F64Vec3 A;
+            public readonly FixMath.F64Vec3 B;
 
-            public Gateway(Vector3 a, Vector3 b)
+            public Gateway(FixMath.F64Vec3 a, FixMath.F64Vec3 b)
                 : this()
             {
                 A = a;
@@ -73,17 +73,17 @@ namespace SharpSteer2.Pathway
             }
         }
 
-        public Vector3 MapPointToPath(Vector3 point, out Vector3 tangent, out float outside)
+        public FixMath.F64Vec3 MapPointToPath(FixMath.F64Vec3 point, out FixMath.F64Vec3 tangent, out FixMath.F64 outside)
         {
             return _trianglePathway.MapPointToPath(point, out tangent, out outside);
         }
 
-        public Vector3 MapPathDistanceToPoint(float pathDistance)
+        public FixMath.F64Vec3 MapPathDistanceToPoint(FixMath.F64 pathDistance)
         {
             return _trianglePathway.MapPathDistanceToPoint(pathDistance);
         }
 
-        public float MapPointToPathDistance(Vector3 point)
+        public FixMath.F64 MapPointToPathDistance(FixMath.F64Vec3 point)
         {
             return _trianglePathway.MapPointToPathDistance(point);
         }

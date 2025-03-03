@@ -22,21 +22,21 @@ namespace SharpSteer2
         /// <summary>
         /// side-pointing unit basis vector
         /// </summary>
-        Vector3 Side { get; }
+        FixMath.F64Vec3 Side { get; }
 
         /// <summary>
         /// upward-pointing unit basis vector
         /// </summary>
-        Vector3 Up { get; }
+        FixMath.F64Vec3 Up { get; }
 
         /// <summary>
         /// forward-pointing unit basis vector
         /// </summary>
-        Vector3 Forward { get; }
+        FixMath.F64Vec3 Forward { get; }
 
         /// <summary>
         /// origin of local space
         /// </summary>
-        Vector3 Position { get; }
+        FixMath.F64Vec3 Position { get; }
     }
 }

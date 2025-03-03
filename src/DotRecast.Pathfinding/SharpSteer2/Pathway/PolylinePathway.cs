@@ -23,8 +23,8 @@ namespace SharpSteer2.Pathway
 	{
 	    public int PointCount { get; private set; }
 
-	    private readonly Vector3[] _points;
-	    public IEnumerable<Vector3> Points
+	    private readonly FixMath.F64Vec3[] _points;
+	    public IEnumerable<FixMath.F64Vec3> Points
 	    {
 	        get
 	        {
@@ -32,13 +32,13 @@ namespace SharpSteer2.Pathway
 	        }
 	    }
 
-	    public float Radius { get; private set; }
+	    public FixMath.F64 Radius { get; private set; }
 	    public bool Cyclic { get; private set; }
 
-	    private readonly float[] _lengths;
-	    private readonly Vector3[] _tangents;
+	    private readonly FixMath.F64[] _lengths;
+	    private readonly FixMath.F64Vec3[] _tangents;
 
-	    public float TotalPathLength { get; private set; }
+	    public FixMath.F64 TotalPathLength { get; private set; }
 
 		/// <summary>
         /// construct a PolylinePathway given the number of points (vertices),
@@ -47,18 +47,18 @@ namespace SharpSteer2.Pathway
 		/// <param name="points"></param>
 		/// <param name="radius"></param>
 		/// <param name="cyclic"></param>
-        public PolylinePathway(IList<Vector3> points, float radius, bool cyclic)
+        public PolylinePathway(IList<FixMath.F64Vec3> points, FixMath.F64 radius, bool cyclic)
 		{
             // set data members, allocate arrays
             Radius = radius;
             Cyclic = cyclic;
             PointCount = points.Count;
-            TotalPathLength = 0;
+            TotalPathLength = FixMath.F64.Zero;
             if (Cyclic)
                 PointCount++;
-            _lengths = new float[PointCount];
-            _points = new Vector3[PointCount];
-            _tangents = new Vector3[PointCount];
+            _lengths = new FixMath.F64[PointCount];
+            _points = new FixMath.F64Vec3[PointCount];
+            _tangents = new FixMath.F64Vec3[PointCount];
 
             // loop over all points
             for (int i = 0; i < PointCount; i++)
@@ -73,7 +73,7 @@ namespace SharpSteer2.Pathway
                 {
                     // compute the segment length
                     _tangents[i] = _points[i] - _points[i - 1];
-                    _lengths[i] = _tangents[i].Length();
+                    _lengths[i] = FixMath.F64Vec3.LengthFast(_tangents[i]);
 
                     // find the normalized vector parallel to the segment
                     _tangents[i] *= 1 / _lengths[i];
@@ -84,18 +84,18 @@ namespace SharpSteer2.Pathway
             }
 		}
 
-        public Vector3 MapPointToPath(Vector3 point, out Vector3 tangent, out float outside)
+        public FixMath.F64Vec3 MapPointToPath(FixMath.F64Vec3 point, out FixMath.F64Vec3 tangent, out FixMath.F64 outside)
 		{
-            float minDistance = float.MaxValue;
-            Vector3 onPath = Vector3.Zero;
-			tangent = Vector3.Zero;
+            var minDistance = FixMath.F64.MaxValue;
+            var onPath = FixMath.F64Vec3.Zero;
+			tangent = FixMath.F64Vec3.Zero;
 
 			// loop over all segments, find the one nearest to the given point
 			for (int i = 1; i < PointCount; i++)
 			{
-			    Vector3 chosen;
-			    float segmentProjection;
-                float d = PointToSegmentDistance(point, _points[i - 1], _points[i], _tangents[i], _lengths[i], out chosen, out segmentProjection);
+			    FixMath.F64Vec3 chosen;
+			    FixMath.F64 segmentProjection;
+                var d = PointToSegmentDistance(point, _points[i - 1], _points[i], _tangents[i], _lengths[i], out chosen, out segmentProjection);
 				if (d < minDistance)
 				{
 					minDistance = d;
@@ -105,23 +105,23 @@ namespace SharpSteer2.Pathway
 			}
 
 			// measure how far original point is outside the Pathway's "tube"
-			outside = Vector3.Distance(onPath, point) - Radius;
+			outside = FixMath.F64Vec3.Distance(onPath, point) - Radius;
 
 			// return point on path
 			return onPath;
 		}
 
-        public float MapPointToPathDistance(Vector3 point)
+        public FixMath.F64 MapPointToPathDistance(FixMath.F64Vec3 point)
 		{
-            float minDistance = float.MaxValue;
-			float segmentLengthTotal = 0;
-			float pathDistance = 0;
+            var minDistance = FixMath.F64.MaxValue;
+			var segmentLengthTotal = FixMath.F64.Zero;
+			var pathDistance = FixMath.F64.Zero;
 
 			for (int i = 1; i < PointCount; i++)
 			{
-			    Vector3 chosen;
-			    float segmentProjection;
-                float d = PointToSegmentDistance(point, _points[i - 1], _points[i], _tangents[i], _lengths[i], out chosen, out segmentProjection);
+			    FixMath.F64Vec3 chosen;
+			    FixMath.F64 segmentProjection;
+                var d = PointToSegmentDistance(point, _points[i - 1], _points[i], _tangents[i], _lengths[i], out chosen, out segmentProjection);
 				if (d < minDistance)
 				{
 					minDistance = d;
@@ -134,10 +134,10 @@ namespace SharpSteer2.Pathway
 			return pathDistance;
 		}
 
-        public Vector3 MapPathDistanceToPoint(float pathDistance)
+        public FixMath.F64Vec3 MapPathDistanceToPoint(FixMath.F64 pathDistance)
 		{
 			// clip or wrap given path distance according to cyclic flag
-			float remaining = pathDistance;
+			var remaining = pathDistance;
 			if (Cyclic)
 			{
 				remaining = pathDistance % TotalPathLength;
@@ -151,7 +151,7 @@ namespace SharpSteer2.Pathway
 			// step through segments, subtracting off segment lengths until
 			// locating the segment that contains the original pathDistance.
 			// Interpolate along that segment to find 3d point value to return.
-			Vector3 result = Vector3.Zero;
+			var result = FixMath.F64Vec3.Zero;
 			for (int i = 1; i < PointCount; i++)
 			{
                 if (_lengths[i] < remaining)
@@ -160,41 +160,41 @@ namespace SharpSteer2.Pathway
 				}
 				else
 				{
-                    float ratio = remaining / _lengths[i];
-                    result = Vector3.Lerp(_points[i - 1], _points[i], ratio);
+                    var ratio = remaining / _lengths[i];
+                    result = FixMath.F64Vec3.Lerp(_points[i - 1], _points[i], ratio);
 					break;
 				}
 			}
 			return result;
 		}
 
-	    private static float PointToSegmentDistance(Vector3 point, Vector3 ep0, Vector3 ep1, Vector3 segmentTangent, float segmentLength, out Vector3 chosen, out float segmentProjection)
+	    private static FixMath.F64 PointToSegmentDistance(FixMath.F64Vec3 point, FixMath.F64Vec3 ep0, FixMath.F64Vec3 ep1, FixMath.F64Vec3 segmentTangent, FixMath.F64 segmentLength, out FixMath.F64Vec3 chosen, out FixMath.F64 segmentProjection)
 		{
 			// convert the test point to be "local" to ep0
-			Vector3 local = point - ep0;
+			var local = point - ep0;
 
 			// find the projection of "local" onto "tangent"
-            segmentProjection = Vector3.Dot(segmentTangent, local);
+            segmentProjection = FixMath.F64Vec3.Dot(segmentTangent, local);
 
 			// handle boundary cases: when projection is not on segment, the
 			// nearest point is one of the endpoints of the segment
 			if (segmentProjection < 0)
 			{
 				chosen = ep0;
-				segmentProjection = 0;
-				return Vector3.Distance(point, ep0);
+				segmentProjection = FixMath.F64.Zero;
+				return FixMath.F64Vec3.Distance(point, ep0);
 			}
             if (segmentProjection > segmentLength)
 			{
 				chosen = ep1;
                 segmentProjection = segmentLength;
-				return Vector3.Distance(point, ep1);
+				return FixMath.F64Vec3.Distance(point, ep1);
 			}
 
 			// otherwise nearest point is projection point on segment
             chosen = segmentTangent * segmentProjection;
 			chosen += ep0;
-			return Vector3.Distance(point, chosen);
+			return FixMath.F64Vec3.Distance(point, chosen);
 		}
 	}
 }

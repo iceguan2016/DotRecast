@@ -10,7 +10,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 
 namespace SharpSteer2.Database
 {
@@ -20,7 +19,7 @@ namespace SharpSteer2.Database
         /// the client object calls this each time its position changes
 		/// </summary>
 		/// <param name="position"></param>
-        void UpdateForNewPosition(Vector3 position);
+        void UpdateForNewPosition(FixMath.F64Vec3 position);
 
 		/// <summary>
         /// find all neighbors within the given sphere (as center and radius)
@@ -28,6 +27,6 @@ namespace SharpSteer2.Database
 		/// <param name="center"></param>
 		/// <param name="radius"></param>
 		/// <param name="results"></param>
-        void FindNeighbors(Vector3 center, float radius, List<ContentType> results);
+        void FindNeighbors(FixMath.F64Vec3 center, FixMath.F64 radius, List<ContentType> results);
 	}
 }

@@ -14,15 +14,15 @@ namespace SharpSteer2
 {
 	public abstract class BaseVehicle : LocalSpace, IVehicle
 	{
-		public abstract float Mass { get; set; }
-		public abstract float Radius { get; set; }
-        public abstract Vector3 Velocity { get; }
-		public abstract Vector3 Acceleration { get; }
-		public abstract float Speed { get; set; }
+		public abstract FixMath.F64 Mass { get; set; }
+		public abstract FixMath.F64 Radius { get; set; }
+        public abstract FixMath.F64Vec3 Velocity { get; }
+		public abstract FixMath.F64Vec3 Acceleration { get; }
+		public abstract FixMath.F64 Speed { get; set; }
 
-        public abstract Vector3 PredictFuturePosition(float predictionTime);
+        public abstract FixMath.F64Vec3 PredictFuturePosition(FixMath.F64 predictionTime);
 
-		public abstract float MaxForce { get; }
-		public abstract float MaxSpeed { get; }
+		public abstract FixMath.F64 MaxForce { get; }
+		public abstract FixMath.F64 MaxSpeed { get; }
 	}
 }

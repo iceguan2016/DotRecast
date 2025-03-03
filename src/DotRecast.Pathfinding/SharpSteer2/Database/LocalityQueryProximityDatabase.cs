@@ -101,13 +101,13 @@ namespace SharpSteer2.Database
 			}
 
 			// the client obj calls this each time its position changes
-            public void UpdateForNewPosition(Vector3 p)
+            public void UpdateForNewPosition(FixMath.F64Vec3 p)
 			{
 				_lq.UpdateForNewLocation(_proxy, p);
 			}
 
 			// find all neighbors within the given sphere (as center and radius)
-            public void FindNeighbors(Vector3 center, float radius, List<T> results)
+            public void FindNeighbors(FixMath.F64Vec3 center, FixMath.F64 radius, List<T> results)
 			{
 				_lq.MapOverAllObjectsInLocality(center, radius, perNeighborCallBackFunction, results);
 			}
@@ -115,7 +115,7 @@ namespace SharpSteer2.Database
 			// called by LQ for each clientObject in the specified neighborhood:
 			// push that clientObject onto the ContentType vector in void*
 			// clientQueryState
-		    private static void perNeighborCallBackFunction(Object clientObject, float distanceSquared, Object clientQueryState)
+		    private static void perNeighborCallBackFunction(Object clientObject, FixMath.F64 distanceSquared, Object clientQueryState)
 			{
 				List<T> results = (List<T>)clientQueryState;
 				results.Add((T)clientObject);
@@ -125,12 +125,12 @@ namespace SharpSteer2.Database
 	    readonly LocalityQueryDatabase _lq;
 
 		// constructor
-        public LocalityQueryProximityDatabase(Vector3 center, Vector3 dimensions, Vector3 divisions)
+        public LocalityQueryProximityDatabase(FixMath.F64Vec3 center, FixMath.F64Vec3 dimensions, FixMath.F64Vec3 divisions)
 		{
-			Vector3 halfsize = dimensions * 0.5f;
-			Vector3 origin = center - halfsize;
+			var halfsize = dimensions * FixMath.F64.Half;
+			var origin = center - halfsize;
 
-			_lq = new LocalityQueryDatabase(origin, dimensions, (int)Math.Round(divisions.X), (int)Math.Round(divisions.Y), (int)Math.Round(divisions.Z));
+			_lq = new LocalityQueryDatabase(origin, dimensions, FixMath.F64.RoundToInt(divisions.X), FixMath.F64.RoundToInt(divisions.Y), FixMath.F64.RoundToInt(divisions.Z));
 		}
 
 		// allocate a token to represent a given client obj in this database

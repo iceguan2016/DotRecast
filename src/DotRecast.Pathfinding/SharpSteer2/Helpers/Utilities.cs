@@ -16,15 +16,15 @@ namespace SharpSteer2.Helpers
 {
 	public class Utilities
 	{
-		public static float square(float x) { return x * x; }
-        public static float floorXXX(float x) { return (float)Math.Floor(x); }
-        public static float sqrtXXX(float x) { return (float)Math.Sqrt(x); }
-        public static float sinXXX(float x) { return (float)Math.Sin(x); }
-        public static float cosXXX(float x) { return (float)Math.Cos(x); }
-        public static float absXXX(float x) { return (float)Math.Abs(x); }
+		public static FixMath.F64 square(FixMath.F64 x) { return x * x; }
+        public static FixMath.F64 floorXXX(FixMath.F64 x) { return FixMath.F64.Floor(x); }
+        public static FixMath.F64 sqrtXXX(FixMath.F64 x) { return FixMath.F64.Sqrt(x); }
+        public static FixMath.F64 sinXXX(FixMath.F64 x) { return FixMath.F64.Sin(x); }
+        public static FixMath.F64 cosXXX(FixMath.F64 x) { return FixMath.F64.Cos(x); }
+        public static FixMath.F64 absXXX(FixMath.F64 x) { return FixMath.F64.Abs(x); }
         public static int absXXX(int x) { return Math.Abs(x); }
-        public static float maxXXX(float x, float y) { if (x > y) return x; else return y; }
-        public static float minXXX(float x, float y) { if (x < y) return x; else return y; }
+        public static FixMath.F64 maxXXX(FixMath.F64 x, FixMath.F64 y) { if (x > y) return x; else return y; }
+        public static FixMath.F64 minXXX(FixMath.F64 x, FixMath.F64 y) { if (x < y) return x; else return y; }
 
         /// <summary>
         /// Linearly interpolate from A to B by amount T
@@ -33,7 +33,7 @@ namespace SharpSteer2.Helpers
         /// <param name="b"></param>
         /// <param name="t"></param>
         /// <returns></returns>
-	    public static float Lerp(float a, float b, float t)
+	    public static FixMath.F64 Lerp(FixMath.F64 a, FixMath.F64 b, FixMath.F64 t)
         {
             return a + (b - a) * t;
         }
@@ -45,7 +45,7 @@ namespace SharpSteer2.Helpers
         /// <param name="min"></param>
         /// <param name="max"></param>
         /// <returns></returns>
-	    public static float Clamp(float value, float min, float max)
+	    public static FixMath.F64 Clamp(FixMath.F64 value, FixMath.F64 min, FixMath.F64 max)
         {
             if (value < min)
                 return min;
@@ -64,10 +64,10 @@ namespace SharpSteer2.Helpers
         /// <param name="out0">Ending lower bound</param>
         /// <param name="out1">Ending upper bound</param>
         /// <returns></returns>
-		public static float RemapInterval(float x, float in0, float in1, float out0, float out1)
+		public static FixMath.F64 RemapInterval(FixMath.F64 x, FixMath.F64 in0, FixMath.F64 in1, FixMath.F64 out0, FixMath.F64 out1)
 		{
 			// uninterpolate: what is x relative to the interval in0:in1?
-			float relative = (x - in0) / (in1 - in0);
+			var relative = (x - in0) / (in1 - in0);
 
 			// now interpolate between output interval based on relative x
 			return Lerp(out0, out1, relative);
@@ -82,13 +82,13 @@ namespace SharpSteer2.Helpers
         /// <param name="out0">Ending lower bound</param>
         /// <param name="out1">Ending upper bound</param>
         /// <returns></returns>
-		public static float RemapIntervalClip(float x, float in0, float in1, float out0, float out1)
+		public static FixMath.F64 RemapIntervalClip(FixMath.F64 x, FixMath.F64 in0, FixMath.F64 in1, FixMath.F64 out0, FixMath.F64 out1)
 		{
 			// uninterpolate: what is x relative to the interval in0:in1?
-			float relative = (x - in0) / (in1 - in0);
+			var relative = (x - in0) / (in1 - in0);
 
 			// now interpolate between output interval based on relative x
-            return Lerp(out0, out1, Clamp(relative, 0, 1));
+            return Lerp(out0, out1, Clamp(relative, FixMath.F64.Zero, FixMath.F64.One));
 		}
 
         /// <summary>
@@ -99,16 +99,16 @@ namespace SharpSteer2.Helpers
         /// <param name="lowerBound"></param>
         /// <param name="upperBound"></param>
         /// <returns></returns>
-		public static int IntervalComparison(float x, float lowerBound, float upperBound)
+		public static int IntervalComparison(FixMath.F64 x, FixMath.F64 lowerBound, FixMath.F64 upperBound)
 		{
 			if (x < lowerBound) return -1;
 			if (x > upperBound) return +1;
 			return 0;
 		}
 
-		public static float ScalarRandomWalk(float initial, float walkspeed, float min, float max)
+		public static FixMath.F64 ScalarRandomWalk(FixMath.F64 initial, FixMath.F64 walkspeed, FixMath.F64 min, FixMath.F64 max)
 		{
-			float next = initial + (((RandomHelpers.Random() * 2) - 1) * walkspeed);
+			var next = initial + (((RandomHelpers.Random() * 2) - 1) * walkspeed);
 			if (next < min) return min;
 			if (next > max) return max;
 			return next;
@@ -130,14 +130,14 @@ namespace SharpSteer2.Helpers
 		/// <param name="newValue"></param>
 		/// <param name="smoothedAccumulator"></param>
 		/// <example>blendIntoAccumulator (dt * 0.4f, currentFPS, smoothedFPS)</example>
-		public static void BlendIntoAccumulator(float smoothRate, float newValue, ref float smoothedAccumulator)
+		public static void BlendIntoAccumulator(FixMath.F64 smoothRate, FixMath.F64 newValue, ref FixMath.F64 smoothedAccumulator)
 		{
-            smoothedAccumulator = Lerp(smoothedAccumulator, newValue, Clamp(smoothRate, 0, 1));
+            smoothedAccumulator = Lerp(smoothedAccumulator, newValue, Clamp(smoothRate, FixMath.F64.Zero, FixMath.F64.One));
 		}
 
-		public static void BlendIntoAccumulator(float smoothRate, Vector3 newValue, ref Vector3 smoothedAccumulator)
+		public static void BlendIntoAccumulator(FixMath.F64 smoothRate, FixMath.F64Vec3 newValue, ref FixMath.F64Vec3 smoothedAccumulator)
 		{
-            smoothedAccumulator = Vector3.Lerp(smoothedAccumulator, newValue, Clamp(smoothRate, 0, 1));
+            smoothedAccumulator = FixMath.F64Vec3.Lerp(smoothedAccumulator, newValue, Clamp(smoothRate, FixMath.F64.Zero, FixMath.F64.One));
 		}
 
         public static void Swap<T>(List<T> list, int i, int j)

@@ -1,9 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Security.Principal;
 using DotRecast.Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;
@@ -28,11 +23,11 @@ namespace DotRecast.Pathfinding.Crowds
         private void AllocPD()
         {
             // allocate new PD
-            Vector3 center = Vector3.Zero;
-            const float DIV = 10.0f;
-            Vector3 divisions = new Vector3(DIV, DIV, DIV);
-            const float DIAMETER = WORLD_RADIUS * 1.1f * 2;
-            Vector3 dimensions = new Vector3(DIAMETER, DIAMETER, DIAMETER);
+            var center = FixMath.F64Vec3.Zero;
+            var DIV = FixMath.F64.FromFloat(10.0f);
+            var divisions = new FixMath.F64Vec3(DIV, DIV, DIV);
+            var DIAMETER = FixMath.F64.FromFloat(WORLD_RADIUS * 1.1f * 2);
+            var dimensions = new FixMath.F64Vec3(DIAMETER, DIAMETER, DIAMETER);
             _pd = new LocalityQueryProximityDatabase<IVehicle>(center, dimensions, divisions);
         }
 
@@ -54,12 +49,11 @@ namespace DotRecast.Pathfinding.Crowds
             EntityId2Index.Add(entity.ID, entityIndex);
 
             // position
-            entity.Position = Vector3Helpers.FromUntiyVector(inParams.SpawnPosition);
+            entity.Position = inParams.SpawnPosition;
             // rotation
-            LocalSpaceBasisHelpers.FromUnityRotation(inParams.SpawnRotation, out var forward, out var side, out var up);
-            entity.Forward = forward;
-            entity.Side = side;
-            entity.Up = up;
+            entity.Forward = inParams.SpawnRotation * Vector3Helpers.Forward;
+            entity.Side = inParams.SpawnRotation * Vector3Helpers.Right;
+            entity.Up = inParams.SpawnRotation * Vector3Helpers.Up;
 
             // add to pd
             entity.NewPD(_pd);
@@ -100,7 +94,7 @@ namespace DotRecast.Pathfinding.Crowds
             }
             return null;
         }
-        public MovableEntity[] GetEntitiesInCircle(UnityEngine.Vector3 inCenter, float inRadius)
+        public MovableEntity[] GetEntitiesInCircle(FixMath.F64Vec3 inCenter, FixMath.F64 inRadius)
         {
             var createEntityParams = new CreateEntityParams() 
             {
@@ -140,9 +134,14 @@ namespace DotRecast.Pathfinding.Crowds
             return true;
         }
 
-        public void Tick(float inDelteTime)
+        public void Tick(FixMath.F64 inDelteTime)
         {
             ++FrameNo;
+
+            for ( var i = 0; i < MovableEntities.Count; i++ )
+            {
+                MovableEntities[i].OnUpdate(inDelteTime);
+            }
         }
     }
 }

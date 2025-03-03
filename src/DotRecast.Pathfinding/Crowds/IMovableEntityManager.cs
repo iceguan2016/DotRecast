@@ -9,8 +9,8 @@ namespace DotRecast.Pathfinding.Crowds
     public class CreateEntityParams
     {
         public UniqueId EntityId = UniqueId.InvalidID;
-        public UnityEngine.Vector3 SpawnPosition = UnityEngine.Vector3.zero;
-        public UnityEngine.Quaternion SpawnRotation = UnityEngine.Quaternion.identity;
+        public FixMath.F64Vec3 SpawnPosition = FixMath.F64Vec3.Zero;
+        public FixMath.F64Quat SpawnRotation = FixMath.F64Quat.Identity;
 
         public IPathwayQuerier PathwayQuerier = null;
         public ILocalBoundaryQuerier LocalBoundaryQuerier = null;
@@ -33,9 +33,9 @@ namespace DotRecast.Pathfinding.Crowds
 
         // find entity
         MovableEntity GetEntityById(UniqueId inEntityId);
-        MovableEntity[] GetEntitiesInCircle(UnityEngine.Vector3 inCenter, float inRadius);
+        MovableEntity[] GetEntitiesInCircle(FixMath.F64Vec3 inCenter, FixMath.F64 inRadius);
 
         // tick
-        void Tick(float inDelteTime);
+        void Tick(FixMath.F64 inDelteTime);
     }
 }

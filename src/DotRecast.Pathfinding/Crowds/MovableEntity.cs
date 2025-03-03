@@ -1,10 +1,8 @@
-using System.Diagnostics;
 using System;
 using SharpSteer2;
 using SharpSteer2.Database;
 using DotRecast.Pathfinding.Util;
 using System.Collections.Generic;
-using System.Numerics;
 using SharpSteer2.Pathway;
 using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
@@ -14,22 +12,22 @@ namespace DotRecast.Pathfinding.Crowds
     public class TemplateMovableEntity
     {
         // maximum move speed
-        public float MaxSpeed = 6.0f;
+        public FixMath.F64 MaxSpeed = FixMath.F64.FromFloat(6.0f);
         // maximum force
-        public float MaxForce = 27.0f;
+        public FixMath.F64 MaxForce = FixMath.F64.FromFloat(27.0f);
         // query local boundary radius
-        public float QueryLocalBoundaryRadius = 5.0f;
+        public FixMath.F64 QueryLocalBoundaryRadius = FixMath.F64.FromFloat(5.0f);
         // query local neighbors radius
-        public float QueryLocalNeighborRadius = 5.0f;
+        public FixMath.F64 QueryLocalNeighborRadius = FixMath.F64.FromFloat(5.0f);
         //
-        public float FollowPathAheadTime = 3.0f;
-        public float FollowPathWeight = 1.0f;
+        public FixMath.F64 FollowPathAheadTime = FixMath.F64.FromFloat(3.0f);
+        public FixMath.F64 FollowPathWeight = FixMath.F64.FromFloat(1.0f);
 
-        public float AvoidObstacleAheadTime = 0.1f;
-        public float AvoidObstacleWeight = 1.0f;
+        public FixMath.F64 AvoidObstacleAheadTime = FixMath.F64.FromFloat(0.1f);
+        public FixMath.F64 AvoidObstacleWeight = FixMath.F64.FromFloat(1.0f);
 
-        public float AvoidNeighborAheadTime = 1.0f;
-        public float AvoidNeighborWeight = 1.0f;
+        public FixMath.F64 AvoidNeighborAheadTime = FixMath.F64.FromFloat(1.0f);
+        public FixMath.F64 AvoidNeighborWeight = FixMath.F64.FromFloat(1.0f);
     }
 
     public class MovableEntity : SimpleVehicle
@@ -45,8 +43,8 @@ namespace DotRecast.Pathfinding.Crowds
         private ITokenForProximityDatabase<IVehicle> _proximityToken;
 
         // Config values
-        public override float MaxForce { get { return Template.MaxForce; } }
-        public override float MaxSpeed { get { return Template.MaxSpeed; } }
+        public override FixMath.F64 MaxForce { get { return Template.MaxForce; } }
+        public override FixMath.F64 MaxSpeed { get { return Template.MaxSpeed; } }
 
         public TemplateMovableEntity Template { get; set; }
 
@@ -60,7 +58,7 @@ namespace DotRecast.Pathfinding.Crowds
         public UniqueId ID { get; set; }
 
         // Move destination
-        public Vector3 TargetLocation { get; set; }
+        public FixMath.F64Vec3 TargetLocation { get; set; }
 
         public MovableEntityDebuger Debuger { get; private set; }
 
@@ -68,7 +66,7 @@ namespace DotRecast.Pathfinding.Crowds
         private PolylinePathway Pathway = null;
         // True means walking forward along the path, false means walking backward along the path
         private bool _pathDirection = true;
-        private Vector3? _pathReferencePosition = null;
+        private FixMath.F64Vec3? _pathReferencePosition = null;
 
         // local boundary
         public static readonly int  MaxBoundarySegmentNum = 10;
@@ -102,7 +100,7 @@ namespace DotRecast.Pathfinding.Crowds
             base.Reset();
 
             // initial slow speed
-            Speed = (MaxSpeed * 0.3f);
+            Speed = (MaxSpeed * FixMath.F64.FromFloat(0.3f));
 
             // randomize initial orientation
             //RegenerateOrthonormalBasisUF(Vector3Helpers.RandomUnitVector());
@@ -134,7 +132,7 @@ namespace DotRecast.Pathfinding.Crowds
             if(null != pd) _proximityToken = pd.AllocateToken(this);
         }
 
-        public List<IVehicle> FindNeighbors(float inRadius)
+        public List<IVehicle> FindNeighbors(FixMath.F64 inRadius)
         {
             if (null == _proximityToken) return null;
             
@@ -161,7 +159,7 @@ namespace DotRecast.Pathfinding.Crowds
             Debuger = null;
         }
 
-        public virtual void OnUpdate(float inDeltaTime)
+        public virtual void OnUpdate(FixMath.F64 inDeltaTime)
         {
             if (!HasEntityState(eEntityState.Moving)) return;
 
@@ -198,7 +196,7 @@ namespace DotRecast.Pathfinding.Crowds
 #endif
 
             var steerForce = determineCombinedSteering(inDeltaTime);
-            if (steerForce != Vector3.Zero)
+            if (steerForce != FixMath.F64Vec3.Zero)
             {
                 ApplySteeringForce(steerForce, inDeltaTime);
 
@@ -209,12 +207,12 @@ namespace DotRecast.Pathfinding.Crowds
 
         // compute combined steering force: move forward, avoid obstacles
         // or neighbors if needed, otherwise follow the path and wander
-        Vector3 determineCombinedSteering(float elapsedTime)
+        FixMath.F64Vec3 determineCombinedSteering(FixMath.F64 elapsedTime)
         {
             if (null == EntityManager)
-                return Vector3.Zero;
+                return FixMath.F64Vec3.Zero;
 
-            const float forceScale = 1.0f;
+            var forceScale = FixMath.F64.FromFloat(1.0f);
 #if ENABLE_STEER_AGENT_DEBUG
 	        ref var info = ref Debuger.SteerFoceInfoBuff.Alloc(EntityManager.FrameNo);
 	        info.reset();
@@ -225,11 +223,11 @@ namespace DotRecast.Pathfinding.Crowds
             // probability that a lower priority behavior will be given a
             // chance to "drive" even if a higher priority behavior might
             // otherwise be triggered.
-            const float leakThrough = 0.1f;
+            var leakThrough = FixMath.F64.FromFloat(0.1f);
 
             // steering to seek target
-            Vector3 steeringForce = Vector3.Zero;
-            Vector3? referencePoint = null;
+            var steeringForce = FixMath.F64Vec3.Zero;
+            FixMath.F64Vec3? referencePoint = null;
             // path follow corner point
             if (null != Pathway)
             {
@@ -237,7 +235,7 @@ namespace DotRecast.Pathfinding.Crowds
                 steeringForce = this.SteerToFollowPath(_pathDirection, predictionTime, Pathway, MaxSpeed, out var currentPathDistance, annotation) * Template.FollowPathWeight;
 
                 // float pathDistanceOffset = (_pathDirection ? 1 : -1) * predictionTime * Speed;
-                referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + 0.5f);
+                referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + FixMath.F64.FromFloat(0.5f));
             }
             else
             {
@@ -252,21 +250,21 @@ namespace DotRecast.Pathfinding.Crowds
 
             // avoid obstacles
             var obstacles = new List<IObstacle>();
-            Vector3 obstacleAvoidance = Vector3.Zero;
+            var obstacleAvoidance = FixMath.F64Vec3.Zero;
             if (leakThrough < RandomHelpers.Random())
             {
                 for (var i = 0; i < _boundarySegmentNum; ++i)
                 {
                     var boundary = _boundarySegements[i];
                     var v = boundary.End - boundary.Start;
-                    v.Y = 0.0f;
+                    v.Y = FixMath.F64.Zero;
                     var s = v.Normalize();
                     var f = Vector3Helpers.Up.Cross(s);
                     var u = f.Cross(s);
-                    var p = (boundary.End + boundary.Start) * 0.5f;
+                    var p = (boundary.End + boundary.Start) * FixMath.F64.Half;
 
                     var w = v.Length2D();
-                    var h = 1.0f;
+                    var h = FixMath.F64.FromFloat(1.0f);
                     var obstacle = new RectangleObstacle(w, h, s, u, f, p, seenFromState.outside);
                     obstacles.Add(obstacle);
 
@@ -289,7 +287,7 @@ namespace DotRecast.Pathfinding.Crowds
             }
 
             // if obstacle avoidance is needed, do it
-            if (obstacleAvoidance != Vector3.Zero)
+            if (obstacleAvoidance != FixMath.F64Vec3.Zero)
             {
                 steeringForce += obstacleAvoidance;
             }
@@ -297,7 +295,7 @@ namespace DotRecast.Pathfinding.Crowds
             {
                 // otherwise consider avoiding collisions with others
                 List<IVehicle> neighbors = new List<IVehicle>();
-                Vector3 collisionAvoidance = Vector3.Zero;
+                var collisionAvoidance = FixMath.F64Vec3.Zero;
                 if (leakThrough < RandomHelpers.Random())
                 {
                     for (int i = 0; i < _neighbors.Count; ++i)
@@ -318,7 +316,7 @@ namespace DotRecast.Pathfinding.Crowds
                 }
 
                 // if collision avoidance is needed, do it
-                if (collisionAvoidance != Vector3.Zero)
+                if (collisionAvoidance != FixMath.F64Vec3.Zero)
                 {
                     steeringForce += collisionAvoidance;
                 }
