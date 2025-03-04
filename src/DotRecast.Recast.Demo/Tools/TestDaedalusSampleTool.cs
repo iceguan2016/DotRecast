@@ -33,10 +33,14 @@ public class TestDaedalusToolMode
 {
     public static readonly TestDaedalusToolMode ADD_OBSTACLE = new TestDaedalusToolMode(0, "Add Obstacle");
     public static readonly TestDaedalusToolMode PATH_FINDER = new TestDaedalusToolMode(1, "Path Finder");
+    public static readonly TestDaedalusToolMode ADD_CROWD_ENTITY = new TestDaedalusToolMode(2, "Add Crowd Entity");
+    public static readonly TestDaedalusToolMode MOVE_CROWD_ENTITY = new TestDaedalusToolMode(3, "Move Crowd Entity");
 
     public static readonly RcImmutableArray<TestDaedalusToolMode> Values = RcImmutableArray.Create(
             ADD_OBSTACLE,
-            PATH_FINDER
+            PATH_FINDER,
+            ADD_CROWD_ENTITY,
+            MOVE_CROWD_ENTITY
         );
 
     public readonly int Idx;
@@ -95,6 +99,14 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     public string GetName()
     {
         return "Test Daedalus Tool";
+    }
+
+    public void Update(double inDeltaTime)
+    {
+        if (null != _entityManager)
+        {
+            _entityManager.Tick(FixMath.F64.FromDouble(inDeltaTime));
+        }
     }
 
     public void AddObstacle(double x, double y)
@@ -186,10 +198,16 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         return null;
     }
 
-    public bool BuildGraphMesh(double mapWidth, double mapHeight)
+    public bool BuildGraphMesh(double x, double y, double mapWidth, double mapHeight)
     {
         // build a rectangular 2 polygons mesh of mapWidth x mapHeight
         var mesh = RectMesh.buildRectangle(mapWidth, mapHeight);
+        for (var i = 0; i < mesh._vertices.length; ++i)
+        { 
+            var vertex = mesh._vertices[i] as hxDaedalus.data.Vertex;
+            vertex._pos.x += x;
+            vertex._pos.y += y;
+        }
 
         // populate mesh with many square objects
         hxDaedalus.data.Object hxObject = null;
@@ -213,8 +231,8 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             hxObject._rotation = (RandomRange(0, 1000) / 1000) * Math.PI / 2;
             // randGen.rangeMin = 50;
             // randGen.rangeMax = 600;
-            hxObject._x = RandomRange(50, 600) / 600.0f * mapWidth;
-            hxObject._y = RandomRange(50, 600) / 600.0f * mapHeight;
+            hxObject._x = x + RandomRange(50, 600) / 600.0f * mapWidth;
+            hxObject._y = y + RandomRange(50, 600) / 600.0f * mapHeight;
             mesh.insertObject(hxObject);
             _obstacles.push(hxObject);
         }  // show result mesh on screen
@@ -411,6 +429,17 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     {
         return UniqueId.InvalidID;
     }
+
+    public void MoveCrowdEntity(double x, double y)
+    {
+        var Position = FixMath.F64Vec3.FromDouble(x, MapHeight, y);
+        _entityManager.ForEachEntity((InEntity) => { 
+            if (null != InEntity)
+            {
+                InEntity.TargetLocation = Position;
+            }
+        });
+    }
     // End
 }
 
@@ -532,6 +561,26 @@ public class TestDaedalusSampleTool : ISampleTool
                 Logger.Information($"HandleClickRay, findPath length:{_tool.Path.length}");
             }
         }
+        else if (m_mode == TestDaedalusToolMode.ADD_CROWD_ENTITY)
+        {
+            var radius = 0.5f;
+            if (shift)
+            {
+                // Delete
+                var entityId = _tool.HitCrowdEntity(hitPos.X, hitPos.Z);
+                if (entityId != UniqueId.InvalidID)
+                    _tool.RemoveCrowdEntity(entityId);
+            }
+            else
+            {
+                // Add
+                _tool.AddCrowdEntity(hitPos.X, hitPos.Z, radius);
+            }
+        }
+        else if (m_mode == TestDaedalusToolMode.MOVE_CROWD_ENTITY)
+        { 
+            _tool.MoveCrowdEntity(hitPos.X, hitPos.Z);
+        }
     }
 
     public void HandleRender(NavMeshRenderer renderer)
@@ -616,6 +665,10 @@ public class TestDaedalusSampleTool : ISampleTool
 
     public void HandleUpdate(float dt)
     {
+        if (null != _tool)
+        {
+            _tool.Update(dt);
+        }
     }
 
     public void Layout()
@@ -626,6 +679,8 @@ public class TestDaedalusSampleTool : ISampleTool
         TestDaedalusToolMode previousToolMode = m_mode;
         ImGui.RadioButton(TestDaedalusToolMode.ADD_OBSTACLE.Label, ref m_modeIdx, TestDaedalusToolMode.ADD_OBSTACLE.Idx);
         ImGui.RadioButton(TestDaedalusToolMode.PATH_FINDER.Label, ref m_modeIdx, TestDaedalusToolMode.PATH_FINDER.Idx);
+        ImGui.RadioButton(TestDaedalusToolMode.ADD_CROWD_ENTITY.Label, ref m_modeIdx, TestDaedalusToolMode.ADD_CROWD_ENTITY.Idx);
+        ImGui.RadioButton(TestDaedalusToolMode.MOVE_CROWD_ENTITY.Label, ref m_modeIdx, TestDaedalusToolMode.MOVE_CROWD_ENTITY.Idx);
         ImGui.NewLine();
 
         if (previousToolMode.Idx != m_modeIdx)
@@ -650,10 +705,12 @@ public class TestDaedalusSampleTool : ISampleTool
         var bound_min = geom.GetMeshBoundsMin();
         var bound_max = geom.GetMeshBoundsMax();
 
+        var bound_center = (bound_min + bound_max) * 0.5f;
+
         var mapWidth = bound_max.X - bound_min.X;
         var mapHeight = bound_max.Z - bound_min.Z;
 
-        _tool.BuildGraphMesh(mapWidth, mapHeight);
+        _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
 
         Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
     }
