@@ -1,4 +1,4 @@
-﻿using SharpSteer2.Helpers;
+using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 using System.Collections.Generic;
 using System.Numerics;
@@ -71,7 +71,7 @@ namespace SharpSteer2.Obstacles
         }
 
         // default do-nothing draw function (derived class can overload this)
-        public abstract void draw(bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint);
+        public abstract void draw(IAnnotationService annotation, bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint);
 
         public seenFromState seenFrom() { return _seenFrom; }
         public void setSeenFrom(seenFromState s) { _seenFrom = s; }

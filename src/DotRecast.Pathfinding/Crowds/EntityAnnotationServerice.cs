@@ -67,6 +67,14 @@ namespace DotRecast.Pathfinding.Crowds
             CircleXZ(radius, center, color, segments);
         }
 
+        public void SolidPlane(FixMath.F64Vec3 point, FixMath.F64Vec3 normal, FixMath.F64Vec2 size, FixMath.F64Vec3 color)
+        {
+            if (_draw != null)
+            {
+                _draw.DrawSolidPlane(point.Cast(), normal.Cast(), size.Cast(), color.Cast(FixMath.F64.One));
+            }
+        }
+
         public void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision)
         {
         }

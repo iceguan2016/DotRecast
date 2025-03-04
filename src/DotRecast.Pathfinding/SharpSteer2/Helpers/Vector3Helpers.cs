@@ -303,6 +303,22 @@ namespace SharpSteer2.Helpers
             return result;
         }
 
+        public static void FindBestAxisVectors(this FixMath.F64Vec3 V, out FixMath.F64Vec3 Axis1, out FixMath.F64Vec3 Axis2 )
+        {
+            var NX = FixMath.F64.Abs(V.X);
+            var NY = FixMath.F64.Abs(V.Y);
+            var NZ = FixMath.F64.Abs(V.Z);
+
+	        // Find best basis vectors.
+	        if(NZ > NX && NZ > NY )
+                Axis1 = FixMath.F64Vec3.AxisX;
+	        else					
+                Axis1 = FixMath.F64Vec3.AxisZ;
+
+            Axis1 = (Axis1 - V * (Axis1.Dot(V))).GetSafeNormal();
+            Axis2 = Axis1.Cross(V).GetSafeNormal();
+        }
+
         public static FixMath.F64Vec3 Forward { get { return FixMath.F64Vec3.AxisZ; } }
         public static FixMath.F64Vec3 Right { get { return FixMath.F64Vec3.AxisX; } }
         public static FixMath.F64Vec3 Up { get { return FixMath.F64Vec3.AxisY; } }
@@ -311,6 +327,25 @@ namespace SharpSteer2.Helpers
         public static FixMath.F64Vec3 Cross(this FixMath.F64Vec3 a, FixMath.F64Vec3 b) { return FixMath.F64Vec3.Cross(a, b); }
 
         public static FixMath.F64Vec3 Normalize(this FixMath.F64Vec3 a) { return FixMath.F64Vec3.NormalizeFast(a); }
+
+        public static FixMath.F64Vec3 GetSafeNormal(this FixMath.F64Vec3 a)
+        {
+
+            var SquareSum = FixMath.F64Vec3.LengthSqr(a);
+
+	        // Not sure if it's safe to add tolerance in there. Might introduce too many errors
+	        if(SquareSum == FixMath.F64.One)
+	        {
+		        return a;
+	        }		
+	        else if(SquareSum<FixMath.F64.Epsilon)
+	        {
+		        return FixMath.F64Vec3.Zero;
+	        }
+	        var Scale = FixMath.F64.RSqrtFast(SquareSum);
+	        return new FixMath.F64Vec3(a.X * Scale, a.Y * Scale, a.Z * Scale);
+        }
+
         public static FixMath.F64 Length(this FixMath.F64Vec3 a) { return FixMath.F64Vec3.LengthFast(a); }
         public static FixMath.F64 Length2D(this FixMath.F64Vec3 a) { var b = new FixMath.F64Vec3(a.X, FixMath.F64.Zero, a.Z); return FixMath.F64Vec3.LengthFast(b); }
         public static FixMath.F64 Distance(this FixMath.F64Vec3 a, FixMath.F64Vec3 b) { return FixMath.F64Vec3.DistanceFast(a, b); }

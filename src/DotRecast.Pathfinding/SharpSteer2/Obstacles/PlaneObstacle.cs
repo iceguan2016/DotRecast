@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Numerics;
 using SharpSteer2.Helpers;
@@ -15,7 +15,7 @@ namespace SharpSteer2.Obstacles
     // tests if a given point on the XZ plane is inside the obstacle's shape.
     public class PlaneObstacle : LocalSpaceObstacle
     {
-        public override void draw(bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)
+        public override void draw(IAnnotationService annotation, bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)
         {
         }
 

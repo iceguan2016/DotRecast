@@ -95,7 +95,7 @@ namespace SharpSteer2.Obstacles
 
         // virtual function for drawing -- normally does nothing, can be
         // specialized by derived types to provide graphics for obstacles
-        void draw(bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint);
+        void draw(IAnnotationService annotation, bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint);
 
         seenFromState seenFrom();
         void setSeenFrom(seenFromState s);

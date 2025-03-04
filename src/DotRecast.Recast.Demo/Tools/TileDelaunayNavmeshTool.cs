@@ -1,14 +1,9 @@
 using DotRecast.Core.Numerics;
-using DotRecast.Detour;
-using DotRecast.Recast.Toolset.Builder;
 using DotRecast.Recast.Demo.Draw;
 using DotRecast.Recast.Toolset;
-using DotRecast.Recast.Toolset.Tools;
 using ImGuiNET;
 using Serilog;
 using static DotRecast.Recast.Demo.Draw.DebugDraw;
-using static DotRecast.Recast.Demo.Draw.DebugDrawPrimitives;
-using Silk.NET.GLFW;
 using Navmesh;
 using DotRecast.Core.Collections;
 using System.Collections.Generic;
@@ -17,8 +12,8 @@ using System;
 using DotRecast.Core;
 using UnityEngine;
 using Game.Utils;
-using System.Drawing;
-using Silk.NET.SDL;
+using SharpSteer2.Helpers;
+using DotRecast.Pathfinding.Util;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -193,6 +188,42 @@ public class TileDelaunayDebugDraw : DrawInterface
             m_draw.Vertex(new float[] { v0.x, v0.y, v0.z }, color);
             m_draw.Vertex(new float[] { v1.x, v1.y, v1.z }, color);
             m_draw.Vertex(new float[] { v2.x, v2.y, v2.z }, color);
+            m_draw.End();
+        }
+    }
+
+    public void DrawSolidPlane(Vector3 point, Vector3 normal, Vector2 size, UnityEngine.Color c)
+    { 
+        if (m_draw != null)
+        {
+            // (x - p) dot n = 0
+            var n = FixMath.F64Vec3.FromFloat(normal.x, normal.y, normal.z);
+            n.FindBestAxisVectors(out var axis1, out var axis2);
+
+            var u = axis1.Cast() * size.x * 0.5f;
+            var v = axis2.Cast() * size.y * 0.5f;
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            var points = new Vector3[4] {
+                point + u + v,
+                point - u + v,
+                point - u - v,
+                point + u - v
+            };
+
+            m_draw.Begin(DebugDrawPrimitives.QUADS);
+            // 正面
+            for ( int i = 0; i < 4; i++ ) 
+            {
+                ref var p = ref points[i];
+                m_draw.Vertex(new float[] { p.x, p.y, p.z }, color);
+            }
+            // 反面
+            for (int i = 3; i >= 0; i--)
+            {
+                ref var p = ref points[i];
+                m_draw.Vertex(new float[] { p.x, p.y, p.z }, color);
+            }
             m_draw.End();
         }
     }

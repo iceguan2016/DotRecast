@@ -58,6 +58,10 @@ namespace SharpSteer2
 
         }
 
+        public void SolidPlane(FixMath.F64Vec3 point, FixMath.F64Vec3 normal, FixMath.F64Vec2 size, FixMath.F64Vec3 color)
+        { 
+        }
+
         public void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision)
         {
 

@@ -91,6 +91,7 @@ namespace DotRecast.Pathfinding.Crowds
         public static readonly int  MaxBoundarySegmentNum = 10;
         private BoundarySegement[]  _boundarySegements = null;
         private int                 _boundarySegmentNum = 0;
+        private List<IObstacle>     _boundaryObstacles = new List<IObstacle>();
 
         // local neighbors
         private List<IVehicle>      _neighbors = new List<IVehicle>(); 
@@ -254,6 +255,14 @@ namespace DotRecast.Pathfinding.Crowds
             }
             // draw local boundary
             Draw.drawCircleOrDisk(annotation, Template.QueryLocalBoundaryRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
+
+            if (_boundaryObstacles.Count > 0)
+            {
+                for (var i = 0; i < _boundaryObstacles.Count; ++i)
+                {
+                    _boundaryObstacles[i].draw(annotation, false, Colors.Yellow, Position);
+                }
+            }
         }
 
         // compute combined steering force: move forward, avoid obstacles
@@ -300,7 +309,8 @@ namespace DotRecast.Pathfinding.Crowds
 #endif
 
             // avoid obstacles
-            var obstacles = new List<IObstacle>();
+            _boundaryObstacles.Clear();
+            // var obstacles = new List<IObstacle>();
             var obstacleAvoidance = FixMath.F64Vec3.Zero;
             if (leakThrough < RandomHelpers.Random())
             {
@@ -317,19 +327,19 @@ namespace DotRecast.Pathfinding.Crowds
                     var w = v.Length2D();
                     var h = FixMath.F64.FromFloat(1.0f);
                     var obstacle = new RectangleObstacle(w, h, s, u, f, p, seenFromState.outside);
-                    obstacles.Add(obstacle);
+                    _boundaryObstacles.Add(obstacle);
 
                 }
 
-                if (obstacles.Count > 0)
+                if (_boundaryObstacles.Count > 0)
                 {
                     if (referencePoint != null)
                     {
-                        obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, obstacles, referencePoint) * Template.AvoidObstacleWeight;
+                        obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, referencePoint) * Template.AvoidObstacleWeight;
                     }
                     else
                     {
-                        obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, obstacles, null) * Template.AvoidObstacleWeight;
+                        obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, null) * Template.AvoidObstacleWeight;
                     }
 #if ENABLE_STEER_AGENT_DEBUG
 			        info.obstacleForce = obstacleAvoidance * forceScale;

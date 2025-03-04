@@ -345,8 +345,6 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     // End
 
     // ILocalBoundaryQuerier interface
-    hxDaedalus.data.Edge debugEdge = null;
-    hxDaedalus.data.Face debugFace = null;
     public virtual int QueryBoundaryInCircle(SharpSteer2.IVehicle vehicle, FixMath.F64 inRadius, BoundarySegement[] outResults)
     {
         if (null == outResults) return 0;
@@ -398,9 +396,6 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
         if (null != refFace)
         {
-            debugEdge = null;
-            debugFace = null;
-
             // Boundary edges
             var boundaryEdges = new List<hxDaedalus.data.Edge>();
             // Visit adjacent triangles
@@ -436,12 +431,6 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
                         // 检查是否在范围内
                         if (!CheckVertexInRadius(adjacentFace)) continue;
                         pendingVisitFaces.Enqueue(adjacentFace);
-
-                        if (null == debugEdge)
-                        { 
-                            debugEdge = outterEdge;
-                            debugFace = adjacentFace;
-                        }
                     }
                 }
             }
@@ -549,10 +538,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
     public void DebugDraw(hxDaedalus.view.SimpleView view)
     { 
-        if (null != debugFace)
-        {
-            DrawFace(debugFace, view);
-        }
+        
     }
 }
 

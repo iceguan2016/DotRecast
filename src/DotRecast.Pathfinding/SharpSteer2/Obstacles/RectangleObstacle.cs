@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Numerics;
 using SharpSteer2.Helpers;
@@ -30,11 +30,18 @@ namespace SharpSteer2.Obstacles
             Forward = f;
             Position = p;
 
+            width = w;
+            height = h;
+
             setSeenFrom(sf);
         }
 
-        public override void draw(bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)
+        public override void draw(IAnnotationService annotation, bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)
         {
+            if (null != annotation)
+            {
+                annotation.SolidPlane(Position, Forward, new FixMath.F64Vec2(width, height), color);
+            }
         }
 
         public override ObstacleType getObstacleType()

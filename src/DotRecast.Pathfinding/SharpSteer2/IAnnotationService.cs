@@ -8,7 +8,6 @@
 // you should have received as part of this distribution. The terms
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
-using System.Numerics;
 using SharpSteer2.Obstacles;
 
 namespace SharpSteer2
@@ -115,11 +114,13 @@ namespace SharpSteer2
 		/// <param name="in3D">Flag indicating whether to draw the disk/circle in 3D or the XZ plane.</param>
         void CircleOrDisk(FixMath.F64 radius, FixMath.F64Vec3 axis, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments, bool filled, bool in3D);
 
-		/// <summary>
-		/// Called when steerToAvoidObstacles decides steering is required.
-		/// </summary>
-		/// <param name="minDistanceToCollision"></param>
-		void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision);
+        void SolidPlane(FixMath.F64Vec3 point, FixMath.F64Vec3 normal, FixMath.F64Vec2 size, FixMath.F64Vec3 color);
+
+        /// <summary>
+        /// Called when steerToAvoidObstacles decides steering is required.
+        /// </summary>
+        /// <param name="minDistanceToCollision"></param>
+        void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision);
 
         // called when steerToAvoidObstacles decides steering is required
         // (default action is to do nothing, layered classes can overload it)
