@@ -253,7 +253,7 @@ namespace DotRecast.Pathfinding.Crowds
                 }
             }
             // draw local boundary
-
+            Draw.drawCircleOrDisk(annotation, Template.QueryLocalBoundaryRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
         }
 
         // compute combined steering force: move forward, avoid obstacles

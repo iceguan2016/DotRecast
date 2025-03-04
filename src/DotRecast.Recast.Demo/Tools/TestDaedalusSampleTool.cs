@@ -345,6 +345,8 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     // End
 
     // ILocalBoundaryQuerier interface
+    hxDaedalus.data.Edge debugEdge = null;
+    hxDaedalus.data.Face debugFace = null;
     public virtual int QueryBoundaryInCircle(SharpSteer2.IVehicle vehicle, FixMath.F64 inRadius, BoundarySegement[] outResults)
     {
         if (null == outResults) return 0;
@@ -388,7 +390,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
                 }
 
                 var pos = VertextToF64Vec3(innerEdge.get_originVertex());
-                var distSq = center.Distance2D(pos);
+                var distSq = center.DistanceSquared2D(pos);
                 if (distSq <= radiusSqured) return true;
             }
             return false;
@@ -396,6 +398,9 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
         if (null != refFace)
         {
+            debugEdge = null;
+            debugFace = null;
+
             // Boundary edges
             var boundaryEdges = new List<hxDaedalus.data.Edge>();
             // Visit adjacent triangles
@@ -423,18 +428,20 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
                     {
                         //  获取邻接face
                         var outterEdge = innerEdge.get_oppositeEdge();
-                        if (outterEdge == null)
-                            continue;
+                        if (outterEdge == null) continue;
                         var adjacentFace = outterEdge.get_leftFace();
-                        if (adjacentFace == null)
-                            continue;
+                        if (adjacentFace == null) continue;
                         // 检查是否已经访问过
-                        if (visiedFaces.Contains(face))
-                            continue;
+                        if (visiedFaces.Contains(adjacentFace)) continue;
                         // 检查是否在范围内
-                        if (!CheckVertexInRadius(adjacentFace))
-                            continue;
+                        if (!CheckVertexInRadius(adjacentFace)) continue;
                         pendingVisitFaces.Enqueue(adjacentFace);
+
+                        if (null == debugEdge)
+                        { 
+                            debugEdge = outterEdge;
+                            debugFace = adjacentFace;
+                        }
                     }
                 }
             }
@@ -506,6 +513,47 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         });
     }
     // End
+
+    public void DrawFace(hxDaedalus.data.Face face, hxDaedalus.view.SimpleView view)
+    {
+        for (var i = 0; i < Mesh._faces.length; ++i)
+        {
+            var f = (hxDaedalus.data.Face)Mesh._faces[i];
+            if (f == face)
+            {
+                global::hxDaedalus.iterators.FromFaceToInnerEdges iterEdge = new hxDaedalus.iterators.FromFaceToInnerEdges();
+                iterEdge.set_fromFace(face);
+                while (true)
+                {
+                    var innerEdge = iterEdge.next();
+                    if (innerEdge == null)
+                    {
+                        break;
+                    }
+
+                    view.drawEdge(innerEdge, UnityEngine.Color.magenta, 10.0f);
+                }
+
+                var color = UnityEngine.Color.yellow;
+                color.a *= 0.1f;
+                view.drawFace(face, color);
+                break;
+            }
+        }
+    }
+
+    public void DrawEdge(hxDaedalus.data.Edge edge)
+    {
+        
+    }
+
+    public void DebugDraw(hxDaedalus.view.SimpleView view)
+    { 
+        if (null != debugFace)
+        {
+            DrawFace(debugFace, view);
+        }
+    }
 }
 
 public class TestDaedalusSampleTool : ISampleTool
@@ -699,39 +747,14 @@ public class TestDaedalusSampleTool : ISampleTool
             }
 
             // draw face
-            for (var i = 0; i < _tool.Mesh._faces.length; ++i)
-            {
-                var face = (hxDaedalus.data.Face)_tool.Mesh._faces[i];
-                if (face == _tool.HitFace)
-                {
-                    var h = _draw.MapHeight;
-                    _draw.MapHeight = h + 0.5f;
-
-                    global::hxDaedalus.iterators.FromFaceToInnerEdges iterEdge = new hxDaedalus.iterators.FromFaceToInnerEdges();
-                    iterEdge.set_fromFace(face);
-                    while (true)
-                    {
-                        var innerEdge = iterEdge.next();
-                        if (innerEdge == null)
-                        {
-                            break;
-                        }
-
-                        _view.drawEdge(innerEdge, UnityEngine.Color.magenta, 10.0f);
-                    }
-
-                    _draw.MapHeight = h;
-
-                    var color = UnityEngine.Color.yellow;
-                    color.a *= 0.1f;
-                    _view.drawFace(face, color);
-                    break;
-                }
-            }
+            _tool.DrawFace(_tool.HitFace, _view);
         }
 
         // draw crowd entities
         _tool.DrawCrowdEntity();
+
+        // debug draw
+        _tool.DebugDraw(_view);
     }
 
     public void HandleUpdate(float dt)
