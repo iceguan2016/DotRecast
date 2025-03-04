@@ -232,9 +232,28 @@ namespace DotRecast.Pathfinding.Crowds
 
         public virtual void OnDraw()
         {
+            // draw vehicle
             Draw.drawBasic2dCircularVehicle(annotation, this, Colors.Gray50);
             // drawTrail();
+            // draw transform
             Draw.drawAxes(annotation, this, FixMath.F64Vec3.FromFloat(1f, 1f, 1f));
+            // draw pathway
+            if (null != Pathway)
+            {
+                var size = FixMath.F64.FromFloat(0.2f);
+                FixMath.F64Vec3? last = null;
+                foreach(var p in Pathway.Points)
+                {
+                    annotation.CircleXZ(size, p, Colors.Red, 10);
+                    if (null != last)
+                    {
+                        annotation.Line(last.Value, p, Colors.Green, FixMath.F64.One);
+                    }
+                    last = p;
+                }
+            }
+            // draw local boundary
+
         }
 
         // compute combined steering force: move forward, avoid obstacles

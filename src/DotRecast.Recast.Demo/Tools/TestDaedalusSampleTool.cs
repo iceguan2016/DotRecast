@@ -335,7 +335,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             var points = new List<FixMath.F64Vec3>();
             for (var i = 0; i < resultPath.length; i += 2)
             {
-                var v = FixMath.F64Vec3.FromFloat((float)resultPath[0], MapHeight, (float)resultPath[1]);
+                var v = FixMath.F64Vec3.FromFloat((float)resultPath[i], MapHeight, (float)resultPath[i+1]);
                 points.Add(v);
             }
             return new SharpSteer2.Pathway.PolylinePathway(points, FixMath.F64.Zero, false);
