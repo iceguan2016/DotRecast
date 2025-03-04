@@ -7,100 +7,83 @@ using SharpSteer2.Obstacles;
 
 namespace DotRecast.Pathfinding.Crowds
 {
-    //public class EntityAnnotationServerice : IAnnotationService
-    //{
-    //    Game.Utils.DrawInterface _draw = null;
+    public class EntityAnnotationServerice : IAnnotationService
+    {
+        Game.Utils.DrawInterface _draw = null;
 
-    //    public EntityAnnotationServerice(Game.Utils.DrawInterface inDraw)
-    //    {
-    //        _draw = inDraw;
-    //    }
+        public EntityAnnotationServerice(Game.Utils.DrawInterface inDraw)
+        {
+            _draw = inDraw;
+        }
 
-    //    public bool IsEnabled { get; set; }
+        public bool IsEnabled { get; set; }
 
-    //    public void AvoidCloseNeighbor(IVehicle other, float additionalDistance)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void Line(FixMath.F64Vec3 startPoint, FixMath.F64Vec3 endPoint, FixMath.F64Vec3 color, FixMath.F64 opacity)
+        {
+        }
 
-    //    public void AvoidNeighbor(IVehicle threat, float steer, Vector3 ourFuture, Vector3 threatFuture)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void CircleXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments)
+        {
+        }
 
-    //    public void AvoidNeighbor2(IVehicle threat, PathIntersection intersection)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void DiskXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments)
+        {
+        }
 
-    //    public void AvoidObstacle(float minDistanceToCollision)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void Circle3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments)
+        {
+        }
 
-    //    public void AvoidObstacle(float minDistanceToCollision, PathIntersection nearest)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void Disk3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments)
+        {
+        }
 
-    //    public void Circle3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void CircleOrDiskXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments, bool filled)
+        {
+        }
 
-    //    public void CircleOrDisk(float radius, Vector3 axis, Vector3 center, Vector3 color, int segments, bool filled, bool in3D)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void CircleOrDisk3D(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 axis, FixMath.F64Vec3 color, int segments, bool filled)
+        {
+        }
 
-    //    public void CircleOrDisk3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments, bool filled)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void CircleOrDisk(FixMath.F64 radius, FixMath.F64Vec3 axis, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments, bool filled, bool in3D)
+        {
+        }
 
-    //    public void CircleOrDiskXZ(float radius, Vector3 center, Vector3 color, int segments, bool filled)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void AvoidObstacle(FixMath.F64 minDistanceToCollision)
+        {
+        }
 
-    //    public void CircleXZ(float radius, Vector3 center, Vector3 color, int segments)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void AvoidObstacle(FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest)
+        {
+        }
 
-    //    public void Disk3D(float radius, Vector3 center, Vector3 axis, Vector3 color, int segments)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void PathFollowing(FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside)
+        {
+        }
 
-    //    public void DiskXZ(float radius, Vector3 center, Vector3 color, int segments)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void AvoidCloseNeighbor(IVehicle other, FixMath.F64 additionalDistance)
+        {
+        }
 
-    //    public void Line(Vector3 startPoint, Vector3 endPoint, Vector3 color, float opacity = 1)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void AvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture)
+        {
+        }
 
-    //    public void PathFollowing(Vector3 future, Vector3 onPath, Vector3 target, float outside)
-    //    {
+        public void AvoidNeighbor2(IVehicle threat, PathIntersection intersection)
+        {
+        }
 
-    //    }
+        public void VelocityAcceleration(IVehicle vehicle)
+        {
+        }
 
-    //    public void VelocityAcceleration(IVehicle vehicle)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public void VelocityAcceleration(IVehicle vehicle, FixMath.F64 maxLength)
+        {
+        }
 
-    //    public void VelocityAcceleration(IVehicle vehicle, float maxLength)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public void VelocityAcceleration(IVehicle vehicle, float maxLengthAcceleration, float maxLengthVelocity)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
+        public void VelocityAcceleration(IVehicle vehicle, FixMath.F64 maxLengthAcceleration, FixMath.F64 maxLengthVelocity)
+        {
+        }
+    }
 }

@@ -48,6 +48,11 @@ namespace DotRecast.Pathfinding.Crowds
             var entityIndex = MovableEntities.Count - 1;
             EntityId2Index.Add(entity.ID, entityIndex);
 
+            entity.Template = inParams.Template;
+            entity.PathwayQuerier = inParams.PathwayQuerier;
+            entity.LocalBoundaryQuerier = inParams.LocalBoundaryQuerier;
+            entity.EntityManager = this;
+            
             // position
             entity.Position = inParams.SpawnPosition;
             // rotation

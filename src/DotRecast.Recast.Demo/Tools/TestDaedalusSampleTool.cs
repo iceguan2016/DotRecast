@@ -26,6 +26,7 @@ using hxDaedalus.ai;
 using Serilog.Core;
 using Silk.NET.Windowing;
 using SharpSteer2.Helpers;
+using Game.Utils;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -77,8 +78,44 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     // obstacles
     private HxArray<hxDaedalus.data.Object> _obstacles = new HxArray<hxDaedalus.data.Object>();
 
+    // crowd entity templates
+    private TemplateMovableEntity[] _templateMovableEntities = new TemplateMovableEntity[] { 
+        new() 
+        {
+            // 
+            Radius = FixMath.F64.FromFloat(0.5f);
+            // maximum move speed
+            MaxSpeed = FixMath.F64.FromFloat(6.0f),
+            // maximum force
+            MaxForce = FixMath.F64.FromFloat(27.0f),
+            // query local boundary radius
+            QueryLocalBoundaryRadius = FixMath.F64.FromFloat(5.0f),
+            // query local neighbors radius
+            QueryLocalNeighborRadius = FixMath.F64.FromFloat(5.0f),
+            //
+            FollowPathAheadTime = FixMath.F64.FromFloat(3.0f),
+            FollowPathWeight = FixMath.F64.FromFloat(1.0f),
+
+            AvoidObstacleAheadTime = FixMath.F64.FromFloat(0.1f),
+            AvoidObstacleWeight = FixMath.F64.FromFloat(1.0f),
+
+            AvoidNeighborAheadTime = FixMath.F64.FromFloat(1.0f),
+            AvoidNeighborWeight = FixMath.F64.FromFloat(1.0f),
+        }
+    };
+
     // crowd entities
     private IMovableEntityManager _entityManager = new MovableEntityManager();
+
+    // annotation
+    private EntityAnnotationServerice _annotationServerice = null;
+    public DrawInterface DrawInterface 
+    { 
+        set 
+        {
+            _annotationServerice = new EntityAnnotationServerice(value);
+        } 
+    }
 
     public float EntityRadius 
     { 
@@ -409,12 +446,13 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         var Params = new CreateEntityParams() 
         {
             EntityId = UniqueId.InvalidID,
-            SpawnPosition = FixMath.F64Vec3.Zero,
+            SpawnPosition = FixMath.F64Vec3.FromDouble(x, MapHeight, y),
             SpawnRotation = FixMath.F64Quat.Identity,
 
-            PathwayQuerier = null,
-            LocalBoundaryQuerier = null,
-            AnnotationService = null,
+            Template = _templateMovableEntities[0],
+            PathwayQuerier = this,
+            LocalBoundaryQuerier = this,
+            AnnotationService = _annotationServerice,
         };
 
         return _entityManager.CreateEntity(Params);
@@ -597,6 +635,7 @@ public class TestDaedalusSampleTool : ISampleTool
             _draw.MapHeight = bound_max.Y + 0.5f;
 
             _view = new hxDaedalus.view.SimpleView(_draw);
+            _tool.DrawInterface = _draw;
         }
 
         // draw bounds

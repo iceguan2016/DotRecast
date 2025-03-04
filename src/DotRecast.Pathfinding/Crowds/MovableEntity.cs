@@ -11,6 +11,8 @@ namespace DotRecast.Pathfinding.Crowds
 {
     public class TemplateMovableEntity
     {
+        // radius
+        public FixMath.F64 Radius = FixMath.F64.FromFloat(0.5f);
         // maximum move speed
         public FixMath.F64 MaxSpeed = FixMath.F64.FromFloat(6.0f);
         // maximum force
@@ -48,11 +50,11 @@ namespace DotRecast.Pathfinding.Crowds
 
         public TemplateMovableEntity Template { get; set; }
 
-        public IMovableEntityManager EntityManager { get; private set; }
+        public IMovableEntityManager EntityManager { get; set; }
 
-        public ILocalBoundaryQuerier LocalBoundaryQuerier { get; private set; }
+        public ILocalBoundaryQuerier LocalBoundaryQuerier { get; set; }
 
-        public IPathwayQuerier PathwayQuerier { get; private set; }
+        public IPathwayQuerier PathwayQuerier { get; set; }
         
         // Entity unique id
         public UniqueId ID { get; set; }
@@ -116,8 +118,12 @@ namespace DotRecast.Pathfinding.Crowds
             // reset the vehicle
             base.Reset();
 
+            if (null == Template)
+                return;
+
             // initial slow speed
             Speed = (MaxSpeed * FixMath.F64.FromFloat(0.3f));
+            Radius = Template.Radius;
 
             // randomize initial orientation
             //RegenerateOrthonormalBasisUF(Vector3Helpers.RandomUnitVector());
@@ -161,7 +167,7 @@ namespace DotRecast.Pathfinding.Crowds
         public virtual void OnCreate()
         {
             _boundarySegements = new BoundarySegement[MaxBoundarySegmentNum];
-            Array.Fill(_boundarySegements, default(BoundarySegement));
+            Array.Fill(_boundarySegements, default);
             _boundarySegmentNum = 0;
 
             Reset();

@@ -12,6 +12,7 @@ namespace DotRecast.Pathfinding.Crowds
         public FixMath.F64Vec3 SpawnPosition = FixMath.F64Vec3.Zero;
         public FixMath.F64Quat SpawnRotation = FixMath.F64Quat.Identity;
 
+        public TemplateMovableEntity Template = null;
         public IPathwayQuerier PathwayQuerier = null;
         public ILocalBoundaryQuerier LocalBoundaryQuerier = null;
         public IAnnotationService AnnotationService = null;
