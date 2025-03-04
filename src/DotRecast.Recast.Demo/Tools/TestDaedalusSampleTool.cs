@@ -83,7 +83,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         new() 
         {
             // 
-            Radius = FixMath.F64.FromFloat(0.5f);
+            Radius = FixMath.F64.FromFloat(0.5f),
             // maximum move speed
             MaxSpeed = FixMath.F64.FromFloat(6.0f),
             // maximum force
@@ -478,6 +478,17 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             }
         });
     }
+
+    public void DrawCrowdEntity()
+    {
+        _entityManager.ForEachEntity((InEntity) =>
+        {
+            if (null != InEntity)
+            {
+                InEntity.OnDraw();
+            }
+        });
+    }
     // End
 }
 
@@ -700,6 +711,9 @@ public class TestDaedalusSampleTool : ISampleTool
                 break;
             }
         }
+
+        // draw crowd entities
+        _tool.DrawCrowdEntity();
     }
 
     public void HandleUpdate(float dt)
@@ -748,6 +762,8 @@ public class TestDaedalusSampleTool : ISampleTool
 
         var mapWidth = bound_max.X - bound_min.X;
         var mapHeight = bound_max.Z - bound_min.Z;
+
+        RandomHelpers.InitialRandom((int)DateTime.Now.Ticks);
 
         _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
 

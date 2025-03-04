@@ -50,11 +50,11 @@ namespace DotRecast.Pathfinding.Crowds
 
         public TemplateMovableEntity Template { get; set; }
 
-        public IMovableEntityManager EntityManager { get; set; }
+        public IMovableEntityManager EntityManager { get; private set; }
 
-        public ILocalBoundaryQuerier LocalBoundaryQuerier { get; set; }
+        public ILocalBoundaryQuerier LocalBoundaryQuerier { get; private set; }
 
-        public IPathwayQuerier PathwayQuerier { get; set; }
+        public IPathwayQuerier PathwayQuerier { get; private set; }
         
         // Entity unique id
         public UniqueId ID { get; set; }
@@ -110,6 +110,8 @@ namespace DotRecast.Pathfinding.Crowds
             : base(annotations)
         {
             EntityManager = manager;
+
+            if (null != annotation) annotation.IsEnabled = true;
         }
 
         // reset state
@@ -228,6 +230,13 @@ namespace DotRecast.Pathfinding.Crowds
                 if (null != _proximityToken)
                     _proximityToken.UpdateForNewPosition(Position);
             }
+        }
+
+        public virtual void OnDraw()
+        {
+            Draw.drawBasic2dCircularVehicle(annotation, this, Colors.Gray50);
+            // drawTrail();
+            Draw.drawAxes(annotation, this, FixMath.F64Vec3.FromFloat(1f, 1f, 1f));
         }
 
         // compute combined steering force: move forward, avoid obstacles

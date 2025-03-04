@@ -68,7 +68,7 @@ namespace SharpSteer2.Helpers
             // steer towards it.  Use onPath projection of futurePosition
             // as seek target
             if (annotation != null)
-                annotation.PathFollowing(futurePosition, onPath, onPath, outside);
+                annotation.PathFollowing(vehicle, futurePosition, onPath, onPath, outside);
 
             return vehicle.SteerForSeek(onPath, maxSpeed);
         }
@@ -134,7 +134,7 @@ namespace SharpSteer2.Helpers
             var target = path.MapPathDistanceToPoint(targetPathDistance);
 
             if (annotation != null)
-                annotation.PathFollowing(futurePosition, onPath, target, outside);
+                annotation.PathFollowing(vehicle, futurePosition, onPath, target, outside);
 
             // return steering to seek target on path
             return SteerForSeek(vehicle, target, maxSpeed);
@@ -160,7 +160,7 @@ namespace SharpSteer2.Helpers
 
             // XXX more annotation modularity problems (assumes spherical obstacle)
             if (avoidance != FixMath.F64Vec3.Zero && annotation != null)
-                annotation.AvoidObstacle(minTimeToCollision * vehicle.Speed);
+                annotation.AvoidObstacle(vehicle, minTimeToCollision * vehicle.Speed);
 
             return avoidance;
         }
@@ -175,7 +175,7 @@ namespace SharpSteer2.Helpers
 
             // XXX more annotation modularity problems (assumes spherical obstacle)
             if (annotation != null && avoidance != FixMath.F64Vec3.Zero)
-                annotation.AvoidObstacle(minTimeToCollision * vehicle.Speed, nearest);
+                annotation.AvoidObstacle(vehicle, minTimeToCollision * vehicle.Speed, nearest);
 
             return avoidance;
         }
@@ -242,7 +242,7 @@ namespace SharpSteer2.Helpers
                     if (currentDistance < minCenterToCenter)
                     {
                         if (annotation != null)
-                            annotation.AvoidCloseNeighbor(other, minSeparationDistance);
+                            annotation.AvoidCloseNeighbor(vehicle, other, minSeparationDistance);
 
                         return Vector3Helpers.PerpendicularComponent(-offset, vehicle.Forward);
                     }
@@ -486,7 +486,7 @@ namespace SharpSteer2.Helpers
                 }
 
                 if (annotation != null)
-                    annotation.AvoidNeighbor(threat, steer, xxxOurPositionAtNearestApproach, xxxThreatPositionAtNearestApproach);
+                    annotation.AvoidNeighbor(vehicle, threat, steer, xxxOurPositionAtNearestApproach, xxxThreatPositionAtNearestApproach);
             }
 
             return vehicle.Side * steer;
@@ -513,7 +513,7 @@ namespace SharpSteer2.Helpers
                     //Move it out based on our radius + theirs
                     resultVector *= vehicle.Radius + threat.Radius;
 
-                    if (null != annotation) annotation.AvoidNeighbor2(threat, intersection);
+                    if (null != annotation) annotation.AvoidNeighbor2(vehicle, threat, intersection);
                 }
                 return resultVector;
             };
