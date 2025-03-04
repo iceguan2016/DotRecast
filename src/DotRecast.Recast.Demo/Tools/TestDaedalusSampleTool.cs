@@ -138,6 +138,22 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         return "Test Daedalus Tool";
     }
 
+    public void Start()
+    {
+        if (null != _entityManager)
+        {
+            _entityManager.Initialize();
+        }
+    }
+
+    public void Destroy()
+    {
+        if (null != _entityManager)
+        {
+            _entityManager.UnInitialize();
+        }
+    }
+
     public void Update(double inDeltaTime)
     {
         if (null != _entityManager)
@@ -498,7 +514,7 @@ public class TestDaedalusSampleTool : ISampleTool
 
     private DemoSample _sample;
 
-    private TestDaedalusTool _tool = new TestDaedalusTool();
+    private TestDaedalusTool _tool = null;
 
     private TileDelaunayDebugDraw _draw = null;
 
@@ -646,6 +662,7 @@ public class TestDaedalusSampleTool : ISampleTool
             _draw.MapHeight = bound_max.Y + 0.5f;
 
             _view = new hxDaedalus.view.SimpleView(_draw);
+            _tool.MapHeight = bound_max.Y + 0.5f;
             _tool.DrawInterface = _draw;
         }
 
@@ -680,35 +697,36 @@ public class TestDaedalusSampleTool : ISampleTool
                     v0 = v1;
                 }
             }
-        }
 
-        // draw face
-        for (var i=0; i<_tool.Mesh._faces.length; ++i)
-        {
-            var face = (hxDaedalus.data.Face)_tool.Mesh._faces[i];
-            if ( face == _tool.HitFace)
+            // draw face
+            for (var i = 0; i < _tool.Mesh._faces.length; ++i)
             {
-                var h = _draw.MapHeight;
-                _draw.MapHeight = h + 0.5f;
+                var face = (hxDaedalus.data.Face)_tool.Mesh._faces[i];
+                if (face == _tool.HitFace)
+                {
+                    var h = _draw.MapHeight;
+                    _draw.MapHeight = h + 0.5f;
 
-                global::hxDaedalus.iterators.FromFaceToInnerEdges iterEdge = new hxDaedalus.iterators.FromFaceToInnerEdges();
-                iterEdge.set_fromFace(face);
-                while (true) {
-					var innerEdge = iterEdge.next();
-					if ( innerEdge == null ) 
+                    global::hxDaedalus.iterators.FromFaceToInnerEdges iterEdge = new hxDaedalus.iterators.FromFaceToInnerEdges();
+                    iterEdge.set_fromFace(face);
+                    while (true)
                     {
-						break;
-					}
+                        var innerEdge = iterEdge.next();
+                        if (innerEdge == null)
+                        {
+                            break;
+                        }
 
-                    _view.drawEdge(innerEdge, UnityEngine.Color.magenta, 10.0f);
+                        _view.drawEdge(innerEdge, UnityEngine.Color.magenta, 10.0f);
+                    }
+
+                    _draw.MapHeight = h;
+
+                    var color = UnityEngine.Color.yellow;
+                    color.a *= 0.1f;
+                    _view.drawFace(face, color);
+                    break;
                 }
-
-                _draw.MapHeight = h;
-
-                var color = UnityEngine.Color.yellow;
-                color.a *= 0.1f;
-                _view.drawFace(face, color);
-                break;
             }
         }
 
@@ -764,6 +782,11 @@ public class TestDaedalusSampleTool : ISampleTool
         var mapHeight = bound_max.Z - bound_min.Z;
 
         RandomHelpers.InitialRandom((int)DateTime.Now.Ticks);
+
+        if (null != _tool) _tool.Destroy();
+
+        _tool = new TestDaedalusTool();
+        if (null != _tool) _tool.Start();
 
         _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
 

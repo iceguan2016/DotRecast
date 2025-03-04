@@ -110,7 +110,8 @@ namespace DotRecast.Pathfinding.Crowds
             : base(annotations)
         {
             EntityManager = manager;
-
+            PathwayQuerier = pathwayQuerier;
+            LocalBoundaryQuerier = bounaryQuerier;
             if (null != annotation) annotation.IsEnabled = true;
         }
 
@@ -119,13 +120,6 @@ namespace DotRecast.Pathfinding.Crowds
         {
             // reset the vehicle
             base.Reset();
-
-            if (null == Template)
-                return;
-
-            // initial slow speed
-            Speed = (MaxSpeed * FixMath.F64.FromFloat(0.3f));
-            Radius = Template.Radius;
 
             // randomize initial orientation
             //RegenerateOrthonormalBasisUF(Vector3Helpers.RandomUnitVector());
@@ -140,8 +134,7 @@ namespace DotRecast.Pathfinding.Crowds
 
             // notify proximity database that our position has changed
             //FIXME: SimpleVehicle::SimpleVehicle() calls reset() before proximityToken is set
-            if (_proximityToken != null)
-                _proximityToken.UpdateForNewPosition(Position);
+            
         }
 
         public void NewPD(IProximityDatabase<IVehicle> pd)
@@ -172,7 +165,12 @@ namespace DotRecast.Pathfinding.Crowds
             Array.Fill(_boundarySegements, default);
             _boundarySegmentNum = 0;
 
-            Reset();
+            // initial slow speed
+            Speed = (MaxSpeed * FixMath.F64.FromFloat(0.3f));
+            Radius = Template.Radius;
+
+            if (_proximityToken != null)
+                _proximityToken.UpdateForNewPosition(Position);
 
 #if ENABLE_STEER_AGENT_DEBUG
             Debuger = new MovableEntityDebuger();
