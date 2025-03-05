@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
+using SharpSteer2;
+using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 
 namespace DotRecast.Pathfinding.Crowds
@@ -92,8 +94,21 @@ namespace DotRecast.Pathfinding.Crowds
 
     public class MovableEntityDebuger
     {
+        static int SteerDebugerDrawFrames = 10;
+
         // 缓存历史intersection信息
         public FCycleDataBuffer<PathIntersection> PathInterSectionBuff = new FCycleDataBuffer<SharpSteer2.Obstacles.PathIntersection>(256);
+
+        public struct RectangeObstacleInfo
+        {
+            public FixMath.F64Vec3 Position;
+            public FixMath.F64Vec3 Forward;
+            public FixMath.F64Vec3 Side;
+            public FixMath.F64Vec3 Up;
+            public FixMath.F64 Width;
+            public FixMath.F64 Height;
+        }
+        public FCycleDataBuffer<RectangeObstacleInfo> RectangeObstacleInfoBuff = new FCycleDataBuffer<RectangeObstacleInfo>(1024);
 
         // 缓存历史entity的信息
         public struct EntityDebugInfo
@@ -142,5 +157,32 @@ namespace DotRecast.Pathfinding.Crowds
             public PathIntersection pathIntersection;
         };
         public FCycleDataBuffer<SteerAvoidNeighborInfo> SteerAvoidNeighborInfoBuff = new FCycleDataBuffer<SteerAvoidNeighborInfo>(1024);
+
+        public void Draw(IAnnotationService annotation, MovableEntity vechile, int frameNo, int specailFrame = -1)
+        {
+            System.Func<int, bool> ShouldDebugerDraw = (InFrameNo) => {
+                return specailFrame < 0 ? (frameNo - InFrameNo) <= SteerDebugerDrawFrames : InFrameNo == specailFrame;
+            };
+
+            // 绘制相交信息
+            PathInterSectionBuff.ForEach((frame, intersection) => {
+                if (ShouldDebugerDraw(frame) && intersection.intersect)
+                {
+                    var point = intersection.surfacePoint;
+                    var normal = intersection.surfaceNormal;
+                    var steerHint = intersection.steerHint;
+
+                    var dirVecLength = FixMath.F64.FromFloat(0.1f);
+                    // draw hit point
+                    var pointSize = FixMath.F64Vec3.One;
+                    annotation.SolidCube(point, pointSize, Colors.Red, FixMath.F64.One);
+                    // draw hit normal
+                    var normalEndPoint = point + normal * dirVecLength;
+                    annotation.Line(point, normalEndPoint, Colors.Red, FixMath.F64.One);
+                    // draw hint direction
+                    annotation.Line(normalEndPoint, normalEndPoint + steerHint * dirVecLength, Colors.Green, FixMath.F64.One);
+                }
+            });
+        }
     }
 }

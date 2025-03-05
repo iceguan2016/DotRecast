@@ -11,8 +11,8 @@ namespace SharpSteer2.Obstacles
     // side/up) plane of a local space.
     public class RectangleObstacle : PlaneObstacle
     {
-        FixMath.F64 width = FixMath.F64.One;  // width  of rectangle centered on local X (side) axis
-        FixMath.F64 height = FixMath.F64.One; // height of rectangle centered on local Y (up)   axis
+        public FixMath.F64 width = FixMath.F64.One;  // width  of rectangle centered on local X (side) axis
+        public FixMath.F64 height = FixMath.F64.One; // height of rectangle centered on local Y (up)   axis
 
         // constructors
         public RectangleObstacle(FixMath.F64 w, FixMath.F64 h)

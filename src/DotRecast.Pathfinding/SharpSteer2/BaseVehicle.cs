@@ -24,5 +24,11 @@ namespace SharpSteer2
 
 		public abstract FixMath.F64 MaxForce { get; }
 		public abstract FixMath.F64 MaxSpeed { get; }
-	}
+
+        public abstract void AnnotationAvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision);
+        public abstract void AnnotationAvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest);
+        public abstract void AnnotationAvoidCloseNeighbor(IVehicle self, IVehicle other, FixMath.F64 additionalDistance);
+        public abstract void AnnotationAvoidNeighbor(IVehicle self, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
+        public abstract void AnnotationAvoidNeighbor(IVehicle self, IVehicle threat, Obstacles.PathIntersection intersection);
+    }
 }

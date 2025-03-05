@@ -285,5 +285,11 @@ namespace SharpSteer2
 				_lastPosition = Position;
 			}
 		}
-	}
+
+        public override void AnnotationAvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision) { }
+        public override void AnnotationAvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest) { }
+        public override void AnnotationAvoidCloseNeighbor(IVehicle self, IVehicle other, FixMath.F64 additionalDistance) { }
+        public override void AnnotationAvoidNeighbor(IVehicle self, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture) { }
+        public override void AnnotationAvoidNeighbor(IVehicle self, IVehicle threat, Obstacles.PathIntersection intersection) { }
+    }
 }

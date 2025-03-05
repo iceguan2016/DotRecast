@@ -55,5 +55,11 @@ namespace SharpSteer2
         /// the maximum speed this vehicle is allowed to move
         /// </summary>
 		FixMath.F64 MaxSpeed { get; }
-	}
+
+        void AnnotationAvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision);
+        void AnnotationAvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest);
+        void AnnotationAvoidCloseNeighbor(IVehicle self, IVehicle other, FixMath.F64 additionalDistance);
+        void AnnotationAvoidNeighbor(IVehicle self, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
+        void AnnotationAvoidNeighbor(IVehicle self, IVehicle threat, Obstacles.PathIntersection intersection);
+    }
 }

@@ -75,12 +75,21 @@ namespace DotRecast.Pathfinding.Crowds
             }
         }
 
+        public void SolidCube(FixMath.F64Vec3 center, FixMath.F64Vec3 size, FixMath.F64Vec3 color, FixMath.F64 opacity)
+        {
+            if (_draw != null)
+            {
+                _draw.DrawSolidCube(center.Cast(), UnityEngine.Quaternion.identity, size.Cast(), color.Cast(opacity));
+            }
+        }
+
         public void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision)
         {
         }
 
         public void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest)
         {
+
         }
 
         public void PathFollowing(IVehicle self, FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside)

@@ -116,6 +116,8 @@ namespace SharpSteer2
 
         void SolidPlane(FixMath.F64Vec3 point, FixMath.F64Vec3 normal, FixMath.F64Vec2 size, FixMath.F64Vec3 color, FixMath.F64 opacity);
 
+        void SolidCube(FixMath.F64Vec3 center, FixMath.F64Vec3 size, FixMath.F64Vec3 color, FixMath.F64 opacity);
+
         /// <summary>
         /// Called when steerToAvoidObstacles decides steering is required.
         /// </summary>

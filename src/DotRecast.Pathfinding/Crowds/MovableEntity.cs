@@ -411,5 +411,44 @@ namespace DotRecast.Pathfinding.Crowds
 
             return totalForce;
         }
+
+        public override void AnnotationAvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision)
+        {
+
+        }
+
+        public override void AnnotationAvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest) 
+        {
+            if (nearest.intersect)
+            {
+#if ENABLE_STEER_AGENT_DEBUG
+                ref var pathIntersectionInfo = ref Debuger.PathInterSectionBuff.Alloc(EntityManager.FrameNo);
+                pathIntersectionInfo = nearest;
+
+                if (nearest.obstacle is RectangleObstacle obstacle)
+                {
+                    ref var rectangeObstacleInfo = ref Debuger.RectangeObstacleInfoBuff.Alloc(EntityManager.FrameNo);
+                    rectangeObstacleInfo.Position = obstacle.Position;
+                    rectangeObstacleInfo.Forward = obstacle.Forward;
+                    rectangeObstacleInfo.Side = obstacle.Side;
+                    rectangeObstacleInfo.Up = obstacle.Up;
+                    rectangeObstacleInfo.Width = obstacle.width;
+                    rectangeObstacleInfo.Height = obstacle.height;
+                }
+#endif
+            }
+        }
+
+        public override void AnnotationAvoidCloseNeighbor(IVehicle self, IVehicle other, FixMath.F64 additionalDistance) 
+        {
+        }
+
+        public override void AnnotationAvoidNeighbor(IVehicle self, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture) 
+        {
+        }
+
+        public override void AnnotationAvoidNeighbor(IVehicle self, IVehicle threat, SharpSteer2.Obstacles.PathIntersection intersection) 
+        {
+        }
     }
 }

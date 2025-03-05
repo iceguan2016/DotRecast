@@ -234,10 +234,13 @@ public class TileDelaunayDebugDraw : DrawInterface
         {
             int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
 
+            int[] fcol = new int[6];
+            DuCalcBoxColors(fcol, color, color);
+
             var halfSize = size * 0.5f;
             var min = p - halfSize;
             var max = p + halfSize;
-            m_draw.DebugDrawBoxWire(min.x, min.y, min.z, max.x, max.y, max.z, color, 1.0f);
+            m_draw.DebugDrawBox(min.x, min.y, min.z, max.x, max.y, max.z, fcol);
         }
     }
 
