@@ -376,9 +376,12 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             return FixMath.F64Vec3.FromDouble(pos.x, MapHeight, pos.y);
         };
 
-        System.Func<hxDaedalus.data.Face, bool> CheckVertexInRadius = (face) => {
+        System.Func<hxDaedalus.data.Face, bool> CheckIntersectionFaceAndCircle = (face) => {
+            // 这里改成Face的AABB盒是否和Circle相交判定，比只判定3个顶点更准确一些
             global::hxDaedalus.iterators.FromFaceToInnerEdges iterEdge = new hxDaedalus.iterators.FromFaceToInnerEdges();
             iterEdge.set_fromFace(face);
+            var min = new FixMath.F64Vec3(FixMath.F64.MaxValue, FixMath.F64.MaxValue, FixMath.F64.MaxValue);
+            var max = new FixMath.F64Vec3(FixMath.F64.MinValue, FixMath.F64.MinValue, FixMath.F64.MinValue);
             while (true)
             {
                 var innerEdge = iterEdge.next();
@@ -388,8 +391,36 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
                 }
 
                 var pos = VertextToF64Vec3(innerEdge.get_originVertex());
-                var distSq = center.DistanceSquared2D(pos);
-                if (distSq <= radiusSqured) return true;
+                min.X = FixMath.F64.Min(min.X, pos.X);
+                min.Y = FixMath.F64.Min(min.Y, pos.Y);
+                min.Z = FixMath.F64.Min(min.Z, pos.Z);
+
+                max.X = FixMath.F64.Max(max.X, pos.X);
+                max.Y = FixMath.F64.Max(max.Y, pos.Y);
+                max.Z = FixMath.F64.Max(max.Z, pos.Z);
+            }
+
+            if (min.X <= max.X && min.Y <= max.Y && min.Z <= max.Z)
+            {
+                var radius_v3 = new FixMath.F64Vec3(inRadius, inRadius, inRadius);
+                var circle_min = center - radius_v3;
+                var circle_max = center + radius_v3;
+
+                // 逐维度比较，如果有一个维度不相交，则返回 false
+                if (max.X < circle_min.X || min.X > circle_max.X)
+                {
+                    return false;
+                }
+                //if (max.Y < circle_min.Y || min.Y > circle_max.Y)
+                //{
+                //    return false;
+                //}
+                if (max.Z < circle_min.Z || min.Z > circle_max.Z)
+                {
+                    return false;
+                }
+
+                return true;
             }
             return false;
         };
@@ -429,7 +460,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
                         // 检查是否已经访问过
                         if (visiedFaces.Contains(adjacentFace)) continue;
                         // 检查是否在范围内
-                        if (!CheckVertexInRadius(adjacentFace)) continue;
+                        if (!CheckIntersectionFaceAndCircle(adjacentFace)) continue;
                         pendingVisitFaces.Enqueue(adjacentFace);
                     }
                 }
