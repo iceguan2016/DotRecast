@@ -40,6 +40,24 @@ namespace Game.Utils
 
         }
 
+        // 暂停/恢复模拟
+        private static bool _isPaused = false;
+        public static void Pause() { _isPaused = true; }
+        public static void Resume() { _isPaused = false; }
+        public static bool IsPaused() { return _isPaused; }
+        // 单步执行
+        private static bool _isNextStep = false;
+        public static void NextStep() { _isNextStep = true; } 
+        public static bool CanNextStep()
+        {
+            if (!_isPaused || _isNextStep)
+            {
+                _isNextStep = false;
+                return true;
+            }
+            return false;
+        }
+
         public static void DrawLine(Vector3 a, Vector3 b, Color c, float duration=0.0f)
         { 
             if (drawInterface != null)

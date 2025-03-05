@@ -40,7 +40,11 @@ namespace SharpSteer2.Obstacles
         {
             if (null != annotation)
             {
+                // 绘制平面
                 annotation.SolidPlane(Position, Forward, new FixMath.F64Vec2(width, height), color);
+
+                // 绘制法线
+                annotation.Line(Position, Position + Forward * FixMath.F64.Half, Colors.Green, FixMath.F64.One);
             }
         }
 

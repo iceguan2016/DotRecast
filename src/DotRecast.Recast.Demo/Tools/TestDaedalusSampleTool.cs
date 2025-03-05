@@ -776,7 +776,7 @@ public class TestDaedalusSampleTool : ISampleTool
 
     public void HandleUpdate(float dt)
     {
-        if (null != _tool)
+        if (Debug.CanNextStep() && null != _tool)
         {
             _tool.Update(dt);
         }
@@ -802,6 +802,19 @@ public class TestDaedalusSampleTool : ISampleTool
         var EntityRadius = _tool.EntityRadius;
         ImGui.SliderFloat("Entity Radius", ref EntityRadius, 0.1f, 3.0f, "%.2f");
         _tool.EntityRadius = EntityRadius;
+
+        // 
+        ImGui.NewLine();
+        var isPaused = Debug.IsPaused();
+        if (ImGui.Button(isPaused? ">" : "||"))
+        {
+            if (isPaused) Debug.Resume(); else Debug.Pause();
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("|>"))
+        {
+            Debug.NextStep();
+        }
     }
 
     public void OnSampleChanged()
