@@ -96,7 +96,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             FollowPathAheadTime = FixMath.F64.FromFloat(3.0f),
             FollowPathWeight = FixMath.F64.FromFloat(1.0f),
 
-            AvoidObstacleAheadTime = FixMath.F64.FromFloat(0.1f),
+            AvoidObstacleAheadTime = FixMath.F64.FromFloat(1.0f),
             AvoidObstacleWeight = FixMath.F64.FromFloat(1.0f),
 
             AvoidNeighborAheadTime = FixMath.F64.FromFloat(1.0f),

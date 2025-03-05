@@ -263,6 +263,15 @@ namespace DotRecast.Pathfinding.Crowds
                     _boundaryObstacles[i].draw(annotation, false, Colors.Yellow, Position);
                 }
             }
+
+            // draw obstacle avoid region
+            var testPoint = PredictFuturePosition(Template.AvoidObstacleAheadTime);
+            // var point = (Position + testPoint) * FixMath.F64.Half;
+            // point.Y += FixMath.F64.Half;
+            //var length = testPoint.Distance(Position);
+            //var rotation = this.ToMatrix().ToQuat();
+            //Draw.drawBoxOutline(annotation, point, rotation, new FixMath.F64Vec3(FixMath.F64.FromFloat(1.0f), FixMath.F64.Zero, length), Colors.Green, FixMath.F64.FromFloat(1.0f));
+            Draw.drawLineAlpha(annotation, Position, testPoint, Colors.Yellow, FixMath.F64.FromFloat(0.4f));
         }
 
         // compute combined steering force: move forward, avoid obstacles

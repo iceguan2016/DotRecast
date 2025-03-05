@@ -107,5 +107,51 @@ namespace DotRecast.Pathfinding.Util
             // draw the circular collision boundary
             drawCircleOrDisk(annotation, r, FixMath.F64Vec3.Up, p + u, Colors.White, 20, false, false);
         }
+
+        public static void drawBoxOutline(
+            IAnnotationService annotation,
+            FixMath.F64Vec3 position,
+            FixMath.F64Quat rotation,
+            FixMath.F64Vec3 size,
+            FixMath.F64Vec3 color,
+            FixMath.F64 alpha)
+        {
+            var s = size / FixMath.F64.Two;  // half of main diagonal
+
+            var a = new FixMath.F64Vec3( s.X,  s.Y,  s.Z);
+            var b = new FixMath.F64Vec3( s.X,  s.Y, -s.Z);
+            var c = new FixMath.F64Vec3(-s.X,  s.Y, -s.Z);
+            var d = new FixMath.F64Vec3(-s.X,  s.Y,  s.Z);
+            
+            var e = new FixMath.F64Vec3( s.X, -s.Y,  s.Z);
+            var f = new FixMath.F64Vec3( s.X, -s.Y, -s.Z);
+            var g = new FixMath.F64Vec3(-s.X, -s.Y, -s.Z);
+            var h = new FixMath.F64Vec3(-s.X, -s.Y,  s.Z);
+            
+            var A = position + rotation * a;
+            var B = position + rotation * b;
+            var C = position + rotation * c;
+            var D = position + rotation * d;
+
+            var E = position + rotation * e;
+            var F = position + rotation * f;
+            var G = position + rotation * g;
+            var H = position + rotation * h;
+
+            drawLineAlpha(annotation, A, B, color, alpha);
+            drawLineAlpha(annotation, B, C, color, alpha);
+            drawLineAlpha(annotation, C, D, color, alpha);
+            drawLineAlpha(annotation, D, A, color, alpha);
+            
+            drawLineAlpha(annotation, A, E, color, alpha);
+            drawLineAlpha(annotation, B, F, color, alpha);
+            drawLineAlpha(annotation, C, G, color, alpha);
+            drawLineAlpha(annotation, D, H, color, alpha);
+            
+            drawLineAlpha(annotation, E, F, color, alpha);
+            drawLineAlpha(annotation, F, G, color, alpha);
+            drawLineAlpha(annotation, G, H, color, alpha);
+            drawLineAlpha(annotation, H, E, color, alpha);
+        }
     }
 }

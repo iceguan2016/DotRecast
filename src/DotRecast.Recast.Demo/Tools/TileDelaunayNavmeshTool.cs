@@ -228,6 +228,19 @@ public class TileDelaunayDebugDraw : DrawInterface
         }
     }
 
+    public void DrawSolidCube(Vector3 p, Quaternion q, Vector3 size, Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            var halfSize = size * 0.5f;
+            var min = p - halfSize;
+            var max = p + halfSize;
+            m_draw.DebugDrawBoxWire(min.x, min.y, min.z, max.x, max.y, max.z, color, 1.0f);
+        }
+    }
+
     public float GetMapHeight()
     {
         return MapHeight;

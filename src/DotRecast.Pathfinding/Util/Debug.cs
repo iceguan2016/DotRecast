@@ -15,6 +15,8 @@ namespace Game.Utils
         void DrawTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Color c);
 
         void DrawSolidPlane(Vector3 point, Vector3 normal, Vector2 size, Color c);
+
+        void DrawSolidCube(Vector3 p, Quaternion q, Vector3 size, Color c);
     }
 
     public static class Debug
