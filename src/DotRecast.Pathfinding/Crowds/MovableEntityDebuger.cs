@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Text;
 using SharpSteer2;
 using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
+using DotRecast.Pathfinding.Util;
 
 namespace DotRecast.Pathfinding.Crowds
 {
@@ -108,7 +106,7 @@ namespace DotRecast.Pathfinding.Crowds
             public FixMath.F64 Width;
             public FixMath.F64 Height;
         }
-        public FCycleDataBuffer<RectangeObstacleInfo> RectangeObstacleInfoBuff = new FCycleDataBuffer<RectangeObstacleInfo>(1024);
+        public FCycleDataBuffer<RectangeObstacleInfo> HitRectangeObstacleBuff = new FCycleDataBuffer<RectangeObstacleInfo>(1024);
 
         // 缓存历史entity的信息
         public struct EntityDebugInfo
@@ -181,6 +179,60 @@ namespace DotRecast.Pathfinding.Crowds
                     annotation.Line(point, normalEndPoint, Colors.Red, FixMath.F64.One);
                     // draw hint direction
                     annotation.Line(normalEndPoint, normalEndPoint + steerHint * dirVecLength, Colors.Green, FixMath.F64.One);
+                }
+            });
+
+            // 绘制阻挡信息
+            var LightCoral = FixMath.F64Vec3.FromFloat(240f / 255f, 128f / 255f, 128f / 255f);
+            HitRectangeObstacleBuff.ForEach((frame, hitObstacle) => {
+                if (ShouldDebugerDraw(frame))
+                {
+                    // 绘制平面
+                    var planePoint = hitObstacle.Position - hitObstacle.Forward * FixMath.F64.FromFloat(0.1f);
+                    annotation.SolidPlane(planePoint, hitObstacle.Forward, new FixMath.F64Vec2(hitObstacle.Width, hitObstacle.Height), LightCoral, FixMath.F64.FromFloat(0.3f));
+
+                    // 绘制法线
+                    annotation.Line(hitObstacle.Position, hitObstacle.Position + hitObstacle.Forward * FixMath.F64.Half, Colors.Green, FixMath.F64.One);
+                }
+            });
+
+            // Entity基础信息
+            EntityDebugInfoBuff.ForEach((frame, entity) => {
+                if (ShouldDebugerDraw(frame))
+                {
+                    var movable = new MovableEntity(null, null, null, annotation);
+                    movable.Position = entity.position;
+                    movable.Forward = entity.forward;
+                    movable.Side = entity.side;
+                    movable.Up = entity.up;
+                    movable.Radius = entity.radius;
+
+                    // draw vehicle
+                    Util.Draw.drawBasic2dCircularVehicle(annotation, movable, Colors.Gray50);
+                    // draw transform
+                    Util.Draw.drawAxes(annotation, movable, FixMath.F64Vec3.FromFloat(1f, 1f, 1f));
+
+                    // draw velocity
+                    var r = entity.radius;
+                    var u = r * FixMath.F64.FromFloat(0.05f) * FixMath.F64Vec3.Up; // slightly up
+                    var p = entity.position;
+                    var v = entity.velocity;
+                    var speed = v.Length();
+                    var maxSpeed = entity.maxSpeed;
+                    if (speed > 0)
+                    {
+                        var offset = FixMath.F64.FromFloat(0.1f) * FixMath.F64Vec3.Up;
+                        var len = Utilities.GetMappedRangeValueClamped(new FixMath.F64Vec2(FixMath.F64.Zero, maxSpeed), new FixMath.F64Vec2(FixMath.F64.Zero, r * 2), speed);
+                        var vn = v.Normalize();
+                        annotation.Line(p + u + offset, p + u + offset + vn * len, Colors.White, FixMath.F64.One);
+                    }
+
+                    // draw steer point
+                    var steerPosition = entity.steerPosition;
+                    var sp = steerPosition + u;
+                    var pointSize = FixMath.F64Vec3.FromFloat(0.02f, 0.02f, 0.02f);
+                    annotation.SolidCube(sp, pointSize, Colors.Red, FixMath.F64.One);
+                    annotation.Line(p + u, steerPosition + u, Colors.Red, FixMath.F64.One);
                 }
             });
         }

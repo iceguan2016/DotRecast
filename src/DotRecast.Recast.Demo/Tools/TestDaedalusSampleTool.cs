@@ -106,6 +106,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
     // crowd entities
     private IMovableEntityManager _entityManager = new MovableEntityManager();
+    public IMovableEntityManager EntityManager { get { return _entityManager; } }
 
     // annotation
     private EntityAnnotationServerice _annotationServerice = null;
@@ -528,7 +529,14 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         {
             if (null != InEntity)
             {
-                InEntity.OnDraw();
+                if (Debug.IsSimulationMode(eSimulationMode.Normal))
+                {
+                    InEntity.OnDraw();
+                }
+                else
+                {
+                    InEntity.Debuger?.Draw(InEntity.Annotation, InEntity, _entityManager.FrameNo, Debug.PlaybackFrameNo);
+                }
             }
         });
     }
@@ -805,15 +813,52 @@ public class TestDaedalusSampleTool : ISampleTool
 
         // 
         ImGui.NewLine();
-        var isPaused = Debug.IsPaused();
-        if (ImGui.Button(isPaused? ">" : "||"))
+        if (Debug.IsSimulationMode(eSimulationMode.Normal))
         {
-            if (isPaused) Debug.Resume(); else Debug.Pause();
+            // 正常模拟模式
+            if (ImGui.Button("Playback Mode"))
+            {
+                Debug.SetSimlationMode(eSimulationMode.Playback);
+            }
+
+            ImGui.NewLine();
+            
+            var isPaused = Debug.IsPaused();
+            if (ImGui.Button(isPaused ? ">" : "||"))
+            {
+                if (isPaused)
+                    Debug.Resume();
+                else
+                    Debug.Pause();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("|>"))
+            {
+                Debug.NextStep();
+            }
+            ImGui.NewLine();
         }
-        ImGui.SameLine();
-        if (ImGui.Button("|>"))
+        else if (Debug.IsSimulationMode(eSimulationMode.Playback))
         {
-            Debug.NextStep();
+            // 回放模式
+            if (ImGui.Button("Normal Mode"))
+            {
+                Debug.SetSimlationMode(eSimulationMode.Normal);
+            }
+
+            if (null != _tool.EntityManager)
+            {
+                var FrameNo = _tool.EntityManager.FrameNo;
+                ImGui.NewLine();
+                ImGui.LabelText("Frame", string.Format("{0}-{1}", FrameNo, Debug.PlaybackFrameNo));
+                ImGui.NewLine();
+                if (ImGui.Button("Reset")) Debug.PlaybackFrameNo = FrameNo;
+                ImGui.SameLine();
+                if (ImGui.Button("Prev")) Debug.PlaybackFrameNo = Math.Max(Debug.PlaybackFrameNo - 1, 1);
+                ImGui.SameLine();
+                if (ImGui.Button("Next")) Debug.PlaybackFrameNo = Math.Min(Debug.PlaybackFrameNo + 1, FrameNo);
+                ImGui.NewLine();
+            }
         }
     }
 

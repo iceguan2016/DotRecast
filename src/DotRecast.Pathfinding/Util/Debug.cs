@@ -19,6 +19,12 @@ namespace Game.Utils
         void DrawSolidCube(Vector3 p, Quaternion q, Vector3 size, Color c);
     }
 
+    public enum eSimulationMode
+    {
+        Normal = 0, // 正常模拟模式
+        Playback    // 回放模式
+    }
+
     public static class Debug
     {
         public static DrawInterface drawInterface = null;
@@ -42,6 +48,11 @@ namespace Game.Utils
 
         }
 
+        // 播放模式
+        private static eSimulationMode _simulationMode = eSimulationMode.Normal;
+        public static bool IsSimulationMode(eSimulationMode InMode) { return _simulationMode == InMode; }
+        public static void SetSimlationMode(eSimulationMode InMode) { _simulationMode = InMode; }
+        public static int PlaybackFrameNo { get; set; }
         // 暂停/恢复模拟
         private static bool _isPaused = false;
         public static void Pause() { _isPaused = true; }
@@ -52,6 +63,11 @@ namespace Game.Utils
         public static void NextStep() { _isNextStep = true; } 
         public static bool CanNextStep()
         {
+            if (IsSimulationMode(eSimulationMode.Playback))
+            {
+                return false;
+            }
+
             if (!_isPaused || _isNextStep)
             {
                 _isNextStep = false;

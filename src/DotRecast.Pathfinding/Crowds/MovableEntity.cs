@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using SharpSteer2.Pathway;
 using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
+using Game.Utils;
 
 namespace DotRecast.Pathfinding.Crowds
 {
@@ -80,6 +81,7 @@ namespace DotRecast.Pathfinding.Crowds
         }
 
         public MovableEntityDebuger Debuger { get; private set; }
+        public IAnnotationService Annotation { get { return annotation; } }
 
         // route for path following (waypoints and legs)
         private PolylinePathway Pathway = null;
@@ -427,7 +429,7 @@ namespace DotRecast.Pathfinding.Crowds
 
                 if (nearest.obstacle is RectangleObstacle obstacle)
                 {
-                    ref var rectangeObstacleInfo = ref Debuger.RectangeObstacleInfoBuff.Alloc(EntityManager.FrameNo);
+                    ref var rectangeObstacleInfo = ref Debuger.HitRectangeObstacleBuff.Alloc(EntityManager.FrameNo);
                     rectangeObstacleInfo.Position = obstacle.Position;
                     rectangeObstacleInfo.Forward = obstacle.Forward;
                     rectangeObstacleInfo.Side = obstacle.Side;

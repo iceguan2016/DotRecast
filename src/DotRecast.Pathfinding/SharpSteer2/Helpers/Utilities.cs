@@ -153,5 +153,29 @@ namespace SharpSteer2.Helpers
             Swap(list, i, lastIndex);
             list.RemoveAt(lastIndex);
         }
+
+        public static FixMath.F64 GetRangePct(FixMath.F64Vec2 Range, FixMath.F64 Value)
+        {
+	        return (Range.X != Range.Y) ? (Value - Range.X) / (Range.Y - Range.X) : Range.X;
+        }
+
+        public static FixMath.F64 GetRangeValue(FixMath.F64Vec2 Range, FixMath.F64 Pct)
+        {
+	        return FixMath.F64.Lerp(Range.X, Range.Y, Pct);
+        }
+
+        /** For the given Value clamped to the [Input:Range] inclusive, returns the corresponding percentage in [Output:Range] Inclusive. */
+        public static FixMath.F64 GetMappedRangeValueClamped(FixMath.F64Vec2 InputRange, FixMath.F64Vec2 OutputRange, FixMath.F64 Value)
+	    {
+
+            var ClampedPct = FixMath.F64.Clamp01(GetRangePct(InputRange, Value));
+		    return GetRangeValue(OutputRange, ClampedPct);
+        }
+
+        /** Transform the given Value relative to the input range to the Output Range. */
+        public static FixMath.F64 GetMappedRangeValueUnclamped(FixMath.F64Vec2 InputRange, FixMath.F64Vec2 OutputRange, FixMath.F64 Value)
+        {
+            return GetRangeValue(OutputRange, GetRangePct(InputRange, Value));
+        }
     }
 }
