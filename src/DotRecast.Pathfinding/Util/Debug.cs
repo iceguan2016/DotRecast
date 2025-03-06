@@ -1,3 +1,4 @@
+using DotRecast.Pathfinding.Util;
 using UnityEngine;
 
 namespace Game.Utils
@@ -75,6 +76,8 @@ namespace Game.Utils
             }
             return false;
         }
+        // 当前调试EntityId
+        public static UniqueId DebugEntityId { get; set; }
 
         public static void DrawLine(Vector3 a, Vector3 b, Color c, float duration=0.0f)
         { 

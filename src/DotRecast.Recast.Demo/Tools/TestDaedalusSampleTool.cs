@@ -533,9 +533,12 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
                 {
                     InEntity.OnDraw();
                 }
-                else
+                else if (Debug.IsSimulationMode(eSimulationMode.Playback))
                 {
-                    InEntity.Debuger?.Draw(InEntity.Annotation, InEntity, _entityManager.FrameNo, Debug.PlaybackFrameNo);
+                    if (InEntity.ID == Debug.DebugEntityId)
+                    {
+                        InEntity.Debuger?.Draw(InEntity.Annotation, InEntity, _entityManager.FrameNo, Debug.PlaybackFrameNo);
+                    }
                 }
             }
         });
@@ -846,19 +849,54 @@ public class TestDaedalusSampleTool : ISampleTool
                 Debug.SetSimlationMode(eSimulationMode.Normal);
             }
 
+            // 显示所有EntityId
+            var Items = new List<string>();
+            _tool.EntityManager.ForEachEntity(entity => {
+                Items.Add(entity.ID.Id.ToString());
+            });
+
             if (null != _tool.EntityManager)
             {
                 var FrameNo = _tool.EntityManager.FrameNo;
                 ImGui.NewLine();
                 ImGui.LabelText("Frame", string.Format("{0}-{1}", FrameNo, Debug.PlaybackFrameNo));
                 ImGui.NewLine();
-                if (ImGui.Button("Reset")) Debug.PlaybackFrameNo = FrameNo;
+                if (ImGui.Button("Reset"))
+                    Debug.PlaybackFrameNo = FrameNo;
                 ImGui.SameLine();
-                if (ImGui.Button("Prev")) Debug.PlaybackFrameNo = Math.Max(Debug.PlaybackFrameNo - 1, 1);
+                if (ImGui.Button("Prev"))
+                    Debug.PlaybackFrameNo = Math.Max(Debug.PlaybackFrameNo - 1, 1);
                 ImGui.SameLine();
-                if (ImGui.Button("Next")) Debug.PlaybackFrameNo = Math.Min(Debug.PlaybackFrameNo + 1, FrameNo);
+                if (ImGui.Button("Next"))
+                    Debug.PlaybackFrameNo = Math.Min(Debug.PlaybackFrameNo + 1, FrameNo);
                 ImGui.NewLine();
             }
+
+            if (Items.Count > 0)
+            {
+                var DebugEntityId = Debug.DebugEntityId.Id.ToString();
+                var CurrItemIndex = Items.FindIndex(id => id == DebugEntityId);
+                if (ImGui.BeginCombo("EntityId", CurrItemIndex != -1? Items[CurrItemIndex] : "None"))
+                {
+                    for (int n = 0; n < Items.Count; n++)
+                    {
+                        bool is_selected = (CurrItemIndex == n);
+                        if (ImGui.Selectable(Items[n], is_selected))
+                            CurrItemIndex = n;
+                        if (is_selected)
+                            ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
+                    }
+                }
+                ImGui.EndCombo();
+
+                if (CurrItemIndex != -1)
+                {
+                    var id = (uint)int.Parse(Items[CurrItemIndex]);
+                    Debug.DebugEntityId = new UniqueId(id, "");
+                }
+            }
+
+            
         }
     }
 
