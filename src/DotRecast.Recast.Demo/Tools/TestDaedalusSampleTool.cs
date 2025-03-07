@@ -919,7 +919,7 @@ public class TestDaedalusSampleTool : ISampleTool
                         if (Debug.DebugerDataType != Type)
                         {
                             Debug.DebugerDataType = Type;
-                            Debug.PlaybackFrameNo = UpdatePlaybackFrameNo(FrameNo, eUpdatePlaybackFrameReason.Reset);
+                            Debug.PlaybackFrameNo = UpdatePlaybackFrameNo(Debug.PlaybackFrameNo, eUpdatePlaybackFrameReason.Reset);
                         }
                     }
                 }
