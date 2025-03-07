@@ -122,11 +122,11 @@ namespace SharpSteer2
         /// Called when steerToAvoidObstacles decides steering is required.
         /// </summary>
         /// <param name="minDistanceToCollision"></param>
-        void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision);
+        void AvoidObstacle(IVehicle vehicle, FixMath.F64 minDistanceToCollision);
 
         // called when steerToAvoidObstacles decides steering is required
         // (default action is to do nothing, layered classes can overload it)
-        void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision, Obstacles.PathIntersection nearest);
+        void AvoidObstacle(IVehicle vehicle, FixMath.F64 minDistanceToCollision, Obstacles.PathIntersection nearest);
 
 		/// <summary>
 		/// Called when steerToFollowPath decides steering is required.
@@ -135,14 +135,14 @@ namespace SharpSteer2
 		/// <param name="onPath"></param>
 		/// <param name="target"></param>
 		/// <param name="outside"></param>
-		void PathFollowing(IVehicle self, FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside);
+		void PathFollowing(IVehicle vehicle, FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside);
 
 		/// <summary>
 		/// Called when steerToAvoidCloseNeighbors decides steering is required.
 		/// </summary>
 		/// <param name="other"></param>
 		/// <param name="additionalDistance"></param>
-		void AvoidCloseNeighbor(IVehicle self, IVehicle other, FixMath.F64 additionalDistance);
+		void AvoidCloseNeighbor(IVehicle vehicle, IVehicle other, FixMath.F64 additionalDistance);
 
 		/// <summary>
 		/// Called when steerToAvoidNeighbors decides steering is required.
@@ -151,8 +151,8 @@ namespace SharpSteer2
 		/// <param name="steer"></param>
 		/// <param name="ourFuture"></param>
 		/// <param name="threatFuture"></param>
-		void AvoidNeighbor(IVehicle self, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
-        void AvoidNeighbor2(IVehicle self, IVehicle threat, PathIntersection intersection);
+		void AvoidNeighbor(IVehicle vehicle, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
+        void AvoidNeighbor(IVehicle vehicle, IVehicle threat, PathIntersection intersection);
 
 		/// <summary>
 		/// Draws lines from the vehicle's position showing its velocity and acceleration.

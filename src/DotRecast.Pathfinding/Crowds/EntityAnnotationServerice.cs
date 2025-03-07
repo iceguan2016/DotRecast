@@ -83,18 +83,19 @@ namespace DotRecast.Pathfinding.Crowds
             }
         }
 
-        public void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision)
+        public void AvoidObstacle(IVehicle vehicle, FixMath.F64 minDistanceToCollision)
         {
+            vehicle.AnnotationAvoidObstacle(minDistanceToCollision);
         }
 
-        public void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest)
+        public void AvoidObstacle(IVehicle vehicle, FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest)
         {
-
+            vehicle.AnnotationAvoidObstacle(minDistanceToCollision, nearest);
         }
 
-        public void PathFollowing(IVehicle self, FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside)
+        public void PathFollowing(IVehicle vehicle, FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside)
         {
-            var position = self.Position;
+            var position = vehicle.Position;
             // draw line from our position to our predicted future position
             Line(position, future, Colors.Yellow, FixMath.F64.One);
 
@@ -110,16 +111,19 @@ namespace DotRecast.Pathfinding.Crowds
             Line(onPathBoundary, future, Colors.LightOrange, FixMath.F64.One);
         }
 
-        public void AvoidCloseNeighbor(IVehicle self, IVehicle other, FixMath.F64 additionalDistance)
+        public void AvoidCloseNeighbor(IVehicle vehicle, IVehicle other, FixMath.F64 additionalDistance)
         {
+            vehicle.AnnotationAvoidCloseNeighbor(other, additionalDistance);
         }
 
-        public void AvoidNeighbor(IVehicle self, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture)
+        public void AvoidNeighbor(IVehicle vehicle, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture)
         {
+            vehicle.AnnotationAvoidNeighbor(threat, steer, ourFuture, threatFuture);
         }
 
-        public void AvoidNeighbor2(IVehicle self, IVehicle threat, PathIntersection intersection)
+        public void AvoidNeighbor(IVehicle vehicle, IVehicle threat, PathIntersection intersection)
         {
+            vehicle.AnnotationAvoidNeighbor(threat, intersection);
         }
 
         public void VelocityAcceleration(IVehicle vehicle)

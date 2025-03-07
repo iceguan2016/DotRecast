@@ -27,6 +27,7 @@ using Serilog.Core;
 using Silk.NET.Windowing;
 using SharpSteer2.Helpers;
 using Game.Utils;
+using Silk.NET.OpenGL;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -793,6 +794,13 @@ public class TestDaedalusSampleTool : ISampleTool
         }
     }
 
+    enum eUpdatePlaybackFrameReason
+    {
+        Reset = 0,
+        Prev,
+        Next,
+    };
+
     public void Layout()
     {
         ImGui.Text($"Test Daedalus Tool Mode");
@@ -849,11 +857,26 @@ public class TestDaedalusSampleTool : ISampleTool
                 Debug.SetSimlationMode(eSimulationMode.Normal);
             }
 
-            // 显示所有EntityId
-            var Items = new List<string>();
-            _tool.EntityManager.ForEachEntity(entity => {
-                Items.Add(entity.ID.Id.ToString());
-            });
+            System.Func<int, eUpdatePlaybackFrameReason, int> UpdatePlaybackFrameNo = (FrameNo, Reason) =>
+            {
+                if (Debug.DebugEntityId.IsValid())
+                {
+                    var Entity = _tool.EntityManager.GetEntityById(Debug.DebugEntityId);
+                    if (null != Entity)
+                    {
+                        if (Reason == eUpdatePlaybackFrameReason.Reset || 
+                            Reason == eUpdatePlaybackFrameReason.Prev)
+                        {
+                            return Entity.Debuger.GetPrevValidDataFrame(FrameNo, Debug.DebugerDataType);
+                        }
+                        else if (Reason == eUpdatePlaybackFrameReason.Next)
+                        {
+                            return Entity.Debuger.GetNextValidDataFrame(FrameNo, Debug.DebugerDataType);
+                        }
+                    }
+                }
+                return FrameNo;
+            };
 
             if (null != _tool.EntityManager)
             {
@@ -862,40 +885,84 @@ public class TestDaedalusSampleTool : ISampleTool
                 ImGui.LabelText("Frame", string.Format("{0}-{1}", FrameNo, Debug.PlaybackFrameNo));
                 ImGui.NewLine();
                 if (ImGui.Button("Reset"))
-                    Debug.PlaybackFrameNo = FrameNo;
+                    Debug.PlaybackFrameNo = UpdatePlaybackFrameNo(FrameNo, eUpdatePlaybackFrameReason.Reset);
                 ImGui.SameLine();
                 if (ImGui.Button("Prev"))
-                    Debug.PlaybackFrameNo = Math.Max(Debug.PlaybackFrameNo - 1, 1);
+                    Debug.PlaybackFrameNo = UpdatePlaybackFrameNo(Math.Max(Debug.PlaybackFrameNo - 1, 1), eUpdatePlaybackFrameReason.Prev);
                 ImGui.SameLine();
                 if (ImGui.Button("Next"))
-                    Debug.PlaybackFrameNo = Math.Min(Debug.PlaybackFrameNo + 1, FrameNo);
+                    Debug.PlaybackFrameNo = UpdatePlaybackFrameNo(Math.Min(Debug.PlaybackFrameNo + 1, FrameNo), eUpdatePlaybackFrameReason.Next);
                 ImGui.NewLine();
-            }
 
-            if (Items.Count > 0)
-            {
-                var DebugEntityId = Debug.DebugEntityId.Id.ToString();
-                var CurrItemIndex = Items.FindIndex(id => id == DebugEntityId);
-                if (ImGui.BeginCombo("EntityId", CurrItemIndex != -1? Items[CurrItemIndex] : "None"))
+
+                // 显示调试信息类型
                 {
-                    for (int n = 0; n < Items.Count; n++)
+                    var CurrItemIndex = (int)Debug.DebugerDataType;
+                    var DataTypes = System.Enum.GetNames(typeof(MovableEntityDebuger.eDebugerDataType));
+
+                    if (ImGui.BeginCombo("DataType", DataTypes[CurrItemIndex]))
                     {
-                        bool is_selected = (CurrItemIndex == n);
-                        if (ImGui.Selectable(Items[n], is_selected))
-                            CurrItemIndex = n;
-                        if (is_selected)
-                            ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
+                        for (int n = 0; n < DataTypes.Length; n++)
+                        {
+                            bool is_selected = (CurrItemIndex == n);
+                            if (ImGui.Selectable(DataTypes[n], is_selected))
+                                CurrItemIndex = n;
+                            if (is_selected)
+                                ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
+                        }
+                    }
+                    ImGui.EndCombo();
+
+                    if (CurrItemIndex != -1)
+                    {
+                        var Type = (MovableEntityDebuger.eDebugerDataType)CurrItemIndex;
+                        if (Debug.DebugerDataType != Type)
+                        {
+                            Debug.DebugerDataType = Type;
+                            Debug.PlaybackFrameNo = UpdatePlaybackFrameNo(FrameNo, eUpdatePlaybackFrameReason.Reset);
+                        }
                     }
                 }
-                ImGui.EndCombo();
 
-                if (CurrItemIndex != -1)
+                // 显示所有EntityId
+                var Items = new List<string>();
+                _tool.EntityManager.ForEachEntity(entity =>
                 {
-                    var id = (uint)int.Parse(Items[CurrItemIndex]);
-                    Debug.DebugEntityId = new UniqueId(id, "");
+                    Items.Add(entity.ID.Id.ToString());
+                });
+
+                if (Items.Count > 0)
+                {
+                    var DebugEntityId = Debug.DebugEntityId.Id.ToString();
+                    var CurrItemIndex = Items.FindIndex(id => id == DebugEntityId);
+                    if (ImGui.BeginCombo("EntityId", CurrItemIndex != -1 ? Items[CurrItemIndex] : "None"))
+                    {
+                        for (int n = 0; n < Items.Count; n++)
+                        {
+                            bool is_selected = (CurrItemIndex == n);
+                            if (ImGui.Selectable(Items[n], is_selected))
+                                CurrItemIndex = n;
+                            if (is_selected)
+                                ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
+                        }
+                    }
+                    ImGui.EndCombo();
+
+                    if (CurrItemIndex != -1)
+                    {
+                        var id = (uint)int.Parse(Items[CurrItemIndex]);
+                        if (Debug.DebugEntityId.Id != id)
+                        {
+                            Debug.DebugEntityId = new UniqueId(id, "");
+                            Debug.PlaybackFrameNo = UpdatePlaybackFrameNo(FrameNo, eUpdatePlaybackFrameReason.Reset);
+                        }
+                    }
+                    else
+                    {
+                        Debug.PlaybackFrameNo = -1;
+                    }
                 }
             }
-
             
         }
     }

@@ -513,7 +513,7 @@ namespace SharpSteer2.Helpers
                     //Move it out based on our radius + theirs
                     resultVector *= vehicle.Radius + threat.Radius;
 
-                    if (null != annotation) annotation.AvoidNeighbor2(vehicle, threat, intersection);
+                    if (null != annotation) annotation.AvoidNeighbor(vehicle, threat, intersection);
                 }
                 return resultVector;
             };

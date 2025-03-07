@@ -92,6 +92,15 @@ namespace DotRecast.Pathfinding.Crowds
 
     public class MovableEntityDebuger
     {
+        public enum eDebugerDataType
+        {
+            PathIntersection = 0,
+	        LocalBoundary,
+	        EntityInfo,
+	        SteerForceInfo,
+	        SteerAvoidNeighborInfo,
+        }
+
         static int SteerDebugerDrawFrames = 10;
 
         // 缓存历史intersection信息
@@ -121,7 +130,7 @@ namespace DotRecast.Pathfinding.Crowds
             public FixMath.F64Vec3 side;
             public FixMath.F64Vec3 up;
         };
-        public FCycleDataBuffer<EntityDebugInfo> EntityDebugInfoBuff = new FCycleDataBuffer<EntityDebugInfo>(1024);
+        public FCycleDataBuffer<EntityDebugInfo> EntityInfoBuff = new FCycleDataBuffer<EntityDebugInfo>(1024);
 
         // Steer force
         public struct SteerForceInfo
@@ -172,7 +181,7 @@ namespace DotRecast.Pathfinding.Crowds
 
                     var dirVecLength = FixMath.F64.FromFloat(0.1f);
                     // draw hit point
-                    var pointSize = FixMath.F64Vec3.One;
+                    var pointSize = FixMath.F64Vec3.FromFloat(0.01f, 0.01f, 0.01f);
                     annotation.SolidCube(point, pointSize, Colors.Red, FixMath.F64.One);
                     // draw hit normal
                     var normalEndPoint = point + normal * dirVecLength;
@@ -197,7 +206,7 @@ namespace DotRecast.Pathfinding.Crowds
             });
 
             // Entity基础信息
-            EntityDebugInfoBuff.ForEach((frame, entity) => {
+            EntityInfoBuff.ForEach((frame, entity) => {
                 if (ShouldDebugerDraw(frame))
                 {
                     var movable = new MovableEntity(null, null, null, annotation);
@@ -235,6 +244,46 @@ namespace DotRecast.Pathfinding.Crowds
                     annotation.Line(p + u, steerPosition + u, Colors.Red, FixMath.F64.One);
                 }
             });
+        }
+
+        public int GetPrevValidDataFrame(int frameNo, eDebugerDataType dataType)
+        {
+            switch (dataType)
+            {
+                case eDebugerDataType.PathIntersection:
+                    return PathInterSectionBuff.FindNearestPrevFrame(frameNo);
+                case eDebugerDataType.LocalBoundary:
+                    // return LocalBoundaryBuff.FindNearestPrevFrame(frameNo);
+                case eDebugerDataType.EntityInfo:
+                    return EntityInfoBuff.FindNearestPrevFrame(frameNo);
+                case eDebugerDataType.SteerForceInfo:
+                    return SteerFoceInfoBuff.FindNearestPrevFrame(frameNo);
+                case eDebugerDataType.SteerAvoidNeighborInfo:
+                    return SteerAvoidNeighborInfoBuff.FindNearestPrevFrame(frameNo);
+                default:
+                    break;
+            }
+            return frameNo;
+        }
+
+        public int GetNextValidDataFrame(int frameNo, eDebugerDataType dataType)
+        {
+            switch (dataType)
+            {
+                case eDebugerDataType.PathIntersection:
+                    return PathInterSectionBuff.FindNearestNextFrame(frameNo);
+                case eDebugerDataType.LocalBoundary:
+                    // return LocalBoundaryBuff.FindNearestNextFrame(frameNo);
+                case eDebugerDataType.EntityInfo:
+                    return EntityInfoBuff.FindNearestNextFrame(frameNo);
+                case eDebugerDataType.SteerForceInfo:
+                    return SteerFoceInfoBuff.FindNearestNextFrame(frameNo);
+                case eDebugerDataType.SteerAvoidNeighborInfo:
+                    return SteerAvoidNeighborInfoBuff.FindNearestNextFrame(frameNo);
+                default:
+                    break;
+            }
+            return frameNo;
         }
     }
 }

@@ -66,31 +66,31 @@ namespace SharpSteer2
         { 
         }
 
-        public void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision)
+        public void AvoidObstacle(IVehicle vehicle, FixMath.F64 minDistanceToCollision)
         {
 
         }
 
-        public void AvoidObstacle(IVehicle self, FixMath.F64 minDistanceToCollision, PathIntersection nearest)
+        public void AvoidObstacle(IVehicle vehicle, FixMath.F64 minDistanceToCollision, PathIntersection nearest)
         {
         }
 
-        public void PathFollowing(IVehicle self, FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside)
-        {
-
-        }
-
-        public void AvoidCloseNeighbor(IVehicle self, IVehicle other, FixMath.F64 additionalDistance)
+        public void PathFollowing(IVehicle vehicle, FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside)
         {
 
         }
 
-        public void AvoidNeighbor(IVehicle self, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture)
+        public void AvoidCloseNeighbor(IVehicle vehicle, IVehicle other, FixMath.F64 additionalDistance)
         {
 
         }
 
-        public void AvoidNeighbor2(IVehicle self, IVehicle threat, PathIntersection intersection)
+        public void AvoidNeighbor(IVehicle vehicle, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture)
+        {
+
+        }
+
+        public void AvoidNeighbor(IVehicle vehicle, IVehicle threat, PathIntersection intersection)
         {
 
         }
