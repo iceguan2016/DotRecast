@@ -88,6 +88,9 @@ namespace DotRecast.Pathfinding.Crowds
         // True means walking forward along the path, false means walking backward along the path
         private bool _pathDirection = true;
         private FixMath.F64Vec3? _pathReferencePosition = null;
+        // Record the most recent avoidance direction
+        private SteerLibrary.AvoidReferenceInfo _avoidReferenceInfo = new AvoidReferenceInfo();
+        private IVehicle.FAvoidNeighborInfo _avoidBeighborinfo = new IVehicle.FAvoidNeighborInfo();
 
         // local boundary
         public static readonly int  MaxBoundarySegmentNum = 10;
@@ -306,7 +309,7 @@ namespace DotRecast.Pathfinding.Crowds
                 steeringForce = this.SteerToFollowPath(_pathDirection, predictionTime, Pathway, MaxSpeed, out var currentPathDistance, annotation) * Template.FollowPathWeight;
 
                 // float pathDistanceOffset = (_pathDirection ? 1 : -1) * predictionTime * Speed;
-                referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + FixMath.F64.FromFloat(0.5f));
+                // referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + FixMath.F64.FromFloat(0.5f));
             }
             else
             {
@@ -344,14 +347,8 @@ namespace DotRecast.Pathfinding.Crowds
 
                 if (_boundaryObstacles.Count > 0)
                 {
-                    if (referencePoint != null)
-                    {
-                        obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, referencePoint) * Template.AvoidObstacleWeight;
-                    }
-                    else
-                    {
-                        obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, null) * Template.AvoidObstacleWeight;
-                    }
+                   obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, ref _avoidReferenceInfo) * Template.AvoidObstacleWeight;
+
 #if ENABLE_STEER_AGENT_DEBUG
 			        info.obstacleForce = obstacleAvoidance * forceScale;
 #endif
@@ -379,7 +376,7 @@ namespace DotRecast.Pathfinding.Crowds
                     }
 
                     // collisionAvoidance = steerToAvoidNeighbors(timeCollisionWithNeighbor, neighbors);
-                    collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors);
+                    collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors, ref _avoidBeighborinfo);
                     collisionAvoidance = collisionAvoidance.Normalize() * MaxForce * Template.AvoidNeighborWeight;
 
 #if ENABLE_STEER_AGENT_DEBUG
@@ -412,6 +409,24 @@ namespace DotRecast.Pathfinding.Crowds
 #endif
 
             return totalForce;
+        }
+
+        public override FixMath.F64Vec3 GetAvoidObstacleDirection(ref PathIntersection pathIntersection) 
+        { 
+
+            return FixMath.F64Vec3.Zero; 
+        }
+
+        public override FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, PathIntersection? intersection, ref IVehicle.FAvoidNeighborInfo info) 
+        {
+            // 选择最优避让方向规则：
+            // (1) 与desiredVelocity方向最接近
+            // (2) 和上一次选择side保持一致
+            // (3) 被避让单位是否在避让自己，选择与其保持一致的避让方向（比如都选左，或者右）
+            // (4) 检查选择的避让方向是否会撞墙
+
+
+            return FixMath.F64Vec3.Zero; 
         }
 
         public override void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision)

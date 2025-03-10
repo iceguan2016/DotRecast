@@ -9,6 +9,8 @@
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
 using System.Numerics;
+using System.Xml;
+using SharpSteer2.Obstacles;
 
 namespace SharpSteer2
 {
@@ -56,10 +58,27 @@ namespace SharpSteer2
         /// </summary>
 		FixMath.F64 MaxSpeed { get; }
 
+        // calculate reference avoidance direction
+        FixMath.F64Vec3 GetAvoidObstacleDirection(ref PathIntersection pathIntersection);
+        public enum eAvoidVOSide
+        {
+            None = 0,
+            Left,
+            Right
+        }
+        public struct FAvoidNeighborInfo
+        {
+            // 当前避让的Entity
+            public UniqueId EntityId { get; set; }
+            // 当前选择的避让Entity的VO方向
+            public eAvoidVOSide VOSide { get; set; }
+        }
+        FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, PathIntersection? intersection, ref FAvoidNeighborInfo info);
+
         void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision);
-        void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest);
+        void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision, PathIntersection nearest);
         void AnnotationAvoidCloseNeighbor(IVehicle other, FixMath.F64 additionalDistance);
         void AnnotationAvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
-        void AnnotationAvoidNeighbor(IVehicle threat, Obstacles.PathIntersection intersection);
+        void AnnotationAvoidNeighbor(IVehicle threat, PathIntersection intersection);
     }
 }

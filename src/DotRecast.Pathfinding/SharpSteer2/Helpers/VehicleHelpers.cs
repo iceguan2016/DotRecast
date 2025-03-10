@@ -156,7 +156,8 @@ namespace SharpSteer2.Helpers
         /// <returns></returns>
         public static FixMath.F64Vec3 SteerToAvoidObstacle(this IVehicle vehicle, FixMath.F64 minTimeToCollision, IObstacle obstacle, IAnnotationService annotation = null)
         {
-            var avoidance = obstacle.steerToAvoid(vehicle as BaseVehicle, minTimeToCollision);
+            var referenceInfo = new SteerLibrary.AvoidReferenceInfo();
+            var avoidance = obstacle.steerToAvoid(vehicle as BaseVehicle, minTimeToCollision, ref referenceInfo);
 
             // XXX more annotation modularity problems (assumes spherical obstacle)
             if (avoidance != FixMath.F64Vec3.Zero && annotation != null)
@@ -165,13 +166,13 @@ namespace SharpSteer2.Helpers
             return avoidance;
         }
 
-        public static FixMath.F64Vec3 SteerToAvoidObstacles(this IVehicle vehicle, FixMath.F64 minTimeToCollision, IEnumerable<IObstacle> obstacles, FixMath.F64Vec3? referencePoint, IAnnotationService annotation = null)
+        public static FixMath.F64Vec3 SteerToAvoidObstacles(this IVehicle vehicle, FixMath.F64 minTimeToCollision, IEnumerable<IObstacle> obstacles, ref SteerLibrary.AvoidReferenceInfo referenceInfo, IAnnotationService annotation = null)
         {
             var avoidance = Obstacle.steerToAvoidObstacles(vehicle as BaseVehicle, 
                                                            minTimeToCollision,
                                                            obstacles,
                                                            out var nearest,
-                                                           referencePoint);
+                                                           ref referenceInfo);
 
             // XXX more annotation modularity problems (assumes spherical obstacle)
             if (annotation != null && avoidance != FixMath.F64Vec3.Zero)
@@ -492,7 +493,7 @@ namespace SharpSteer2.Helpers
             return vehicle.Side * steer;
         }
 
-        public static FixMath.F64Vec3 SteerToAvoidNeighbors2(this IVehicle vehicle, FixMath.F64 minTimeToCollision, IEnumerable<IVehicle> others, IAnnotationService annotation = null)
+        public static FixMath.F64Vec3 SteerToAvoidNeighbors(this IVehicle vehicle, FixMath.F64 minTimeToCollision, IEnumerable<IVehicle> others, ref IVehicle.FAvoidNeighborInfo info, IAnnotationService annotation = null)
         {
             // https://www.jdxdev.com/blog/2021/03/19/boids-for-rts/
             // https://howtorts.github.io/2014/01/14/avoidance-behaviours.html
@@ -583,7 +584,9 @@ namespace SharpSteer2.Helpers
             // if a potential collision was found, compute steering to avoid
             if (threat != null)
             {
-                return avoidThreatEntity(threat);
+                // return avoidThreatEntity(threat);
+                var avoidDir = vehicle.GetAvoidNeighborDirection(threat, null, ref info);
+                return vehicle.Velocity - avoidDir.TruncateLength(vehicle.MaxSpeed);
             }
 
             // otherwise return zero
