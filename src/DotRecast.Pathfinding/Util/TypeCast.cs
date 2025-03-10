@@ -1,7 +1,7 @@
 
 namespace DotRecast.Pathfinding.Util
 {
-    public static class Unity
+    public static class TypeCast
     {
         public static UnityEngine.Vector3 Cast(this FixMath.F64Vec3 v)
         { 
@@ -26,6 +26,16 @@ namespace DotRecast.Pathfinding.Util
         public static UnityEngine.Color Cast(this FixMath.F64Vec3 c, FixMath.F64 a)
         {
             return new UnityEngine.Color(c.X.Float, c.Y.Float, c.Z.Float, a.Float);
+        }
+
+        public static FixMath.F64Vec3 Cast(this FixMath.F64Vec2 v, FixMath.F64 y)
+        {
+            return new FixMath.F64Vec3(v.X, y, v.Y);
+        }
+
+        public static FixMath.F64Vec2 Cast2D(this FixMath.F64Vec3 v)
+        {
+            return new FixMath.F64Vec2(v.X, v.Y);
         }
     }
 }

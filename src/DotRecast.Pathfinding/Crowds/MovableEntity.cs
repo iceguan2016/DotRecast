@@ -90,7 +90,8 @@ namespace DotRecast.Pathfinding.Crowds
         private FixMath.F64Vec3? _pathReferencePosition = null;
         // Record the most recent avoidance direction
         private SteerLibrary.AvoidReferenceInfo _avoidReferenceInfo = new AvoidReferenceInfo();
-        private IVehicle.FAvoidNeighborInfo _avoidBeighborinfo = new IVehicle.FAvoidNeighborInfo();
+        private IVehicle.FAvoidNeighborInfo _avoidNeighborInfo = new IVehicle.FAvoidNeighborInfo();
+        public IVehicle.FAvoidNeighborInfo AvoidNeighborInfo { get { return _avoidNeighborInfo; } }
 
         // local boundary
         public static readonly int  MaxBoundarySegmentNum = 10;
@@ -376,7 +377,7 @@ namespace DotRecast.Pathfinding.Crowds
                     }
 
                     // collisionAvoidance = steerToAvoidNeighbors(timeCollisionWithNeighbor, neighbors);
-                    collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors, ref _avoidBeighborinfo);
+                    collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors, ref _avoidNeighborInfo);
                     collisionAvoidance = collisionAvoidance.Normalize() * MaxForce * Template.AvoidNeighborWeight;
 
 #if ENABLE_STEER_AGENT_DEBUG
@@ -424,8 +425,83 @@ namespace DotRecast.Pathfinding.Crowds
             // (2) 和上一次选择side保持一致
             // (3) 被避让单位是否在避让自己，选择与其保持一致的避让方向（比如都选左，或者右）
             // (4) 检查选择的避让方向是否会撞墙
+            if (threat is MovableEntity entity)
+            {
+                var relativePosition = threat.Position - Position;
+                var distSq = relativePosition.LengthSquared2D();
+                var combinedRadius = threat.Radius + Radius;
+                var combinedRadiusSq = combinedRadius * combinedRadius;
 
+                FixMath.F64Vec2 u = FixMath.F64Vec2.Zero;
+                FixMath.F64Vec2 left, right;
 
+                var leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);
+
+                left = new FixMath.F64Vec2(relativePosition.X * leg - relativePosition.Y * combinedRadius,
+                        relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
+                right = -new FixMath.F64Vec2(relativePosition.X * leg + relativePosition.Y * combinedRadius,
+                        -relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
+
+                var side = IVehicle.eAvoidVOSide.Left;
+                if (info.VOSide == IVehicle.eAvoidVOSide.None)
+                {
+                    
+                    // 选择和对方一致的避让方向
+                    if (entity.AvoidNeighborInfo.EntityId == ID)
+                    {
+                        side = entity.AvoidNeighborInfo.VOSide;
+                    }
+                    else
+                    {
+                        // 选择不撞墙的方向
+                        var minDistanceToCollision = Template.AvoidObstacleAheadTime * Speed;
+                        var testDirs = new FixMath.F64Vec2[] { left, right };
+                        var testSides = new IVehicle.eAvoidVOSide[] { IVehicle.eAvoidVOSide.Left, IVehicle.eAvoidVOSide.Right };
+
+                        var movable = new SimpleVehicle();
+                        movable.Position = Position;
+                        movable.Radius = Radius;
+
+                        for (var dir = 0; dir < testDirs.Length; ++dir)
+                        {
+                            var forward = testDirs[dir].Cast(FixMath.F64.Zero);
+                            movable.Forward = forward;
+                            movable.Side = FixMath.F64Vec3.Cross(forward, FixMath.F64Vec3.Up);
+                            movable.Up = FixMath.F64Vec3.Up;
+
+                            var findDir = true;
+                            PathIntersection pathIntersection = new PathIntersection();
+                            for (var i = 0; i < _boundaryObstacles.Count; ++i)
+                            {
+                                var boundary = _boundaryObstacles[i];
+                                if (null == boundary) continue;
+                                boundary.findIntersectionWithVehiclePath(movable, ref pathIntersection);
+                                if (pathIntersection.intersect && pathIntersection.distance < minDistanceToCollision)
+                                {
+                                    // 会碰撞Wall，此方向无效
+                                    findDir = false;
+                                    break;
+                                }
+                            }
+
+                            if (findDir) 
+                            {
+                                side = testSides[dir];
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    side = info.VOSide;
+                }
+
+                // 根据side返回避让方向
+                info.VOSide = side;
+                info.EntityId = entity.ID;
+                return side == IVehicle.eAvoidVOSide.Left? left.Cast(FixMath.F64.Zero) : right.Cast(FixMath.F64.Zero);
+            }
             return FixMath.F64Vec3.Zero; 
         }
 
@@ -458,6 +534,17 @@ namespace DotRecast.Pathfinding.Crowds
 
         public override void AnnotationAvoidCloseNeighbor(IVehicle other, FixMath.F64 additionalDistance) 
         {
+        }
+
+        public override void AnnotationAvoidCloseNeighbor(IVehicle threat, FixMath.F64Vec3 avoidDirection, IVehicle.FAvoidNeighborInfo info)
+        {
+#if ENABLE_STEER_AGENT_DEBUG
+            ref var avoidCloseNeighorInfo = ref Debuger.SteerAvoidCloseNeighborInfoBuff.Alloc(EntityManager.FrameNo);
+            avoidCloseNeighorInfo.threatPosition = threat.Position;
+            avoidCloseNeighorInfo.threatRadius = threat.Radius;
+            avoidCloseNeighorInfo.avoidDirection = avoidDirection;
+            avoidCloseNeighorInfo.avoidNeighborInfo = info;
+#endif
         }
 
         public override void AnnotationAvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture) 

@@ -31,6 +31,7 @@ namespace SharpSteer2
         public abstract void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision);
         public abstract void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest);
         public abstract void AnnotationAvoidCloseNeighbor(IVehicle other, FixMath.F64 additionalDistance);
+        public abstract void AnnotationAvoidCloseNeighbor(IVehicle threat, FixMath.F64Vec3 avoidDirection, IVehicle.FAvoidNeighborInfo info);
         public abstract void AnnotationAvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
         public abstract void AnnotationAvoidNeighbor(IVehicle threat, Obstacles.PathIntersection intersection);
     }

@@ -143,22 +143,23 @@ namespace SharpSteer2
 		/// <param name="other"></param>
 		/// <param name="additionalDistance"></param>
 		void AvoidCloseNeighbor(IVehicle vehicle, IVehicle other, FixMath.F64 additionalDistance);
+        void AvoidCloseNeighbor(IVehicle vehicle, IVehicle threat, FixMath.F64Vec3 avoidDirection, IVehicle.FAvoidNeighborInfo info);
 
-		/// <summary>
-		/// Called when steerToAvoidNeighbors decides steering is required.
-		/// </summary>
-		/// <param name="threat"></param>
-		/// <param name="steer"></param>
-		/// <param name="ourFuture"></param>
-		/// <param name="threatFuture"></param>
-		void AvoidNeighbor(IVehicle vehicle, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
+        /// <summary>
+        /// Called when steerToAvoidNeighbors decides steering is required.
+        /// </summary>
+        /// <param name="threat"></param>
+        /// <param name="steer"></param>
+        /// <param name="ourFuture"></param>
+        /// <param name="threatFuture"></param>
+        void AvoidNeighbor(IVehicle vehicle, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
         void AvoidNeighbor(IVehicle vehicle, IVehicle threat, PathIntersection intersection);
 
-		/// <summary>
-		/// Draws lines from the vehicle's position showing its velocity and acceleration.
-		/// </summary>
-		/// <param name="vehicle">The vehicle to annotate.</param>
-		void VelocityAcceleration(IVehicle vehicle);
+        /// <summary>
+        /// Draws lines from the vehicle's position showing its velocity and acceleration.
+        /// </summary>
+        /// <param name="vehicle">The vehicle to annotate.</param>
+        void VelocityAcceleration(IVehicle vehicle);
 
 		/// <summary>
 		/// Draws lines from the vehicle's position showing its velocity and acceleration.

@@ -8,8 +8,7 @@
 // you should have received as part of this distribution. The terms
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
-using System.Numerics;
-using System.Xml;
+using DotRecast.Pathfinding.Util;
 using SharpSteer2.Obstacles;
 
 namespace SharpSteer2
@@ -78,6 +77,7 @@ namespace SharpSteer2
         void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision);
         void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision, PathIntersection nearest);
         void AnnotationAvoidCloseNeighbor(IVehicle other, FixMath.F64 additionalDistance);
+        void AnnotationAvoidCloseNeighbor(IVehicle threat, FixMath.F64Vec3 avoidDirection, IVehicle.FAvoidNeighborInfo info);
         void AnnotationAvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
         void AnnotationAvoidNeighbor(IVehicle threat, PathIntersection intersection);
     }

@@ -85,6 +85,10 @@ namespace SharpSteer2
 
         }
 
+        public void AvoidCloseNeighbor(IVehicle vehicle, IVehicle threat, FixMath.F64Vec3 avoidDirection, IVehicle.FAvoidNeighborInfo info)
+        { 
+        }
+
         public void AvoidNeighbor(IVehicle vehicle, IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture)
         {
 

@@ -3,6 +3,8 @@ using SharpSteer2;
 using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 using DotRecast.Pathfinding.Util;
+using DotRecast.Detour;
+using System.Threading;
 
 namespace DotRecast.Pathfinding.Crowds
 {
@@ -165,6 +167,15 @@ namespace DotRecast.Pathfinding.Crowds
         };
         public FCycleDataBuffer<SteerAvoidNeighborInfo> SteerAvoidNeighborInfoBuff = new FCycleDataBuffer<SteerAvoidNeighborInfo>(1024);
 
+        public struct SteerAvoidCloseNeighborInfo
+        {
+            public FixMath.F64Vec3 threatPosition;
+            public FixMath.F64 threatRadius;
+            public FixMath.F64Vec3 avoidDirection;
+            public IVehicle.FAvoidNeighborInfo avoidNeighborInfo;
+        }
+        public FCycleDataBuffer<SteerAvoidCloseNeighborInfo> SteerAvoidCloseNeighborInfoBuff = new FCycleDataBuffer<SteerAvoidCloseNeighborInfo>(1024);
+
         public void Draw(IAnnotationService annotation, MovableEntity vechile, int frameNo, int specailFrame = -1)
         {
             System.Func<int, bool> ShouldDebugerDraw = (InFrameNo) => {
@@ -242,6 +253,48 @@ namespace DotRecast.Pathfinding.Crowds
                     var pointSize = FixMath.F64Vec3.FromFloat(0.02f, 0.02f, 0.02f);
                     annotation.SolidCube(sp, pointSize, Colors.Red, FixMath.F64.One);
                     annotation.Line(p + u, steerPosition + u, Colors.Red, FixMath.F64.One);
+                }
+            });
+
+            // 绘制避让最近Neighbor信息
+            SteerAvoidCloseNeighborInfoBuff.ForEach((frame, info) => {
+                if (ShouldDebugerDraw(frame))
+                {
+                    var entity = EntityInfoBuff.FindData(frame);
+                    // draw threat entity
+                    Util.Draw.drawCircleOrDisk(annotation, info.threatRadius, FixMath.F64Vec3.Up, info.threatPosition, Colors.Yellow, 10, false, false);
+                    
+                    if (null != entity)
+                    {
+                        // draw avoid direction
+                        var start = entity.Value.position;
+                        var end = entity.Value.position + info.avoidDirection * FixMath.F64.FromFloat(1.0f);
+                        Util.Draw.drawLine(annotation, start, end, Colors.Yellow);
+
+                        // draw VO
+                        var relativePosition = info.threatPosition - entity.Value.position;
+                        var distSq = relativePosition.LengthSquared2D();
+                        var combinedRadius = info.threatRadius + entity.Value.radius;
+                        var combinedRadiusSq = combinedRadius * combinedRadius;
+
+                        FixMath.F64Vec2 u = FixMath.F64Vec2.Zero;
+                        FixMath.F64Vec2 left, right;
+
+                        var leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);
+
+                        left = new FixMath.F64Vec2(relativePosition.X * leg - relativePosition.Y * combinedRadius,
+                                relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
+                        right = -new FixMath.F64Vec2(relativePosition.X * leg + relativePosition.Y * combinedRadius,
+                                -relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
+                        // left
+                        start = entity.Value.position;
+                        end = entity.Value.position + left.Cast(FixMath.F64.Zero) * FixMath.F64.FromFloat(5.0f);
+                        Util.Draw.drawLine(annotation, start, end, Colors.Red);
+                        // right
+                        start = entity.Value.position;
+                        end = entity.Value.position + right.Cast(FixMath.F64.Zero) * FixMath.F64.FromFloat(5.0f);
+                        Util.Draw.drawLine(annotation, start, end, Colors.Green);
+                    }
                 }
             });
         }
