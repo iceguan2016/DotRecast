@@ -101,6 +101,7 @@ namespace DotRecast.Pathfinding.Crowds
 	        EntityInfo,
 	        SteerForceInfo,
 	        SteerAvoidNeighborInfo,
+            SteerAvoidCloseNeighborInfo,
         }
 
         static int SteerDebugerDrawFrames = 10;
@@ -313,6 +314,8 @@ namespace DotRecast.Pathfinding.Crowds
                     return SteerFoceInfoBuff.FindNearestPrevFrame(frameNo);
                 case eDebugerDataType.SteerAvoidNeighborInfo:
                     return SteerAvoidNeighborInfoBuff.FindNearestPrevFrame(frameNo);
+                case eDebugerDataType.SteerAvoidCloseNeighborInfo:
+                    return SteerAvoidCloseNeighborInfoBuff.FindNearestPrevFrame(frameNo);
                 default:
                     break;
             }
@@ -333,6 +336,8 @@ namespace DotRecast.Pathfinding.Crowds
                     return SteerFoceInfoBuff.FindNearestNextFrame(frameNo);
                 case eDebugerDataType.SteerAvoidNeighborInfo:
                     return SteerAvoidNeighborInfoBuff.FindNearestNextFrame(frameNo);
+                case eDebugerDataType.SteerAvoidCloseNeighborInfo:
+                    return SteerAvoidCloseNeighborInfoBuff.FindNearestNextFrame(frameNo);
                 default:
                     break;
             }
