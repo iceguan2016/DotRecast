@@ -555,6 +555,9 @@ namespace SharpSteer2.Helpers
             {
                 if (other != vehicle)
                 {
+                    // check should avoid it?
+                    if (!vehicle.ShouldAvoidNeighbor(other)) continue;
+
                     // avoid when future positions are this close (or less)
                     var collisionDangerThreshold = vehicle.Radius * 2;
 

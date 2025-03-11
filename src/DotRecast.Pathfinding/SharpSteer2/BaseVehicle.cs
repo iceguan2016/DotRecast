@@ -27,6 +27,7 @@ namespace SharpSteer2
 
         public abstract FixMath.F64Vec3 GetAvoidObstacleDirection(ref Obstacles.PathIntersection pathIntersection);
         public abstract FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, Obstacles.PathIntersection? intersection, ref IVehicle.FAvoidNeighborInfo info);
+        public abstract bool ShouldAvoidNeighbor(IVehicle threat);
 
         public abstract void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision);
         public abstract void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision, SharpSteer2.Obstacles.PathIntersection nearest);

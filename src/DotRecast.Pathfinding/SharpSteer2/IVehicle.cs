@@ -73,6 +73,8 @@ namespace SharpSteer2
             public eAvoidVOSide VOSide { get; set; }
         }
         FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, PathIntersection? intersection, ref FAvoidNeighborInfo info);
+        // returns true if the threat entity needs to be avoided.
+        bool ShouldAvoidNeighbor(IVehicle threat);
 
         void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision);
         void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision, PathIntersection nearest);

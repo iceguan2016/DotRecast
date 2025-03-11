@@ -550,6 +550,11 @@ namespace DotRecast.Pathfinding.Crowds
             return FixMath.F64Vec3.Zero; 
         }
 
+        public override bool ShouldAvoidNeighbor(IVehicle threat) 
+        { 
+            return true; 
+        }
+
         static FixMath.F64 COLLISION_RESOLVE_FACTOR = FixMath.F64.FromFloat(0.7f);
         static FixMath.F64 DISTANCE_EPLISION = FixMath.F64.FromFloat(0.001f);
         public FixMath.F64Vec3 ResolveCollisionWithNeighbors()
