@@ -298,6 +298,15 @@ namespace DotRecast.Pathfinding.Crowds
                         start = entity.Value.position;
                         end = entity.Value.position + right * FixMath.F64.FromFloat(5.0f);
                         Util.Draw.drawLine(annotation, start, end, Colors.Green);
+
+                        // draw side
+                        if (info.avoidNeighborInfo.VOSide != IVehicle.eAvoidVOSide.None)
+                        {
+                            var sideDir = info.avoidNeighborInfo.VOSide == IVehicle.eAvoidVOSide.Left ? left : right;
+                            start = entity.Value.position;
+                            end = entity.Value.position + sideDir * FixMath.F64.FromFloat(2.0f);
+                            Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), Colors.Yellow);
+                        }
                     }
                 }
             });

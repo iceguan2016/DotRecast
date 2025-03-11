@@ -83,29 +83,26 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     private HxArray<hxDaedalus.data.Object> _obstacles = new HxArray<hxDaedalus.data.Object>();
 
     // crowd entity templates
-    private TemplateMovableEntity[] _templateMovableEntities = new TemplateMovableEntity[] { 
-        new() 
-        {
-            // 
-            Radius = FixMath.F64.FromFloat(0.5f),
-            // maximum move speed
-            MaxSpeed = FixMath.F64.FromFloat(6.0f),
-            // maximum force
-            MaxForce = FixMath.F64.FromFloat(27.0f),
-            // query local boundary radius
-            QueryLocalBoundaryRadius = FixMath.F64.FromFloat(5.0f),
-            // query local neighbors radius
-            QueryLocalNeighborRadius = FixMath.F64.FromFloat(5.0f),
-            //
-            FollowPathAheadTime = FixMath.F64.FromFloat(3.0f),
-            FollowPathWeight = FixMath.F64.FromFloat(1.0f),
+    public TemplateMovableEntity TemplateMovableEntity = new TemplateMovableEntity { 
+        // 
+        Radius = FixMath.F64.FromFloat(0.5f),
+        // maximum move speed
+        MaxSpeed = FixMath.F64.FromFloat(6.0f),
+        // maximum force
+        MaxForce = FixMath.F64.FromFloat(27.0f),
+        // query local boundary radius
+        QueryLocalBoundaryRadius = FixMath.F64.FromFloat(5.0f),
+        // query local neighbors radius
+        QueryLocalNeighborRadius = FixMath.F64.FromFloat(5.0f),
+        //
+        FollowPathAheadTime = FixMath.F64.FromFloat(3.0f),
+        FollowPathWeight = FixMath.F64.FromFloat(1.0f),
 
-            AvoidObstacleAheadTime = FixMath.F64.FromFloat(1.0f),
-            AvoidObstacleWeight = FixMath.F64.FromFloat(1.0f),
+        AvoidObstacleAheadTime = FixMath.F64.FromFloat(1.0f),
+        AvoidObstacleWeight = FixMath.F64.FromFloat(1.0f),
 
-            AvoidNeighborAheadTime = FixMath.F64.FromFloat(1.0f),
-            AvoidNeighborWeight = FixMath.F64.FromFloat(1.0f),
-        }
+        AvoidNeighborAheadTime = FixMath.F64.FromFloat(1.0f),
+        AvoidNeighborWeight = FixMath.F64.FromFloat(1.0f),
     };
 
     // crowd entities
@@ -499,7 +496,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             SpawnPosition = FixMath.F64Vec3.FromDouble(x, MapHeight, y),
             SpawnRotation = FixMath.F64Quat.Identity,
 
-            Template = _templateMovableEntities[0],
+            Template = TemplateMovableEntity,
             PathwayQuerier = this,
             LocalBoundaryQuerier = this,
             AnnotationService = _annotationServerice,
@@ -868,6 +865,33 @@ public class TestDaedalusSampleTool : ISampleTool
         if (Debug.IsSimulationMode(eSimulationMode.Normal))
         {
             // 正常模拟模式
+
+            // 模板参数
+            var followPathAheadTime = _tool.TemplateMovableEntity.FollowPathAheadTime.Float;
+            ImGui.SliderFloat("FollowPathAheadTime", ref followPathAheadTime, 0.1f, 5.0f);
+            _tool.TemplateMovableEntity.FollowPathAheadTime = FixMath.F64.FromFloat(followPathAheadTime);
+
+            var followPathWeight = _tool.TemplateMovableEntity.FollowPathWeight.Float;
+            ImGui.SliderFloat("FollowPathWeight", ref followPathWeight, 0.1f, 5.0f);
+            _tool.TemplateMovableEntity.FollowPathWeight = FixMath.F64.FromFloat(followPathWeight);
+
+            var avoidNeighborAheadTime = _tool.TemplateMovableEntity.AvoidNeighborAheadTime.Float;
+            ImGui.SliderFloat("AvoidNeighborAheadTime", ref avoidNeighborAheadTime, 0.1f, 5.0f);
+            _tool.TemplateMovableEntity.AvoidNeighborAheadTime = FixMath.F64.FromFloat(avoidNeighborAheadTime);
+
+            var avoidNeighborWeight = _tool.TemplateMovableEntity.AvoidNeighborWeight.Float;
+            ImGui.SliderFloat("AvoidNeighborWeight", ref avoidNeighborWeight, 0.1f, 20.0f);
+            _tool.TemplateMovableEntity.AvoidNeighborWeight = FixMath.F64.FromFloat(avoidNeighborWeight);
+
+            var avoidObstacleAheadTime = _tool.TemplateMovableEntity.AvoidObstacleAheadTime.Float;
+            ImGui.SliderFloat("AvoidObstacleAheadTime", ref avoidObstacleAheadTime, 0.1f, 5.0f);
+            _tool.TemplateMovableEntity.AvoidObstacleAheadTime = FixMath.F64.FromFloat(avoidObstacleAheadTime);
+
+            var avoidObstacleWeight = _tool.TemplateMovableEntity.AvoidObstacleWeight.Float;
+            ImGui.SliderFloat("AvoidObstacleWeight", ref avoidObstacleWeight, 0.1f, 5.0f);
+            _tool.TemplateMovableEntity.AvoidObstacleWeight = FixMath.F64.FromFloat(avoidObstacleWeight);
+
+
             if (ImGui.Button("Playback Mode"))
             {
                 Debug.SetSimlationMode(eSimulationMode.Playback);

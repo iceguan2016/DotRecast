@@ -100,7 +100,9 @@ namespace DotRecast.Pathfinding.Crowds
         private List<IObstacle>     _boundaryObstacles = new List<IObstacle>();
 
         // local neighbors
-        private List<IVehicle>      _neighbors = new List<IVehicle>(); 
+        private List<IVehicle>      _neighbors = new List<IVehicle>();
+        // displacement for neighbor collision
+        public FixMath.F64Vec3      Displacement { get; set; }
 
         // state bits
         private uint                _stateBitsValue = 0;
@@ -546,6 +548,60 @@ namespace DotRecast.Pathfinding.Crowds
                 return side == IVehicle.eAvoidVOSide.Left? left : right;
             }
             return FixMath.F64Vec3.Zero; 
+        }
+
+        static FixMath.F64 COLLISION_RESOLVE_FACTOR = FixMath.F64.FromFloat(0.7f);
+        static FixMath.F64 DISTANCE_EPLISION = FixMath.F64.FromFloat(0.001f);
+        public FixMath.F64Vec3 ResolveCollisionWithNeighbors()
+        {
+            var Disp = FixMath.F64Vec3.Zero;
+            var w = FixMath.F64.Zero;
+
+            for (int i = 0; i < _neighbors.Count; ++i)
+            {
+                var nei = _neighbors[i] as MovableEntity;
+                if (null == nei || ID == nei.ID)
+                    continue;
+
+                // 检查距离
+                var Diff = Position - nei.Position;
+                Diff.Y = FixMath.F64.Zero;
+                var DistSq = Diff.LengthSquared();
+                var Radii = Radius + nei.Radius;
+
+                if (DistSq > Radii * Radii)
+                    continue;
+
+                var Dist = FixMath.F64.Sqrt(DistSq);
+                var Pen = FixMath.F64.FromFloat(0.01f);
+                if (Dist < DISTANCE_EPLISION)
+                {
+                    if (ID.Id < nei.ID.Id)
+                    {
+                        Diff = new FixMath.F64Vec3(-Velocity.Z, FixMath.F64.Zero, Velocity.X);
+                    }
+                    else
+                    {
+                        Diff = new FixMath.F64Vec3(Velocity.Z, FixMath.F64.Zero, -Velocity.X);
+                    }
+                }
+                else
+                {
+                    Pen = (FixMath.F64.One / Dist) * (Radii - Dist) * FixMath.F64.Half * COLLISION_RESOLVE_FACTOR;
+                }
+                var Mtd = Pen * Diff;
+                // minimum translation distance to push balls apart after intersecting
+                Disp += Mtd;
+
+                w += FixMath.F64.One;
+            }
+
+            if (w > FixMath.F64.Zero)
+            {
+                var iw = FixMath.F64.One / w;
+                Disp *= iw;
+            }
+            return Disp;
         }
 
         public override void AnnotationAvoidObstacle(FixMath.F64 minDistanceToCollision)

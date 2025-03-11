@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using DotRecast.Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;
@@ -140,9 +141,33 @@ namespace DotRecast.Pathfinding.Crowds
         {
             ++FrameNo;
 
+            // update movement
             for ( var i = 0; i < MovableEntities.Count; i++ )
             {
                 MovableEntities[i].OnUpdate(inDelteTime);
+            }
+
+            // resolve collision
+            int MaxIterNum = 4;
+            for (int iter = 0; iter < MaxIterNum; ++iter)
+            {
+                for (int i = 0; i < MovableEntities.Count; ++i)
+                {
+                    var entity = MovableEntities[i];
+                    if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
+                        continue;
+
+                    entity.Displacement = entity.ResolveCollisionWithNeighbors();
+                }
+
+                for (int i = 0; i < MovableEntities.Count; ++i)
+                {
+                    var entity = MovableEntities[i];
+                    if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
+                        continue;
+
+                    entity.Position += entity.Displacement;
+                }
             }
         }
 

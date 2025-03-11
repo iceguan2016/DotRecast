@@ -587,7 +587,7 @@ namespace SharpSteer2.Helpers
                 // return avoidThreatEntity(threat);
                 var avoidDir = vehicle.GetAvoidNeighborDirection(threat, null, ref info);
                 if (null != annotation) annotation.AvoidCloseNeighbor(vehicle, threat, avoidDir, info);
-                return avoidDir * vehicle.MaxSpeed - vehicle.Velocity;
+                return avoidDir * vehicle.Speed - vehicle.Velocity;
             }
 
             // otherwise return zero
