@@ -28,6 +28,7 @@ using Silk.NET.Windowing;
 using SharpSteer2.Helpers;
 using Game.Utils;
 using Silk.NET.OpenGL;
+using System.Security.Principal;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -36,12 +37,14 @@ public class TestDaedalusToolMode
     public static readonly TestDaedalusToolMode ADD_OBSTACLE = new TestDaedalusToolMode(0, "Add Obstacle");
     public static readonly TestDaedalusToolMode PATH_FINDER = new TestDaedalusToolMode(1, "Path Finder");
     public static readonly TestDaedalusToolMode ADD_CROWD_ENTITY = new TestDaedalusToolMode(2, "Add Crowd Entity");
-    public static readonly TestDaedalusToolMode MOVE_CROWD_ENTITY = new TestDaedalusToolMode(3, "Move Crowd Entity");
+    public static readonly TestDaedalusToolMode SELECT_CROWD_ENTITY = new TestDaedalusToolMode(3, "Select Crowd Entity");
+    public static readonly TestDaedalusToolMode MOVE_CROWD_ENTITY = new TestDaedalusToolMode(4, "Move Crowd Entity");
 
     public static readonly RcImmutableArray<TestDaedalusToolMode> Values = RcImmutableArray.Create(
             ADD_OBSTACLE,
             PATH_FINDER,
             ADD_CROWD_ENTITY,
+            SELECT_CROWD_ENTITY,
             MOVE_CROWD_ENTITY
         );
 
@@ -108,6 +111,8 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     // crowd entities
     private IMovableEntityManager _entityManager = new MovableEntityManager();
     public IMovableEntityManager EntityManager { get { return _entityManager; } }
+    private List<UniqueId> _selectEntities = new List<UniqueId>();
+    public List<UniqueId> SelectEntities { get { return _selectEntities; } }
 
     // annotation
     private EntityAnnotationServerice _annotationServerice = null;
@@ -510,18 +515,40 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
     public UniqueId HitCrowdEntity(double x, double y)
     {
-        return UniqueId.InvalidID;
+        var hitPos = FixMath.F64Vec3.FromDouble(x, MapHeight, y);
+        var hitEntityId = UniqueId.InvalidID;
+        _entityManager.ForEachEntity((InEntity) =>
+        {
+            if (null != InEntity)
+            {
+                var q = FixMath.F64Quat.LookRotation(InEntity.Forward, InEntity.Up);
+                var local_p = FixMath.F64Quat.Inverse(q) * (hitPos - InEntity.Position);
+                if (FixMath.F64.Abs(local_p.X) < InEntity.Radius && FixMath.F64.Abs(local_p.Z) < InEntity.Radius)
+                {
+                    hitEntityId = InEntity.ID;
+                }
+            }
+        });
+        return hitEntityId;
     }
 
     public void MoveCrowdEntity(double x, double y)
     {
         var Position = FixMath.F64Vec3.FromDouble(x, MapHeight, y);
-        _entityManager.ForEachEntity((InEntity) => { 
-            if (null != InEntity)
+        //_entityManager.ForEachEntity((InEntity) => { 
+        //    if (null != InEntity)
+        //    {
+        //        InEntity.TargetLocation = Position;
+        //    }
+        //});
+        for (var i = 0; i < _selectEntities.Count; ++i)
+        {
+            var entity = _entityManager.GetEntityById(_selectEntities[i]);
+            if (null != entity)
             {
-                InEntity.TargetLocation = Position;
+                entity.TargetLocation = Position;
             }
-        });
+        }
     }
 
     public void DrawCrowdEntity()
@@ -532,7 +559,8 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             {
                 if (Debug.IsSimulationMode(eSimulationMode.Normal))
                 {
-                    InEntity.OnDraw();
+                    var index = SelectEntities.FindIndex(Id => Id == InEntity.ID);
+                    InEntity.OnDraw(index != -1);
                 }
                 else if (Debug.IsSimulationMode(eSimulationMode.Playback))
                 {
@@ -719,6 +747,18 @@ public class TestDaedalusSampleTool : ISampleTool
                 _tool.AddCrowdEntity(hitPos.X, hitPos.Z, radius);
             }
         }
+        else if (m_mode == TestDaedalusToolMode.SELECT_CROWD_ENTITY)
+        {
+            var entityId = _tool.HitCrowdEntity(hitPos.X, hitPos.Z);
+
+            if (entityId != UniqueId.InvalidID)
+            {
+                if (shift)
+                    _tool.SelectEntities.Remove(entityId);
+                else
+                    _tool.SelectEntities.Add(entityId);
+            }
+        }
         else if (m_mode == TestDaedalusToolMode.MOVE_CROWD_ENTITY)
         { 
             _tool.MoveCrowdEntity(hitPos.X, hitPos.Z);
@@ -810,6 +850,7 @@ public class TestDaedalusSampleTool : ISampleTool
         ImGui.RadioButton(TestDaedalusToolMode.ADD_OBSTACLE.Label, ref m_modeIdx, TestDaedalusToolMode.ADD_OBSTACLE.Idx);
         ImGui.RadioButton(TestDaedalusToolMode.PATH_FINDER.Label, ref m_modeIdx, TestDaedalusToolMode.PATH_FINDER.Idx);
         ImGui.RadioButton(TestDaedalusToolMode.ADD_CROWD_ENTITY.Label, ref m_modeIdx, TestDaedalusToolMode.ADD_CROWD_ENTITY.Idx);
+        ImGui.RadioButton(TestDaedalusToolMode.SELECT_CROWD_ENTITY.Label, ref m_modeIdx, TestDaedalusToolMode.SELECT_CROWD_ENTITY.Idx);
         ImGui.RadioButton(TestDaedalusToolMode.MOVE_CROWD_ENTITY.Label, ref m_modeIdx, TestDaedalusToolMode.MOVE_CROWD_ENTITY.Idx);
         ImGui.NewLine();
 

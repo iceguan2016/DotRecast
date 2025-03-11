@@ -237,10 +237,10 @@ namespace DotRecast.Pathfinding.Crowds
             }
         }
 
-        public virtual void OnDraw()
+        public virtual void OnDraw(bool selected)
         {
             // draw vehicle
-            Draw.drawBasic2dCircularVehicle(annotation, this, Colors.Gray50);
+            Draw.drawBasic2dCircularVehicle(annotation, this, selected? Colors.Red : Colors.Gray50);
             // drawTrail();
             // draw transform
             Draw.drawAxes(annotation, this, FixMath.F64Vec3.FromFloat(1f, 1f, 1f));
