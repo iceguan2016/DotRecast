@@ -10,6 +10,8 @@ namespace Game.Utils
 
         void DrawLine(Vector3 a, Vector3 b, Color c, float lineWidth=1.0f);
 
+        void DrawArrow(Vector3 start, Vector3 end, Vector2 arrowSize, float lineWidth, Color c);
+
         void DrawCube(Vector3 p, Vector3 size, Color c);
 
         void DrawCircle(Vector3 p, float r, Color c);

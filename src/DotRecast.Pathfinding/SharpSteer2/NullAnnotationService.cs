@@ -23,6 +23,11 @@ namespace SharpSteer2
 
         }
 
+        public void Arrow(FixMath.F64Vec3 startPoint, FixMath.F64Vec3 endPoint, FixMath.F64Vec2 arrowSize, FixMath.F64 lineWidth, FixMath.F64Vec3 color, FixMath.F64 opacity)
+        {
+            
+        }
+
         public void CircleXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments)
         {
 

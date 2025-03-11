@@ -178,6 +178,16 @@ public class TileDelaunayDebugDraw : DrawInterface
         }
     }
 
+    public void DrawArrow(Vector3 start, Vector3 end, Vector2 arrowSize, float lineWidth, Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            m_draw.DebugDrawArrow(start.x, start.y, start.z, end.x, end.y, end.z, arrowSize.x, arrowSize.y, color, lineWidth);
+        }
+    }
+
     public void DrawTriangle(Vector3 v0, Vector3 v1, Vector3 v2, UnityEngine.Color c)
     {
         if (m_draw != null)

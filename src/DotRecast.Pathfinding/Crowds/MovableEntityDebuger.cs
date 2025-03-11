@@ -274,26 +274,29 @@ namespace DotRecast.Pathfinding.Crowds
 
                         // draw VO
                         var relativePosition = info.threatPosition - entity.Value.position;
+                        relativePosition.SetYtoZero();
                         var distSq = relativePosition.LengthSquared2D();
                         var combinedRadius = info.threatRadius + entity.Value.radius;
                         var combinedRadiusSq = combinedRadius * combinedRadius;
 
-                        FixMath.F64Vec2 u = FixMath.F64Vec2.Zero;
-                        FixMath.F64Vec2 left, right;
+                        FixMath.F64Vec3 left, right;
 
                         var leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);
 
-                        left = new FixMath.F64Vec2(relativePosition.X * leg - relativePosition.Y * combinedRadius,
-                                relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
-                        right = -new FixMath.F64Vec2(relativePosition.X * leg + relativePosition.Y * combinedRadius,
-                                -relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
+                        left = new FixMath.F64Vec3(relativePosition.X * leg - relativePosition.Z * combinedRadius,
+                                FixMath.F64.Zero,
+                                relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
+                        right = new FixMath.F64Vec3(relativePosition.X * leg + relativePosition.Z * combinedRadius,
+                                FixMath.F64.Zero,
+                                -relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
+
                         // left
                         start = entity.Value.position;
-                        end = entity.Value.position + left.Cast(FixMath.F64.Zero) * FixMath.F64.FromFloat(5.0f);
+                        end = entity.Value.position + left * FixMath.F64.FromFloat(5.0f);
                         Util.Draw.drawLine(annotation, start, end, Colors.Red);
                         // right
                         start = entity.Value.position;
-                        end = entity.Value.position + right.Cast(FixMath.F64.Zero) * FixMath.F64.FromFloat(5.0f);
+                        end = entity.Value.position + right * FixMath.F64.FromFloat(5.0f);
                         Util.Draw.drawLine(annotation, start, end, Colors.Green);
                     }
                 }

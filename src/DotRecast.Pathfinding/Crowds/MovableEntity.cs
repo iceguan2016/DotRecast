@@ -173,7 +173,7 @@ namespace DotRecast.Pathfinding.Crowds
             _boundarySegmentNum = 0;
 
             // initial slow speed
-            Speed = (MaxSpeed * FixMath.F64.FromFloat(0.3f));
+            Speed = FixMath.F64.Zero;
             Radius = Template.Radius;
 
             if (_proximityToken != null)
@@ -260,7 +260,7 @@ namespace DotRecast.Pathfinding.Crowds
                 }
             }
             // draw local boundary
-            Draw.drawCircleOrDisk(annotation, Template.QueryLocalBoundaryRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
+            // Draw.drawCircleOrDisk(annotation, Template.QueryLocalBoundaryRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
 
             if (_boundaryObstacles.Count > 0)
             {
@@ -278,6 +278,54 @@ namespace DotRecast.Pathfinding.Crowds
             //var rotation = this.ToMatrix().ToQuat();
             //Draw.drawBoxOutline(annotation, point, rotation, new FixMath.F64Vec3(FixMath.F64.FromFloat(1.0f), FixMath.F64.Zero, length), Colors.Green, FixMath.F64.FromFloat(1.0f));
             Draw.drawLineAlpha(annotation, Position, testPoint, Colors.Yellow, FixMath.F64.FromFloat(0.4f));
+
+            // draw VO
+            if (_avoidNeighborInfo.EntityId != UniqueId.InvalidID)
+            {
+                var neighbor = EntityManager.GetEntityById(_avoidNeighborInfo.EntityId);
+                var relativePosition = neighbor.Position - Position;
+                relativePosition.SetYtoZero();
+                var distSq = relativePosition.LengthSquared2D();
+                var combinedRadius = neighbor.Radius + Radius;
+                var combinedRadiusSq = combinedRadius * combinedRadius;
+
+                FixMath.F64Vec3 left, right;
+
+                var leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);
+
+                left = new FixMath.F64Vec3(relativePosition.X * leg - relativePosition.Z * combinedRadius,
+                        FixMath.F64.Zero,
+                        relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
+                right = new FixMath.F64Vec3(relativePosition.X * leg + relativePosition.Z * combinedRadius,
+                        FixMath.F64.Zero,
+                        -relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
+
+                // left
+                var start = Position;
+                var end = Position + left* FixMath.F64.FromFloat(5.0f);
+                Util.Draw.drawLine(annotation, start, end, Colors.Red);
+                // right
+                start = Position;
+                end = Position + right * FixMath.F64.FromFloat(5.0f);
+                Util.Draw.drawLine(annotation, start, end, Colors.Green);
+
+                // draw side
+                if (_avoidNeighborInfo.VOSide != IVehicle.eAvoidVOSide.None)
+                {
+                    var sideDir = _avoidNeighborInfo.VOSide == IVehicle.eAvoidVOSide.Left? left : right;
+                    start = Position;
+                    end = Position + sideDir * FixMath.F64.FromFloat(2.0f);
+                    Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), Colors.Yellow);
+                }
+            }
+
+            // draw velocity
+            {
+                var start = Position; start.Y += FixMath.F64.FromFloat(1.0f);
+                var len = Utilities.GetMappedRangeValueClamped(new FixMath.F64Vec2(FixMath.F64.Zero, MaxSpeed), new FixMath.F64Vec2(FixMath.F64.Zero, Radius * 3), Speed);
+                var end = start + Velocity.GetSafeNormal() * len;
+                Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), Colors.White);
+            }
         }
 
         // compute combined steering force: move forward, avoid obstacles
@@ -312,10 +360,12 @@ namespace DotRecast.Pathfinding.Crowds
                 // float pathDistanceOffset = (_pathDirection ? 1 : -1) * predictionTime * Speed;
                 // referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + FixMath.F64.FromFloat(0.5f));
             }
-            else
+
+            if (steeringForce == FixMath.F64Vec3.Zero)
             {
                 steeringForce = SteerForSeek(targetLocation.Value) * Template.FollowPathWeight;
             }
+
             steeringForce = steeringForce.TruncateLength(MaxForce);
             _pathReferencePosition = referencePoint;
 
@@ -361,12 +411,12 @@ namespace DotRecast.Pathfinding.Crowds
             {
                 steeringForce += obstacleAvoidance;
             }
-            else
+            // else
             {
                 // otherwise consider avoiding collisions with others
                 List<IVehicle> neighbors = new List<IVehicle>();
                 var collisionAvoidance = FixMath.F64Vec3.Zero;
-                if (leakThrough < RandomHelpers.Random())
+                // if (leakThrough < RandomHelpers.Random())
                 {
                     for (int i = 0; i < _neighbors.Count; ++i)
                     {
@@ -389,18 +439,6 @@ namespace DotRecast.Pathfinding.Crowds
                 if (collisionAvoidance != FixMath.F64Vec3.Zero)
                 {
                     steeringForce += collisionAvoidance;
-                }
-                else
-                {
-                    // do (interactively) selected type of path following
-                    //const float pfLeadTime = 3;
-                    //const Vec3 pathFollow =
-                    //    (gUseDirectedPathFollowing ?
-                    //        steerToFollowPath(pathDirection, pfLeadTime, *path) :
-                    //        steerToStayOnPath(pfLeadTime, *path));
-
-                    //// add in to steeringForce
-                    //steeringForce += pathFollow * 0.5;
                 }
             }
 
@@ -428,24 +466,29 @@ namespace DotRecast.Pathfinding.Crowds
             if (threat is MovableEntity entity)
             {
                 var relativePosition = threat.Position - Position;
-                var distSq = relativePosition.LengthSquared2D();
+                relativePosition.SetYtoZero();
+                if (relativePosition == FixMath.F64Vec3.Zero) 
+                    return FixMath.F64Vec3.Zero;
+
+                var distSq = relativePosition.LengthSquared();
                 var combinedRadius = threat.Radius + Radius;
                 var combinedRadiusSq = combinedRadius * combinedRadius;
 
-                FixMath.F64Vec2 u = FixMath.F64Vec2.Zero;
-                FixMath.F64Vec2 left, right;
+                FixMath.F64Vec3 left, right;
 
                 var leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);
 
-                left = new FixMath.F64Vec2(relativePosition.X * leg - relativePosition.Y * combinedRadius,
-                        relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
-                right = -new FixMath.F64Vec2(relativePosition.X * leg + relativePosition.Y * combinedRadius,
-                        -relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
+                // 基于以relativePosition为Forward的坐标系
+                left = new FixMath.F64Vec3(relativePosition.X * leg - relativePosition.Z * combinedRadius,
+                        FixMath.F64.Zero,
+                        relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
+                right = new FixMath.F64Vec3(relativePosition.X * leg + relativePosition.Z * combinedRadius,
+                        FixMath.F64.Zero,
+                        -relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
 
                 var side = IVehicle.eAvoidVOSide.Left;
                 if (info.VOSide == IVehicle.eAvoidVOSide.None)
                 {
-                    
                     // 选择和对方一致的避让方向
                     if (entity.AvoidNeighborInfo.EntityId == ID)
                     {
@@ -455,7 +498,7 @@ namespace DotRecast.Pathfinding.Crowds
                     {
                         // 选择不撞墙的方向
                         var minDistanceToCollision = Template.AvoidObstacleAheadTime * Speed;
-                        var testDirs = new FixMath.F64Vec2[] { left, right };
+                        var testDirs = new FixMath.F64Vec3[] { left, right };
                         var testSides = new IVehicle.eAvoidVOSide[] { IVehicle.eAvoidVOSide.Left, IVehicle.eAvoidVOSide.Right };
 
                         var movable = new SimpleVehicle();
@@ -464,7 +507,7 @@ namespace DotRecast.Pathfinding.Crowds
 
                         for (var dir = 0; dir < testDirs.Length; ++dir)
                         {
-                            var forward = testDirs[dir].Cast(FixMath.F64.Zero);
+                            var forward = testDirs[dir];
                             movable.Forward = forward;
                             movable.Side = FixMath.F64Vec3.Cross(forward, FixMath.F64Vec3.Up);
                             movable.Up = FixMath.F64Vec3.Up;
@@ -500,7 +543,7 @@ namespace DotRecast.Pathfinding.Crowds
                 // 根据side返回避让方向
                 info.VOSide = side;
                 info.EntityId = entity.ID;
-                return side == IVehicle.eAvoidVOSide.Left? left.Cast(FixMath.F64.Zero) : right.Cast(FixMath.F64.Zero);
+                return side == IVehicle.eAvoidVOSide.Left? left : right;
             }
             return FixMath.F64Vec3.Zero; 
         }

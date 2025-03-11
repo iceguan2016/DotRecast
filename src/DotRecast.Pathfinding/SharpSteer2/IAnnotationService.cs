@@ -8,6 +8,7 @@
 // you should have received as part of this distribution. The terms
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
+using DotRecast.Pathfinding.Util;
 using SharpSteer2.Obstacles;
 
 namespace SharpSteer2
@@ -43,13 +44,15 @@ namespace SharpSteer2
 	    /// <param name="opacity"></param>
 	    void Line(FixMath.F64Vec3 startPoint, FixMath.F64Vec3 endPoint, FixMath.F64Vec3 color, FixMath.F64 opacity /*= 1.0f*/);
 
-		/// <summary>
-		/// Draws a circle on the XZ plane.
-		/// </summary>
-		/// <param name="radius">The radius of the circle.</param>
-		/// <param name="center">The center of the circle.</param>
-		/// <param name="color">The color of the circle.</param>
-		/// <param name="segments">The number of segments to use to draw the circle.</param>
+        void Arrow(FixMath.F64Vec3 startPoint, FixMath.F64Vec3 endPoint, FixMath.F64Vec2 arrowSize, FixMath.F64 lineWidth, FixMath.F64Vec3 color, FixMath.F64 opacity);
+
+        /// <summary>
+        /// Draws a circle on the XZ plane.
+        /// </summary>
+        /// <param name="radius">The radius of the circle.</param>
+        /// <param name="center">The center of the circle.</param>
+        /// <param name="color">The color of the circle.</param>
+        /// <param name="segments">The number of segments to use to draw the circle.</param>
         void CircleXZ(FixMath.F64 radius, FixMath.F64Vec3 center, FixMath.F64Vec3 color, int segments);
 
 		/// <summary>

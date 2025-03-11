@@ -42,6 +42,18 @@ namespace DotRecast.Pathfinding.Util
                 annotation.Line(startPoint, endPoint, color, alpha);
         }
 
+        public static void drawArrow(
+            IAnnotationService annotation,
+            FixMath.F64Vec3 startPoint,
+            FixMath.F64Vec3 endPoint,
+            FixMath.F64Vec2 arrowSize,
+            FixMath.F64 lineWidth,
+            FixMath.F64Vec3 color)
+        {
+            if (annotation != null)
+                annotation.Arrow(startPoint, endPoint, arrowSize, lineWidth, color, FixMath.F64.One);
+        }
+
         // ------------------------------------------------------------------------
         // draw the three axes of a LocalSpace: three lines parallel to the
         // basis vectors of the space, centered at its origin, of lengths
