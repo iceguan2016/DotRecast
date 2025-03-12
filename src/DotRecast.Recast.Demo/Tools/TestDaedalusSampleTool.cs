@@ -121,17 +121,6 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         } 
     }
 
-    public float EntityRadius 
-    { 
-        get {
-            return (float)EntityAI.get_radius();
-        } 
-
-        set {
-            EntityAI.set_radius(value);
-        }
-    }
-
     double RandomRange(double min, double max)
     {
         return min + rand.NextDouble() * (max - min);
@@ -939,41 +928,64 @@ public class TestDaedalusSampleTool : ISampleTool
             m_mode = TestDaedalusToolMode.Values[m_modeIdx];
         }
 
-        var EntityRadius = _tool.EntityRadius;
-        ImGui.SliderFloat("Entity Radius", ref EntityRadius, 0.1f, 3.0f, "%.2f");
-        _tool.EntityRadius = EntityRadius;
-
         // 
         ImGui.NewLine();
         if (Debug.IsSimulationMode(eSimulationMode.Normal))
         {
             // 正常模拟模式
 
+            var propertyChanged = false;
             // 模板参数
+            var radius = _tool.TemplateMovableEntity.Radius.Float;
+            propertyChanged |= ImGui.SliderFloat("Radius", ref radius, 0.1f, 5.0f);
+            _tool.TemplateMovableEntity.Radius = FixMath.F64.FromFloat(radius);
+
+            var maxSpeed = _tool.TemplateMovableEntity.MaxSpeed.Float;
+            propertyChanged |= ImGui.SliderFloat("MaxSpeed", ref maxSpeed, 1.0f, 10.0f);
+            _tool.TemplateMovableEntity.MaxSpeed = FixMath.F64.FromFloat(maxSpeed);
+
+            var maxForce = _tool.TemplateMovableEntity.MaxForce.Float;
+            propertyChanged |= ImGui.SliderFloat("MaxForce", ref maxForce, 10.0f, 100.0f);
+            _tool.TemplateMovableEntity.MaxForce = FixMath.F64.FromFloat(maxForce);
+
+            var queryLocalNeighborRadius = _tool.TemplateMovableEntity.QueryLocalNeighborRadius.Float;
+            propertyChanged |= ImGui.SliderFloat("QueryLocalNeighborRadius", ref queryLocalNeighborRadius, 3.0f, 15.0f);
+            _tool.TemplateMovableEntity.QueryLocalNeighborRadius = FixMath.F64.FromFloat(queryLocalNeighborRadius);
+
             var followPathAheadTime = _tool.TemplateMovableEntity.FollowPathAheadTime.Float;
-            ImGui.SliderFloat("FollowPathAheadTime", ref followPathAheadTime, 0.1f, 5.0f);
+            propertyChanged |= ImGui.SliderFloat("FollowPathAheadTime", ref followPathAheadTime, 0.1f, 5.0f);
             _tool.TemplateMovableEntity.FollowPathAheadTime = FixMath.F64.FromFloat(followPathAheadTime);
 
             var followPathWeight = _tool.TemplateMovableEntity.FollowPathWeight.Float;
-            ImGui.SliderFloat("FollowPathWeight", ref followPathWeight, 0.1f, 5.0f);
+            propertyChanged |= ImGui.SliderFloat("FollowPathWeight", ref followPathWeight, 0.1f, 5.0f);
             _tool.TemplateMovableEntity.FollowPathWeight = FixMath.F64.FromFloat(followPathWeight);
 
             var avoidNeighborAheadTime = _tool.TemplateMovableEntity.AvoidNeighborAheadTime.Float;
-            ImGui.SliderFloat("AvoidNeighborAheadTime", ref avoidNeighborAheadTime, 0.1f, 5.0f);
+            propertyChanged |= ImGui.SliderFloat("AvoidNeighborAheadTime", ref avoidNeighborAheadTime, 0.1f, 5.0f);
             _tool.TemplateMovableEntity.AvoidNeighborAheadTime = FixMath.F64.FromFloat(avoidNeighborAheadTime);
 
             var avoidNeighborWeight = _tool.TemplateMovableEntity.AvoidNeighborWeight.Float;
-            ImGui.SliderFloat("AvoidNeighborWeight", ref avoidNeighborWeight, 0.1f, 20.0f);
+            propertyChanged |= ImGui.SliderFloat("AvoidNeighborWeight", ref avoidNeighborWeight, 0.1f, 20.0f);
             _tool.TemplateMovableEntity.AvoidNeighborWeight = FixMath.F64.FromFloat(avoidNeighborWeight);
 
             var avoidObstacleAheadTime = _tool.TemplateMovableEntity.AvoidObstacleAheadTime.Float;
-            ImGui.SliderFloat("AvoidObstacleAheadTime", ref avoidObstacleAheadTime, 0.1f, 5.0f);
+            propertyChanged |= ImGui.SliderFloat("AvoidObstacleAheadTime", ref avoidObstacleAheadTime, 0.1f, 5.0f);
             _tool.TemplateMovableEntity.AvoidObstacleAheadTime = FixMath.F64.FromFloat(avoidObstacleAheadTime);
 
             var avoidObstacleWeight = _tool.TemplateMovableEntity.AvoidObstacleWeight.Float;
-            ImGui.SliderFloat("AvoidObstacleWeight", ref avoidObstacleWeight, 0.1f, 5.0f);
+            propertyChanged |= ImGui.SliderFloat("AvoidObstacleWeight", ref avoidObstacleWeight, 0.1f, 5.0f);
             _tool.TemplateMovableEntity.AvoidObstacleWeight = FixMath.F64.FromFloat(avoidObstacleWeight);
 
+            if (propertyChanged)
+            {
+                _tool.EntityManager.ForEachEntity((InEntity) =>
+                {
+                    if (null != InEntity)
+                    {
+                        InEntity.OnTemplatePropertyChanged();
+                    }
+                });
+            }
 
             if (ImGui.Button("Playback Mode"))
             {

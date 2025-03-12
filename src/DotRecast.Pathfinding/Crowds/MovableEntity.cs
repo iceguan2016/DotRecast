@@ -169,6 +169,11 @@ namespace DotRecast.Pathfinding.Crowds
             return result;
         }
 
+        public void OnTemplatePropertyChanged()
+        {
+            Radius = Template.Radius;
+        }
+
         public virtual void OnCreate()
         {
             _boundarySegements = new BoundarySegement[MaxBoundarySegmentNum];
