@@ -8,8 +8,6 @@
 // you should have received as part of this distribution. The terms
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
-using System.Numerics;
-
 namespace SharpSteer2
 {
 	public abstract class BaseVehicle : LocalSpace, IVehicle
@@ -25,7 +23,7 @@ namespace SharpSteer2
 		public abstract FixMath.F64 MaxForce { get; }
 		public abstract FixMath.F64 MaxSpeed { get; }
 
-        public abstract FixMath.F64Vec3 GetAvoidObstacleDirection(ref Obstacles.PathIntersection pathIntersection);
+        public abstract FixMath.F64Vec3 GetAvoidObstacleDirection(Obstacles.IObstacle obstacle, ref Obstacles.PathIntersection pathIntersection, ref IVehicle.FAvoidObstacleInfo info);
         public abstract FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, Obstacles.PathIntersection? intersection, ref IVehicle.FAvoidNeighborInfo info);
         public abstract bool ShouldAvoidNeighbor(IVehicle threat);
 

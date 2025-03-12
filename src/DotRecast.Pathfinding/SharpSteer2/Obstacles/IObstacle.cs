@@ -30,38 +30,31 @@ namespace SharpSteer2.Obstacles
         // determine steering based on path intersection tests
         public FixMath.F64Vec3 steerToAvoidIfNeeded(IVehicle vehicle,
                                        FixMath.F64 minTimeToCollision,
-                                       ref SteerLibrary.AvoidReferenceInfo referenceInfo)
+                                       ref IVehicle.FAvoidObstacleInfo info)
         {
             // if nearby intersection found, steer away from it, otherwise no steering
             var minDistanceToCollision = minTimeToCollision * vehicle.Speed;
             if (intersect && (distance < minDistanceToCollision))
             {
-                // try updating the reference avoidance direction
-                if (referenceInfo.referenceDirection == null)
-                {
-                    var direction = vehicle.GetAvoidObstacleDirection(ref this);
-                    if (direction == FixMath.F64Vec3.Zero)
-                    {
-                        referenceInfo.referenceDirection = direction;
-                    }
-                }
+                var avoidDirection = vehicle.GetAvoidObstacleDirection(obstacle, ref this, ref info);
+                return avoidDirection * vehicle.MaxForce;
 
                 // compute avoidance steering force: take the component of
                 // steerHint which is lateral (perpendicular to vehicle's
                 // forward direction), set its length to vehicle's maxForce
-                if (referenceInfo.referenceDirection != null)
-                {
-                    // Select the direction that is closer to the reference point
-                    var d = referenceInfo.referenceDirection.Value;
-                    var hintDir = FixMath.F64Vec3.Dot(d, steerHint) >= 0 ? steerHint : (2 * FixMath.F64Vec3.Dot(steerHint, surfaceNormal) * surfaceNormal - steerHint);
-                    var lateral = Vector3Helpers.PerpendicularComponent(hintDir, vehicle.Forward);
-                    return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
-                }
-                else
-                {
-                    var lateral = Vector3Helpers.PerpendicularComponent(steerHint, vehicle.Forward);
-                    return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
-                }
+                //if (referenceInfo.referenceDirection != null)
+                //{
+                //    // Select the direction that is closer to the reference point
+                //    var d = referenceInfo.referenceDirection.Value;
+                //    var hintDir = FixMath.F64Vec3.Dot(d, steerHint) >= 0 ? steerHint : (2 * FixMath.F64Vec3.Dot(steerHint, surfaceNormal) * surfaceNormal - steerHint);
+                //    var lateral = Vector3Helpers.PerpendicularComponent(hintDir, vehicle.Forward);
+                //    return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
+                //}
+                //else
+                //{
+                //    var lateral = Vector3Helpers.PerpendicularComponent(steerHint, vehicle.Forward);
+                //    return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
+                //}
             }
             else
             {
@@ -97,7 +90,7 @@ namespace SharpSteer2.Obstacles
     /// </summary>
     public interface IObstacle
 	{
-        FixMath.F64Vec3 steerToAvoid(BaseVehicle v, FixMath.F64 minTimeToCollision, ref SteerLibrary.AvoidReferenceInfo referenceInfo);
+        FixMath.F64Vec3 steerToAvoid(BaseVehicle v, FixMath.F64 minTimeToCollision, ref IVehicle.FAvoidObstacleInfo info);
 
         // find first intersection of a vehicle's path with this obstacle
         // (this must be specialized for each new obstacle shape class)

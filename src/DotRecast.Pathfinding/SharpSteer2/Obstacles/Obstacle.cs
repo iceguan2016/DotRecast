@@ -14,14 +14,14 @@ namespace SharpSteer2.Obstacles
         public abstract void findIntersectionWithVehiclePath(BaseVehicle vehicle, ref PathIntersection pi);
 
         // compute steering for a vehicle to avoid this obstacle, if needed 
-        public FixMath.F64Vec3 steerToAvoid(BaseVehicle vehicle, FixMath.F64 minTimeToCollision, ref SteerLibrary.AvoidReferenceInfo referenceInfo)
+        public FixMath.F64Vec3 steerToAvoid(BaseVehicle vehicle, FixMath.F64 minTimeToCollision, ref IVehicle.FAvoidObstacleInfo info)
         {
             // find nearest intersection with this obstacle along vehicle's path
             PathIntersection pi = PathIntersection.DEFAULT;
             findIntersectionWithVehiclePath(vehicle, ref pi);
 
             // return steering for vehicle to avoid intersection, or zero if non found
-            return pi.steerToAvoidIfNeeded(vehicle, minTimeToCollision, ref referenceInfo);
+            return pi.steerToAvoidIfNeeded(vehicle, minTimeToCollision, ref info);
         }
 
         // static method to apply steerToAvoid to nearest obstacle in an
@@ -30,7 +30,7 @@ namespace SharpSteer2.Obstacles
                                                FixMath.F64 minTimeToCollision,
                                                IEnumerable<IObstacle> obstacles,
                                                out PathIntersection outNearest,
-                                               ref SteerLibrary.AvoidReferenceInfo referenceInfo)
+                                               ref IVehicle.FAvoidObstacleInfo info)
         {
             // test all obstacles in group for an intersection with the vehicle's
             // future path, select the one whose point of intersection is nearest
@@ -38,7 +38,7 @@ namespace SharpSteer2.Obstacles
 
             // if nearby intersection found, steer away from it, otherwise no steering
             outNearest = nearest;
-            return nearest.steerToAvoidIfNeeded(vehicle, minTimeToCollision, ref referenceInfo);
+            return nearest.steerToAvoidIfNeeded(vehicle, minTimeToCollision, ref info);
         }
 
         // static method to find first vehicle path intersection in an

@@ -80,14 +80,9 @@ namespace SharpSteer2
             return this.SteerToAvoidObstacle(minTimeToCollision, obstacle, annotation);
         }
 
-        public struct AvoidReferenceInfo
-        {
-            // Record the most recent avoidance direction
-            public FixMath.F64Vec3? referenceDirection;
-        }
-	    protected FixMath.F64Vec3 SteerToAvoidObstacles(FixMath.F64 minTimeToCollision, IEnumerable<IObstacle> obstacles, ref AvoidReferenceInfo referenceInfo)
+	    protected FixMath.F64Vec3 SteerToAvoidObstacles(FixMath.F64 minTimeToCollision, IEnumerable<IObstacle> obstacles, ref IVehicle.FAvoidObstacleInfo info)
 	    {
-	        return this.SteerToAvoidObstacles(minTimeToCollision, obstacles, ref referenceInfo, annotation);
+	        return this.SteerToAvoidObstacles(minTimeToCollision, obstacles, ref info, annotation);
 	    }
 
 	    protected FixMath.F64Vec3 SteerToAvoidNeighbors(FixMath.F64 minTimeToCollision, IEnumerable<IVehicle> others, ref IVehicle.FAvoidNeighborInfo info)

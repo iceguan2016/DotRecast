@@ -286,7 +286,7 @@ namespace SharpSteer2
 			}
 		}
 
-        public override FixMath.F64Vec3 GetAvoidObstacleDirection(ref Obstacles.PathIntersection pathIntersection) { return FixMath.F64Vec3.Zero; }
+        public override FixMath.F64Vec3 GetAvoidObstacleDirection(Obstacles.IObstacle obstacle, ref Obstacles.PathIntersection pathIntersection, ref IVehicle.FAvoidObstacleInfo info) { return FixMath.F64Vec3.Zero; }
         public override FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, Obstacles.PathIntersection? intersection, ref IVehicle.FAvoidNeighborInfo info) { return FixMath.F64Vec3.Zero; }
         public override bool ShouldAvoidNeighbor(IVehicle threat) { return true; }
         public override void AnnotationAvoidCloseNeighbor(IVehicle threat, FixMath.F64Vec3 avoidDirection, IVehicle.FAvoidNeighborInfo info) { }

@@ -57,20 +57,72 @@ namespace SharpSteer2
         /// </summary>
 		FixMath.F64 MaxSpeed { get; }
 
-        // calculate reference avoidance direction
-        FixMath.F64Vec3 GetAvoidObstacleDirection(ref PathIntersection pathIntersection);
-        public enum eAvoidVOSide
+        public enum eAvoidSide
         {
             None = 0,
             Left,
             Right
         }
+        public struct FAvoidObstacleInfo
+        {
+            // 最新更新帧号
+            public int FrameNo { get; private set; }
+            // 当前避让的阻挡物
+            public IObstacle Obstacle { get; private set; }
+            // 当前选择的避让Obstacle选择的方向
+            public eAvoidSide Side { get; private set; }
+
+            public bool IsValid 
+            {
+                get 
+                {
+                    return Obstacle != null && Side != eAvoidSide.None;
+                }
+            }
+
+            public void SetAvoidInfo(int frameNo, IObstacle obstacle, eAvoidSide side)
+            {
+                FrameNo = frameNo;
+                Obstacle = obstacle;
+                Side = side;
+            }
+
+            public void Reset()
+            {
+                Obstacle = null;
+                Side = eAvoidSide.None;
+            }
+        }
+        FixMath.F64Vec3 GetAvoidObstacleDirection(IObstacle obstacle, ref PathIntersection pathIntersection, ref FAvoidObstacleInfo info);
         public struct FAvoidNeighborInfo
         {
+            // 最新更新帧号
+            public int FrameNo { get; private set; }
             // 当前避让的Entity
-            public UniqueId EntityId { get; set; }
+            public UniqueId EntityId { get; private set; }
             // 当前选择的避让Entity的VO方向
-            public eAvoidVOSide VOSide { get; set; }
+            public eAvoidSide Side { get; private set; }
+
+            public bool IsValid
+            {
+                get
+                {
+                    return EntityId != UniqueId.InvalidID && Side != eAvoidSide.None;
+                }
+            }
+
+            public void SetAvoidInfo(int frameNo, UniqueId entityId, eAvoidSide side)
+            {
+                FrameNo = frameNo;
+                EntityId = entityId;
+                Side = side;
+            }
+
+            public void Reset()
+            {
+                EntityId = UniqueId.InvalidID;
+                Side = eAvoidSide.None;
+            }
         }
         FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, PathIntersection? intersection, ref FAvoidNeighborInfo info);
         // returns true if the threat entity needs to be avoided.

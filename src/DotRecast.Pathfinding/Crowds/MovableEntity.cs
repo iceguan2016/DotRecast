@@ -7,6 +7,7 @@ using SharpSteer2.Pathway;
 using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 using Game.Utils;
+using System.Threading;
 
 namespace DotRecast.Pathfinding.Crowds
 {
@@ -88,8 +89,9 @@ namespace DotRecast.Pathfinding.Crowds
         // True means walking forward along the path, false means walking backward along the path
         private bool _pathDirection = true;
         private FixMath.F64Vec3? _pathReferencePosition = null;
-        // Record the most recent avoidance direction
-        private SteerLibrary.AvoidReferenceInfo _avoidReferenceInfo = new AvoidReferenceInfo();
+        // history avoid info
+        private IVehicle.FAvoidObstacleInfo _avoidObstacleInfo = new IVehicle.FAvoidObstacleInfo();
+        public IVehicle.FAvoidObstacleInfo AvoidObstacleInfo { get { return _avoidObstacleInfo; } }
         private IVehicle.FAvoidNeighborInfo _avoidNeighborInfo = new IVehicle.FAvoidNeighborInfo();
         public IVehicle.FAvoidNeighborInfo AvoidNeighborInfo { get { return _avoidNeighborInfo; } }
 
@@ -237,6 +239,10 @@ namespace DotRecast.Pathfinding.Crowds
                 if (null != _proximityToken)
                     _proximityToken.UpdateForNewPosition(Position);
             }
+
+            // 更新避让状态信息
+            updateAvoidNeighborInfo();
+            updateAvoidObstacleInfo();
         }
 
         public virtual void OnDraw(bool selected)
@@ -312,9 +318,9 @@ namespace DotRecast.Pathfinding.Crowds
                 Util.Draw.drawLine(annotation, start, end, Colors.Green);
 
                 // draw side
-                if (_avoidNeighborInfo.VOSide != IVehicle.eAvoidVOSide.None)
+                if (_avoidNeighborInfo.Side != IVehicle.eAvoidSide.None)
                 {
-                    var sideDir = _avoidNeighborInfo.VOSide == IVehicle.eAvoidVOSide.Left? left : right;
+                    var sideDir = _avoidNeighborInfo.Side == IVehicle.eAvoidSide.Left? left : right;
                     start = Position;
                     end = Position + sideDir * FixMath.F64.FromFloat(2.0f);
                     Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), Colors.Yellow);
@@ -400,7 +406,7 @@ namespace DotRecast.Pathfinding.Crowds
 
                 if (_boundaryObstacles.Count > 0)
                 {
-                   obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, ref _avoidReferenceInfo) * Template.AvoidObstacleWeight;
+                   obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, ref _avoidObstacleInfo) * Template.AvoidObstacleWeight;
 
 #if ENABLE_STEER_AGENT_DEBUG
 			        info.obstacleForce = obstacleAvoidance * forceScale;
@@ -452,17 +458,45 @@ namespace DotRecast.Pathfinding.Crowds
             return totalForce;
         }
 
-        public override FixMath.F64Vec3 GetAvoidObstacleDirection(ref PathIntersection pathIntersection) 
-        { 
+        public override FixMath.F64Vec3 GetAvoidObstacleDirection(IObstacle obstacle, ref PathIntersection pathIntersection, ref IVehicle.FAvoidObstacleInfo info) 
+        {
+            // 选择最优避让方向规则：
+            // (1) 和上一次选择side保持一致, 如果为none，则检查_avoidNeighborInfo的side，与其保持一致
 
-            return FixMath.F64Vec3.Zero; 
+            var det = Vector3Helpers.Det(pathIntersection.surfaceNormal.Cast2D(), pathIntersection.steerHint.Cast2D());
+
+            var side = IVehicle.eAvoidSide.Left;
+            if (info.Side == IVehicle.eAvoidSide.None)
+            { 
+                if (_avoidNeighborInfo.IsValid)
+                {
+                    side = _avoidNeighborInfo.Side;
+                }
+                else
+                {
+                    // 根据Intersection方向来选择
+                    side = det >= 0? IVehicle.eAvoidSide.Left : IVehicle.eAvoidSide.Right;
+                }
+            }
+            else
+            {
+                side = info.Side;
+            }
+
+            info.SetAvoidInfo(EntityManager.FrameNo, obstacle, side);
+
+            var isReflect = (side == IVehicle.eAvoidSide.Left && det < 0) || (side == IVehicle.eAvoidSide.Right && det > 0);
+            ref var steerHint = ref pathIntersection.steerHint;
+            ref var normal = ref pathIntersection.surfaceNormal;
+            var direction = isReflect? (2 * steerHint.Dot(normal) * normal - steerHint) : steerHint; 
+            return direction.GetSafeNormal();
         }
 
         public override FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, PathIntersection? intersection, ref IVehicle.FAvoidNeighborInfo info) 
         {
             // 选择最优避让方向规则：
             // (1) 与desiredVelocity方向最接近
-            // (2) 和上一次选择side保持一致
+            // (2) 和上一次选择side保持一致, 如果为none，则检查_avoidObstacleInfo的side，与其保持一致
             // (3) 被避让单位是否在避让自己，选择与其保持一致的避让方向（比如都选左，或者右）
             // (4) 检查选择的避让方向是否会撞墙
             if (threat is MovableEntity entity)
@@ -488,20 +522,24 @@ namespace DotRecast.Pathfinding.Crowds
                         FixMath.F64.Zero,
                         -relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
 
-                var side = IVehicle.eAvoidVOSide.Left;
-                if (info.VOSide == IVehicle.eAvoidVOSide.None)
+                var side = IVehicle.eAvoidSide.Left;
+                if (info.Side == IVehicle.eAvoidSide.None)
                 {
                     // 选择和对方一致的避让方向
                     if (entity.AvoidNeighborInfo.EntityId == ID)
                     {
-                        side = entity.AvoidNeighborInfo.VOSide;
+                        side = entity.AvoidNeighborInfo.Side;
+                    }
+                    else if (_avoidObstacleInfo.IsValid)
+                    {
+                        side = _avoidObstacleInfo.Side;
                     }
                     else
                     {
                         // 选择不撞墙的方向
                         var minDistanceToCollision = Template.AvoidObstacleAheadTime * Speed;
                         var testDirs = new FixMath.F64Vec3[] { left, right };
-                        var testSides = new IVehicle.eAvoidVOSide[] { IVehicle.eAvoidVOSide.Left, IVehicle.eAvoidVOSide.Right };
+                        var testSides = new IVehicle.eAvoidSide[] { IVehicle.eAvoidSide.Left, IVehicle.eAvoidSide.Right };
 
                         var movable = new SimpleVehicle();
                         movable.Position = Position;
@@ -539,24 +577,58 @@ namespace DotRecast.Pathfinding.Crowds
                 }
                 else
                 {
-                    side = info.VOSide;
+                    side = info.Side;
                 }
 
-                // 根据side返回避让方向
-                info.VOSide = side;
-                info.EntityId = entity.ID;
-                return side == IVehicle.eAvoidVOSide.Left? left : right;
+                // 根据side选择避让方向
+                info.SetAvoidInfo(EntityManager.FrameNo, entity.ID, side);
+                return side == IVehicle.eAvoidSide.Left? left : right;
             }
             return FixMath.F64Vec3.Zero; 
         }
 
         public override bool ShouldAvoidNeighbor(IVehicle threat) 
         { 
+            // 规则：
+            // (1) 静止的单位需要避让
+            // (2) 移动方向同向的不避让，移动方向反向的需避让
             return true; 
+        }
+
+        // 更新避让neighbor信息，并在合适的时机重置信息
+        void updateAvoidNeighborInfo()
+        {
+            if (!_avoidNeighborInfo.EntityId.IsValid())
+            {
+                _avoidNeighborInfo.Reset();
+                return;
+            }
+
+            // 超过一定帧数没有需要避让的单位，则重置避让信息
+            var deltaFrame = EntityManager.FrameNo - _avoidNeighborInfo.FrameNo;
+            if (deltaFrame > 5)
+            {
+                _avoidNeighborInfo.Reset();
+            }
+        }
+
+        void updateAvoidObstacleInfo()
+        {
+            if (null == _avoidObstacleInfo.Obstacle)
+            {
+                _avoidObstacleInfo.Reset();
+            }
+
+            var deltaFrame = EntityManager.FrameNo - _avoidObstacleInfo.FrameNo;
+            if (deltaFrame > 5)
+            {
+                _avoidObstacleInfo.Reset();
+            }
         }
 
         static FixMath.F64 COLLISION_RESOLVE_FACTOR = FixMath.F64.FromFloat(0.7f);
         static FixMath.F64 DISTANCE_EPLISION = FixMath.F64.FromFloat(0.001f);
+        // 返回避让邻近单位位移量
         public FixMath.F64Vec3 ResolveCollisionWithNeighbors()
         {
             var Disp = FixMath.F64Vec3.Zero;

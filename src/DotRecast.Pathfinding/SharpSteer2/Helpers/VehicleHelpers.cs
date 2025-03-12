@@ -156,8 +156,8 @@ namespace SharpSteer2.Helpers
         /// <returns></returns>
         public static FixMath.F64Vec3 SteerToAvoidObstacle(this IVehicle vehicle, FixMath.F64 minTimeToCollision, IObstacle obstacle, IAnnotationService annotation = null)
         {
-            var referenceInfo = new SteerLibrary.AvoidReferenceInfo();
-            var avoidance = obstacle.steerToAvoid(vehicle as BaseVehicle, minTimeToCollision, ref referenceInfo);
+            var info = new IVehicle.FAvoidObstacleInfo();
+            var avoidance = obstacle.steerToAvoid(vehicle as BaseVehicle, minTimeToCollision, ref info);
 
             // XXX more annotation modularity problems (assumes spherical obstacle)
             if (avoidance != FixMath.F64Vec3.Zero && annotation != null)
@@ -166,13 +166,13 @@ namespace SharpSteer2.Helpers
             return avoidance;
         }
 
-        public static FixMath.F64Vec3 SteerToAvoidObstacles(this IVehicle vehicle, FixMath.F64 minTimeToCollision, IEnumerable<IObstacle> obstacles, ref SteerLibrary.AvoidReferenceInfo referenceInfo, IAnnotationService annotation = null)
+        public static FixMath.F64Vec3 SteerToAvoidObstacles(this IVehicle vehicle, FixMath.F64 minTimeToCollision, IEnumerable<IObstacle> obstacles, ref IVehicle.FAvoidObstacleInfo info, IAnnotationService annotation = null)
         {
             var avoidance = Obstacle.steerToAvoidObstacles(vehicle as BaseVehicle, 
                                                            minTimeToCollision,
                                                            obstacles,
                                                            out var nearest,
-                                                           ref referenceInfo);
+                                                           ref info);
 
             // XXX more annotation modularity problems (assumes spherical obstacle)
             if (annotation != null && avoidance != FixMath.F64Vec3.Zero)
