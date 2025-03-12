@@ -122,8 +122,6 @@ public class RecastDemo : IRecastDemoChannel
     // selection
     private bool select= false;
     private bool processSelection = false;
-    private RcVec2f _selectMouseStart = new RcVec2f();
-    private RcVec2f _selectMouseEnd = new RcVec2f();
 
     public RecastDemo()
     {
@@ -194,11 +192,6 @@ public class RecastDemo : IRecastDemoChannel
                 movedDuringPan = true;
             }
         }
-
-        if (select)
-        {
-            _selectMouseEnd = mousePos;
-        }
     }
 
     public void OnMouseUpAndDown(IMouse mouse, MouseButton button, bool down)
@@ -230,8 +223,6 @@ public class RecastDemo : IRecastDemoChannel
             else if (button == MouseButton.Left)
             {
                 select = true;
-                _selectMouseStart = mousePos;
-                _selectMouseEnd = mousePos;
             }
         }
         else
@@ -254,7 +245,6 @@ public class RecastDemo : IRecastDemoChannel
                 if (select)
                 {
                     select = false;
-                    _selectMouseEnd = mousePos;
                     processSelection = true;
                 }
 
@@ -543,15 +533,15 @@ public class RecastDemo : IRecastDemoChannel
 
         if (select || processSelection)
         {
-            RcVec3f start = new RcVec3f();
-            RcVec3f end = new RcVec3f();
+            RcVec3f rayStart = new RcVec3f();
+            RcVec3f rayEnd = new RcVec3f();
 
-            GLU.GlhUnProjectf(_selectMouseStart.X, viewport[3] - 1 - _selectMouseStart.Y, 0.3f, modelviewMatrix, projectionMatrix, viewport, ref start);
-            GLU.GlhUnProjectf(_selectMouseEnd.X, viewport[3] - 1 - _selectMouseEnd.Y, 0.3f, modelviewMatrix, projectionMatrix, viewport, ref end);
+            GLU.GlhUnProjectf(mousePos.X, viewport[3] - 1 - mousePos.Y, 0.0f, modelviewMatrix, projectionMatrix, viewport, ref rayStart);
+            GLU.GlhUnProjectf(mousePos.X, viewport[3] - 1 - mousePos.Y, 1.0f, modelviewMatrix, projectionMatrix, viewport, ref rayEnd);
 
             SendMessage(new SelectionEvent() { 
-                Start = start,
-                End = end,
+                RayStart = rayStart,
+                RayEnd = rayEnd,
                 IsFinished = processSelection,
             });
 
@@ -896,7 +886,13 @@ public class RecastDemo : IRecastDemoChannel
 
     private void OnSelection(SelectionEvent args)
     {
+        var rayStart = args.RayStart;
+        var rayEnd = args.RayEnd;
+
+        RcVec3f rayDir = new RcVec3f(rayEnd.X - rayStart.X, rayEnd.Y - rayStart.Y, rayEnd.Z - rayStart.Z);
+        rayDir = RcVec3f.Normalize(rayDir);
+
         ISampleTool raySampleTool = _toolsetView.GetTool();
-        raySampleTool.HandleSelection(args.Start, args.End, args.IsFinished);
+        raySampleTool.HandleSelectionRay(rayStart, rayDir, args.IsFinished);
     }
 }

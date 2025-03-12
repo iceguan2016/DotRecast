@@ -628,6 +628,24 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             IsSelecting = false;
 
             // 更新选中的单位
+            var center = (SelectionStartPosition + SelectionEndPosition) * 0.5f;
+            var size = SelectionEndPosition - SelectionStartPosition;
+            var halfSizeX = Math.Abs(size.X) * 0.5f;
+            var halfSizeZ = Math.Abs(size.Z) * 0.5f;
+
+            _selectEntities.Clear();
+            _entityManager.ForEachEntity((InEntity) =>
+            {
+                if (null != InEntity)
+                {
+                    var pos = InEntity.Position;
+                    if (Math.Abs(pos.X.Float - center.X) < halfSizeX &&
+                        Math.Abs(pos.Z.Float - center.Z) < halfSizeZ)
+                    {
+                        _selectEntities.Add(InEntity.ID);
+                    }
+                }
+            });
         }
     }
 }
@@ -657,12 +675,10 @@ public class TestDaedalusSampleTool : ISampleTool
 
     }
 
-    public void HandleClickRay(RcVec3f start, RcVec3f direction, bool shift)
+    bool GetRaycastHitPos(RcVec3f start, RcVec3f direction, out RcVec3f outHitPos)
     {
-        if (null == _draw) return;
-        if (null == _tool.Mesh) return;
-
         // 平面 y = _draw.MapHeight
+        outHitPos = new RcVec3f();
 
         var src = start;
         var dst = start + direction * 100.0f;
@@ -670,10 +686,22 @@ public class TestDaedalusSampleTool : ISampleTool
         var bmax = new RcVec3f((float)_tool.Mesh._width, _draw.MapHeight, (float)_tool.Mesh._height);
         if (!RcIntersections.IsectSegAABB(src, dst, bmin, bmax, out var btmin, out var btmax))
         {
-            return;
+            return false;
         }
 
-        var hitPos = src + (dst - src) * btmin;
+        outHitPos = src + (dst - src) * btmin;
+        return true;
+    }
+
+    public void HandleClickRay(RcVec3f start, RcVec3f direction, bool shift)
+    {
+        if (null == _draw) return;
+        if (null == _tool.Mesh) return;
+
+        if (!GetRaycastHitPos(start, direction, out var hitPos))
+        {
+            return;
+        }
 
         Logger.Information($"HandleClickRay, hitPos:{hitPos}");
 
@@ -785,18 +813,21 @@ public class TestDaedalusSampleTool : ISampleTool
         }
     }
 
-    public void HandleSelection(RcVec3f start, RcVec3f end, bool finished)
+    public void HandleSelectionRay(RcVec3f start, RcVec3f direction, bool finished)
     {
         if (m_mode == TestDaedalusToolMode.SELECT_CROWD_ENTITY)
         {
-            if (!_tool.IsSelecting)
+            if (!GetRaycastHitPos(start, direction, out var hitPos))
             {
-                _tool.BeginSelection(start);
+                return;
             }
 
-            _tool.UpdateSelection(end, finished);
-            // var size = end - start;
-            // Logger.Information($"HandleSelection, size:{size}, start:{start}, end:{end}, finished:{finished}");
+            if (!_tool.IsSelecting)
+            {
+                _tool.BeginSelection(hitPos);
+            }
+
+            _tool.UpdateSelection(hitPos, finished);
         }
     }
 

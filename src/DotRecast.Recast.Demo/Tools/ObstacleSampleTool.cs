@@ -122,7 +122,7 @@ public class ObstacleSampleTool : ISampleTool
     {
     }
 
-    public void HandleSelection(RcVec3f start, RcVec3f end, bool finished)
+    public void HandleSelectionRay(RcVec3f start, RcVec3f direction, bool finished)
     {
     }
 }

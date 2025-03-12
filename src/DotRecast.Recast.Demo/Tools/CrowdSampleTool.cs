@@ -539,7 +539,7 @@ public class CrowdSampleTool : ISampleTool
     public void HandleClickRay(RcVec3f start, RcVec3f direction, bool shift)
     {
     }
-    public void HandleSelection(RcVec3f start, RcVec3f end, bool finished)
+    public void HandleSelectionRay(RcVec3f start, RcVec3f direction, bool finished)
     {
     }
 }
