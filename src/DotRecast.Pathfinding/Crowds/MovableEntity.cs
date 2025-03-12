@@ -580,7 +580,20 @@ namespace DotRecast.Pathfinding.Crowds
             // 规则：
             // (1) 静止的单位需要避让
             // (2) 移动方向同向的不避让，移动方向反向的需避让
-            return true; 
+            if (threat is MovableEntity entity)
+            {
+                if (!entity.HasEntityState(eEntityState.Moving))
+                {
+                    return true;
+                }
+
+                var dot = Velocity.Dot(entity.Velocity);
+                if (dot < 0)
+                {
+                    return true;
+                }
+            }
+            return false; 
         }
 
         // 更新避让neighbor信息，并在合适的时机重置信息
