@@ -37,7 +37,8 @@ namespace SharpSteer2.Obstacles
             if (intersect && (distance < minDistanceToCollision))
             {
                 var avoidDirection = vehicle.GetAvoidObstacleDirection(obstacle, ref this, ref info);
-                return avoidDirection * vehicle.MaxForce;
+                var lateral = Vector3Helpers.PerpendicularComponent(avoidDirection, vehicle.Forward);
+                return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
 
                 // compute avoidance steering force: take the component of
                 // steerHint which is lateral (perpendicular to vehicle's

@@ -499,26 +499,6 @@ namespace SharpSteer2.Helpers
             // https://howtorts.github.io/2014/01/14/avoidance-behaviours.html
             // 
 
-            System.Func<IVehicle, FixMath.F64Vec3> avoidThreatEntity = threat =>
-            {
-                var resultVector = FixMath.F64Vec3.Zero;
-                var obstacle = new SphericalObstacle(threat.Radius, threat.Position);
-                PathIntersection intersection = PathIntersection.DEFAULT;
-                obstacle.findIntersectionWithVehiclePath(vehicle as BaseVehicle, ref intersection);
-                if (intersection.intersect)
-                {
-                    // Choose right direction
-                    resultVector = new FixMath.F64Vec3(intersection.surfaceNormal.Z, FixMath.F64.Zero, -intersection.surfaceNormal.X);
-                    resultVector.Normalize();
-
-                    //Move it out based on our radius + theirs
-                    resultVector *= vehicle.Radius + threat.Radius;
-
-                    if (null != annotation) annotation.AvoidNeighbor(vehicle, threat, intersection);
-                }
-                return resultVector;
-            };
-
             // Find min distance entity
             var minSeparationDistance = FixMath.F64.Zero;
             foreach (var other in others)
@@ -532,7 +512,12 @@ namespace SharpSteer2.Helpers
 
                     if (currentDistance < minCenterToCenter)
                     {
-                        return avoidThreatEntity(other);
+                        var avoidDirection = vehicle.GetAvoidNeighborDirection(other, null, ref info);
+                        if (null != annotation)
+                            annotation.AvoidCloseNeighbor(vehicle, other, avoidDirection, info);
+                        // return avoidDir * vehicle.Speed - vehicle.Velocity;
+                        var lateral = Vector3Helpers.PerpendicularComponent(avoidDirection, vehicle.Forward);
+                        return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
                     }
                 }
             }
@@ -587,10 +572,11 @@ namespace SharpSteer2.Helpers
             // if a potential collision was found, compute steering to avoid
             if (threat != null)
             {
-                // return avoidThreatEntity(threat);
-                var avoidDir = vehicle.GetAvoidNeighborDirection(threat, null, ref info);
-                if (null != annotation) annotation.AvoidCloseNeighbor(vehicle, threat, avoidDir, info);
-                return avoidDir * vehicle.Speed - vehicle.Velocity;
+                var avoidDirection = vehicle.GetAvoidNeighborDirection(threat, null, ref info);
+                if (null != annotation) annotation.AvoidCloseNeighbor(vehicle, threat, avoidDirection, info);
+                // return avoidDir * vehicle.Speed - vehicle.Velocity;
+                var lateral = Vector3Helpers.PerpendicularComponent(avoidDirection, vehicle.Forward);
+                return FixMath.F64Vec3.NormalizeFast(lateral) * vehicle.MaxForce;
             }
 
             // otherwise return zero
