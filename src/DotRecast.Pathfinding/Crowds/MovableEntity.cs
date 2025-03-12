@@ -88,7 +88,6 @@ namespace DotRecast.Pathfinding.Crowds
         private PolylinePathway Pathway = null;
         // True means walking forward along the path, false means walking backward along the path
         private bool _pathDirection = true;
-        private FixMath.F64Vec3? _pathReferencePosition = null;
         // history avoid info
         private IVehicle.FAvoidObstacleInfo _avoidObstacleInfo = new IVehicle.FAvoidObstacleInfo();
         public IVehicle.FAvoidObstacleInfo AvoidObstacleInfo { get { return _avoidObstacleInfo; } }
@@ -228,7 +227,6 @@ namespace DotRecast.Pathfinding.Crowds
             info.forward = Forward;
             info.side = Side;
             info.up = Up;
-            info.steerPosition = _pathReferencePosition?? TargetLocation.Value;
 #endif
 
             var steerForce = determineCombinedSteering(inDeltaTime);
@@ -354,39 +352,63 @@ namespace DotRecast.Pathfinding.Crowds
             // probability that a lower priority behavior will be given a
             // chance to "drive" even if a higher priority behavior might
             // otherwise be triggered.
-            var leakThrough = FixMath.F64.FromFloat(0.1f);
+            // var leakThrough = FixMath.F64.FromFloat(0.1f);
 
-            // steering to seek target
             var steeringForce = FixMath.F64Vec3.Zero;
-            FixMath.F64Vec3? referencePoint = null;
-            // path follow corner point
-            if (null != Pathway)
+
+            // 1.path follow corner point
             {
-                var predictionTime = Template.FollowPathAheadTime;
-                steeringForce = this.SteerToFollowPath(_pathDirection, predictionTime, Pathway, MaxSpeed, out var currentPathDistance, annotation) * Template.FollowPathWeight;
+                if (null != Pathway)
+                {
+                    var predictionTime = Template.FollowPathAheadTime;
+                    steeringForce = this.SteerToFollowPath(_pathDirection, predictionTime, Pathway, MaxSpeed, out var currentPathDistance, annotation) * Template.FollowPathWeight;
 
-                // float pathDistanceOffset = (_pathDirection ? 1 : -1) * predictionTime * Speed;
-                // referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + FixMath.F64.FromFloat(0.5f));
-            }
+                    // float pathDistanceOffset = (_pathDirection ? 1 : -1) * predictionTime * Speed;
+                    // referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + FixMath.F64.FromFloat(0.5f));
+                }
 
-            if (steeringForce == FixMath.F64Vec3.Zero)
-            {
-                steeringForce = SteerForSeek(targetLocation.Value) * Template.FollowPathWeight;
-            }
+                if (steeringForce == FixMath.F64Vec3.Zero)
+                {
+                    steeringForce = SteerForSeek(targetLocation.Value) * Template.FollowPathWeight;
+                }
 
-            steeringForce = steeringForce.TruncateLength(MaxForce);
-            _pathReferencePosition = referencePoint;
+                steeringForce = steeringForce.TruncateLength(MaxForce);
 
 #if ENABLE_STEER_AGENT_DEBUG
-            info.targetForce = steeringForce * forceScale;
+                info.targetForce = steeringForce * forceScale;
 #endif
+            }
 
-            // avoid obstacles
-            _boundaryObstacles.Clear();
-            // var obstacles = new List<IObstacle>();
-            var obstacleAvoidance = FixMath.F64Vec3.Zero;
-            if (leakThrough < RandomHelpers.Random())
+            // 2.avoid neighbors
             {
+                // otherwise consider avoiding collisions with others
+                List<IVehicle> neighbors = new List<IVehicle>();
+                var collisionAvoidance = FixMath.F64Vec3.Zero;
+                for (int i = 0; i < _neighbors.Count; ++i)
+                {
+                    var neighbor = _neighbors[i] as MovableEntity;
+                    if (null == neighbor || ID == neighbor.ID)
+                        continue;
+                    if (neighbor.HasEntityState(eEntityState.Moving))
+                        continue;
+                    neighbors.Add(neighbor);
+                }
+
+                // collisionAvoidance = steerToAvoidNeighbors(timeCollisionWithNeighbor, neighbors);
+                collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors, ref _avoidNeighborInfo);
+                collisionAvoidance = collisionAvoidance.Normalize() * MaxForce * Template.AvoidNeighborWeight;
+
+#if ENABLE_STEER_AGENT_DEBUG
+                info.avoidNeighborFoce = collisionAvoidance * forceScale;
+#endif
+                steeringForce += collisionAvoidance;
+            }
+
+            // 3.avoid obstacles
+            {
+                _boundaryObstacles.Clear();
+                // var obstacles = new List<IObstacle>();
+                var obstacleAvoidance = FixMath.F64Vec3.Zero;
                 for (var i = 0; i < _boundarySegmentNum; ++i)
                 {
                     var boundary = _boundarySegements[i];
@@ -406,48 +428,14 @@ namespace DotRecast.Pathfinding.Crowds
 
                 if (_boundaryObstacles.Count > 0)
                 {
-                   obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, ref _avoidObstacleInfo) * Template.AvoidObstacleWeight;
+                    obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, ref _avoidObstacleInfo) * Template.AvoidObstacleWeight;
 
 #if ENABLE_STEER_AGENT_DEBUG
-			        info.obstacleForce = obstacleAvoidance * forceScale;
+                    info.obstacleForce = obstacleAvoidance * forceScale;
 #endif
                 }
-            }
 
-            // if obstacle avoidance is needed, do it
-            if (obstacleAvoidance != FixMath.F64Vec3.Zero)
-            {
                 steeringForce += obstacleAvoidance;
-            }
-            // else
-            {
-                // otherwise consider avoiding collisions with others
-                List<IVehicle> neighbors = new List<IVehicle>();
-                var collisionAvoidance = FixMath.F64Vec3.Zero;
-                // if (leakThrough < RandomHelpers.Random())
-                {
-                    for (int i = 0; i < _neighbors.Count; ++i)
-                    {
-                        var neighbor = _neighbors[i] as MovableEntity;
-                        if (null == neighbor || ID == neighbor.ID) continue;
-                        if (neighbor.HasEntityState(eEntityState.Moving)) continue;
-                        neighbors.Add(neighbor);
-                    }
-
-                    // collisionAvoidance = steerToAvoidNeighbors(timeCollisionWithNeighbor, neighbors);
-                    collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors, ref _avoidNeighborInfo);
-                    collisionAvoidance = collisionAvoidance.Normalize() * MaxForce * Template.AvoidNeighborWeight;
-
-#if ENABLE_STEER_AGENT_DEBUG
-			        info.avoidNeighborFoce = collisionAvoidance * forceScale;
-#endif
-                }
-
-                // if collision avoidance is needed, do it
-                if (collisionAvoidance != FixMath.F64Vec3.Zero)
-                {
-                    steeringForce += collisionAvoidance;
-                }
             }
 
             var totalForce = steeringForce.SetYtoZero() * forceScale;

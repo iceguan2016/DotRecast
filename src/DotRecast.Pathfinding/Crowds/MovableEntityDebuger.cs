@@ -127,7 +127,6 @@ namespace DotRecast.Pathfinding.Crowds
             public FixMath.F64 radius;
             public FixMath.F64Vec3 position;
             public FixMath.F64Vec3 velocity;
-            public FixMath.F64Vec3 steerPosition;
 
             public FixMath.F64Vec3 forward;
             public FixMath.F64Vec3 side;
@@ -247,13 +246,6 @@ namespace DotRecast.Pathfinding.Crowds
                         var vn = v.Normalize();
                         annotation.Line(p + u + offset, p + u + offset + vn * len, Colors.White, FixMath.F64.One);
                     }
-
-                    // draw steer point
-                    var steerPosition = entity.steerPosition;
-                    var sp = steerPosition + u;
-                    var pointSize = FixMath.F64Vec3.FromFloat(0.02f, 0.02f, 0.02f);
-                    annotation.SolidCube(sp, pointSize, Colors.Red, FixMath.F64.One);
-                    annotation.Line(p + u, steerPosition + u, Colors.Red, FixMath.F64.One);
                 }
             });
 
