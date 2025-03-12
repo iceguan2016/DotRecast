@@ -1,4 +1,4 @@
-﻿using DotRecast.Core;
+using DotRecast.Core;
 using DotRecast.Core.Numerics;
 using DotRecast.Detour.TileCache;
 using DotRecast.Detour.TileCache.Io.Compress;
@@ -119,6 +119,10 @@ public class ObstacleSampleTool : ISampleTool
     }
 
     public void HandleClickRay(RcVec3f start, RcVec3f direction, bool shift)
+    {
+    }
+
+    public void HandleSelection(RcVec3f start, RcVec3f end, bool finished)
     {
     }
 }

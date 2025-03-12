@@ -401,6 +401,10 @@ public class DynamicUpdateSampleTool : ISampleTool
         }
     }
 
+    public void HandleSelection(RcVec3f start, RcVec3f end, bool finished)
+    {
+    }
+
     public void HandleUpdate(float dt)
     {
         long t = RcFrequency.Ticks;

@@ -35,4 +35,5 @@ public interface ISampleTool
     void HandleRender(NavMeshRenderer renderer);
     void HandleUpdate(float dt);
     void HandleClickRay(RcVec3f start, RcVec3f direction, bool shift);
+    void HandleSelection(RcVec3f start, RcVec3f end, bool finished);
 }

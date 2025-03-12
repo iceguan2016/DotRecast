@@ -627,9 +627,9 @@ namespace DotRecast.Pathfinding.Crowds
             }
         }
 
+        // 返回避让邻近单位位移量
         static FixMath.F64 COLLISION_RESOLVE_FACTOR = FixMath.F64.FromFloat(0.7f);
         static FixMath.F64 DISTANCE_EPLISION = FixMath.F64.FromFloat(0.001f);
-        // 返回避让邻近单位位移量
         public FixMath.F64Vec3 ResolveCollisionWithNeighbors()
         {
             var Disp = FixMath.F64Vec3.Zero;

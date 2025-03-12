@@ -217,4 +217,8 @@ public class CrowdAgentProfilingSampleTool : ISampleTool
     {
         //throw new NotImplementedException();
     }
+
+    public void HandleSelection(RcVec3f start, RcVec3f end, bool finished)
+    {
+    }
 }

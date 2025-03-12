@@ -608,6 +608,28 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     { 
         
     }
+
+    // Selection
+    public bool IsSelecting { get; private set; }
+    public RcVec3f SelectionStartPosition { get; private set; }
+    public RcVec3f SelectionEndPosition { get; private set; }
+    public void BeginSelection(RcVec3f p)
+    {
+        IsSelecting = true;
+        SelectionStartPosition = p;
+    }
+
+    public void UpdateSelection(RcVec3f p, bool finished)
+    {
+        if (!IsSelecting) return;
+        SelectionEndPosition = p;
+        if (finished)
+        {
+            IsSelecting = false;
+
+            // 更新选中的单位
+        }
+    }
 }
 
 public class TestDaedalusSampleTool : ISampleTool
@@ -632,6 +654,7 @@ public class TestDaedalusSampleTool : ISampleTool
 
     public void HandleClick(RcVec3f s, RcVec3f p, bool shift)
     {
+
     }
 
     public void HandleClickRay(RcVec3f start, RcVec3f direction, bool shift)
@@ -762,6 +785,21 @@ public class TestDaedalusSampleTool : ISampleTool
         }
     }
 
+    public void HandleSelection(RcVec3f start, RcVec3f end, bool finished)
+    {
+        if (m_mode == TestDaedalusToolMode.SELECT_CROWD_ENTITY)
+        {
+            if (!_tool.IsSelecting)
+            {
+                _tool.BeginSelection(start);
+            }
+
+            _tool.UpdateSelection(end, finished);
+            // var size = end - start;
+            // Logger.Information($"HandleSelection, size:{size}, start:{start}, end:{end}, finished:{finished}");
+        }
+    }
+
     public void HandleRender(NavMeshRenderer renderer)
     {
         var dd = renderer.GetDebugDraw();
@@ -814,6 +852,16 @@ public class TestDaedalusSampleTool : ISampleTool
 
             // draw face
             _tool.DrawFace(_tool.HitFace, _view);
+        }
+        else if (m_mode == TestDaedalusToolMode.SELECT_CROWD_ENTITY)
+        {
+            if (_tool.IsSelecting)
+            {
+                var p = (_tool.SelectionStartPosition + _tool.SelectionEndPosition) * 0.5f;
+                var size = _tool.SelectionEndPosition - _tool.SelectionStartPosition;
+                _draw.DrawSolidCube(new Vector3(p.X, p.Y, p.Z), Quaternion.identity, new Vector3(Math.Abs(size.X), 0.01f, Math.Abs(size.Z)), new Color(1.0f, 0.0f, 0.0f, 0.3f));
+                // _draw.DrawCircle(new Vector3(p.X, p.Y, p.Z), size.X)
+            }
         }
 
         // draw crowd entities

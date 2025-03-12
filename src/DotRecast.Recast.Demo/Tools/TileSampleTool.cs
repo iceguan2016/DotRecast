@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using DotRecast.Core.Numerics;
 using DotRecast.Recast.Demo.Draw;
 using DotRecast.Recast.Toolset;
@@ -131,6 +131,10 @@ public class TileSampleTool : ISampleTool
     }
 
     public void HandleClickRay(RcVec3f start, RcVec3f direction, bool shift)
+    {
+    }
+
+    public void HandleSelection(RcVec3f start, RcVec3f end, bool finished)
     {
     }
 }

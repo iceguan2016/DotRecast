@@ -119,6 +119,12 @@ public class RecastDemo : IRecastDemoChannel
     private RecastDebugDraw dd;
     private readonly Queue<IRecastDemoMessage> _messages;
 
+    // selection
+    private bool select= false;
+    private bool processSelection = false;
+    private RcVec2f _selectMouseStart = new RcVec2f();
+    private RcVec2f _selectMouseEnd = new RcVec2f();
+
     public RecastDemo()
     {
         _messages = new();
@@ -188,6 +194,11 @@ public class RecastDemo : IRecastDemoChannel
                 movedDuringPan = true;
             }
         }
+
+        if (select)
+        {
+            _selectMouseEnd = mousePos;
+        }
     }
 
     public void OnMouseUpAndDown(IMouse mouse, MouseButton button, bool down)
@@ -216,6 +227,12 @@ public class RecastDemo : IRecastDemoChannel
                     origCameraPos = cameraPos;
                 }
             }
+            else if (button == MouseButton.Left)
+            {
+                select = true;
+                _selectMouseStart = mousePos;
+                _selectMouseEnd = mousePos;
+            }
         }
         else
         {
@@ -234,6 +251,13 @@ public class RecastDemo : IRecastDemoChannel
             }
             else if (button == MouseButton.Left)
             {
+                if (select)
+                {
+                    select = false;
+                    _selectMouseEnd = mousePos;
+                    processSelection = true;
+                }
+
                 if (!_mouseOverMenu)
                 {
                     processHitTest = true;
@@ -517,6 +541,23 @@ public class RecastDemo : IRecastDemoChannel
             simIter++;
         }
 
+        if (select || processSelection)
+        {
+            RcVec3f start = new RcVec3f();
+            RcVec3f end = new RcVec3f();
+
+            GLU.GlhUnProjectf(_selectMouseStart.X, viewport[3] - 1 - _selectMouseStart.Y, 0.3f, modelviewMatrix, projectionMatrix, viewport, ref start);
+            GLU.GlhUnProjectf(_selectMouseEnd.X, viewport[3] - 1 - _selectMouseEnd.Y, 0.3f, modelviewMatrix, projectionMatrix, viewport, ref end);
+
+            SendMessage(new SelectionEvent() { 
+                Start = start,
+                End = end,
+                IsFinished = processSelection,
+            });
+
+            if (processSelection) processSelection = false;
+        }
+
         if (processHitTest)
         {
             processHitTest = false;
@@ -669,6 +710,10 @@ public class RecastDemo : IRecastDemoChannel
         else if (message is RaycastEvent args5)
         {
             OnRaycast(args5);
+        }
+        else if (message is SelectionEvent args6)
+        {
+            OnSelection(args6);
         }
     }
 
@@ -847,5 +892,11 @@ public class RecastDemo : IRecastDemoChannel
                 markerPositionSet = false;
             }
         }
+    }
+
+    private void OnSelection(SelectionEvent args)
+    {
+        ISampleTool raySampleTool = _toolsetView.GetTool();
+        raySampleTool.HandleSelection(args.Start, args.End, args.IsFinished);
     }
 }
