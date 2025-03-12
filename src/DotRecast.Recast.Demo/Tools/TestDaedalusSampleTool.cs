@@ -632,6 +632,10 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             var size = SelectionEndPosition - SelectionStartPosition;
             var halfSizeX = Math.Abs(size.X) * 0.5f;
             var halfSizeZ = Math.Abs(size.Z) * 0.5f;
+            if (halfSizeX < 0.01f || halfSizeZ < 0.01f)
+            {
+                return;
+            }
 
             _selectEntities.Clear();
             _entityManager.ForEachEntity((InEntity) =>
@@ -797,15 +801,15 @@ public class TestDaedalusSampleTool : ISampleTool
         }
         else if (m_mode == TestDaedalusToolMode.SELECT_CROWD_ENTITY)
         {
-            var entityId = _tool.HitCrowdEntity(hitPos.X, hitPos.Z);
+            //var entityId = _tool.HitCrowdEntity(hitPos.X, hitPos.Z);
 
-            if (entityId != UniqueId.InvalidID)
-            {
-                if (shift)
-                    _tool.SelectEntities.Remove(entityId);
-                else
-                    _tool.SelectEntities.Add(entityId);
-            }
+            //if (entityId != UniqueId.InvalidID)
+            //{
+            //    if (shift)
+            //        _tool.SelectEntities.Remove(entityId);
+            //    else
+            //        _tool.SelectEntities.Add(entityId);
+            //}
         }
         else if (m_mode == TestDaedalusToolMode.MOVE_CROWD_ENTITY)
         { 

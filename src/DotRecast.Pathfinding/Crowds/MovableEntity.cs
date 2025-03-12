@@ -389,8 +389,8 @@ namespace DotRecast.Pathfinding.Crowds
                     var neighbor = _neighbors[i] as MovableEntity;
                     if (null == neighbor || ID == neighbor.ID)
                         continue;
-                    if (neighbor.HasEntityState(eEntityState.Moving))
-                        continue;
+                    //if (neighbor.HasEntityState(eEntityState.Moving))
+                    //    continue;
                     neighbors.Add(neighbor);
                 }
 
@@ -575,6 +575,8 @@ namespace DotRecast.Pathfinding.Crowds
             return FixMath.F64Vec3.Zero; 
         }
 
+        static FixMath.F64 IRECTION_ANGLE_THRESHOLD = FixMath.F64.DegToRad(FixMath.F64.FromFloat(45.0f));
+        static FixMath.F64 DIRECTION_ANGLE_THRESHOLD_COS = FixMath.F64.CosFast(IRECTION_ANGLE_THRESHOLD);
         public override bool ShouldAvoidNeighbor(IVehicle threat) 
         { 
             // 规则：
@@ -587,8 +589,10 @@ namespace DotRecast.Pathfinding.Crowds
                     return true;
                 }
 
-                var dot = Velocity.Dot(entity.Velocity);
-                if (dot < 0)
+                var dir0 = Velocity.GetSafeNormal();
+                var dir1 = entity.Velocity.GetSafeNormal();
+                var dot = dir0.Dot(dir1);
+                if (dot < DIRECTION_ANGLE_THRESHOLD_COS)
                 {
                     return true;
                 }
