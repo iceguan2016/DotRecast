@@ -101,6 +101,7 @@ namespace DotRecast.Pathfinding.Crowds
         private int                 _boundarySegmentNum = 0;
         private List<IObstacle>     _boundaryObstacles = new List<IObstacle>();
         private AvoidanceQuerySystem _avoidQuerySystem = new AvoidanceQuerySystem();
+        private List<UniqueId>      _avoidNeghborIDs = new List<UniqueId>();
 
         // local neighbors
         private List<IVehicle>      _neighbors = new List<IVehicle>();
@@ -252,6 +253,20 @@ namespace DotRecast.Pathfinding.Crowds
 
         public virtual void OnDraw(bool selected)
         {
+            // for test
+            if (selected)
+            {
+                var angle = FixMath.F64.DegToRad(FixMath.F64.FromFloat(30.0f));
+                var cosAngle = FixMath.F64.CosFast(angle);
+                var sinAngle = FixMath.F64.SinFast(angle);
+                var newX = Forward.X * cosAngle - Forward.Z * sinAngle;
+                var newZ = Forward.X * sinAngle + Forward.Z * cosAngle;
+
+                var start = Position;
+                var end = start + new FixMath.F64Vec3(newX, FixMath.F64.Zero, newZ) * FixMath.F64.FromFloat(10.0f);
+                Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), Colors.White);
+            }
+
             // draw vehicle
             Draw.drawBasic2dCircularVehicle(annotation, this, selected? Colors.Red : Colors.Gray50);
             // drawTrail();
@@ -272,8 +287,11 @@ namespace DotRecast.Pathfinding.Crowds
                     last = p;
                 }
             }
-            // draw local boundary
-            // Draw.drawCircleOrDisk(annotation, QueryLocalBoundaryRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
+            
+            if (selected)
+            {
+                Draw.drawCircleOrDisk(annotation, QueryLocalNeighborRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
+            }
 
             if (_boundaryObstacles.Count > 0)
             {
@@ -292,7 +310,17 @@ namespace DotRecast.Pathfinding.Crowds
             //Draw.drawBoxOutline(annotation, point, rotation, new FixMath.F64Vec3(FixMath.F64.FromFloat(1.0f), FixMath.F64.Zero, length), Colors.Green, FixMath.F64.FromFloat(1.0f));
             Draw.drawLineAlpha(annotation, Position, testPoint, Colors.Yellow, FixMath.F64.FromFloat(0.4f));
 
-            // draw VO
+            // draw avoid info
+            if (_avoidNeighborInfo.EntityId != UniqueId.InvalidID)
+            {
+                var neighbor = EntityManager.GetEntityById(_avoidNeighborInfo.EntityId);
+                if (null != neighbor)
+                {
+                    var d = neighbor.Radius.Float * 2;
+                    var boxSize = FixMath.F64Vec3.FromFloat(d, 0.1f, d);
+                    Draw.drawBoxOutline(annotation, neighbor.Position, FixMath.F64Quat.Identity, boxSize, Colors.OrangeRed, FixMath.F64.One);
+                }
+            }
 #if false
             if (_avoidNeighborInfo.EntityId != UniqueId.InvalidID)
             {
@@ -333,7 +361,19 @@ namespace DotRecast.Pathfinding.Crowds
                 }
             }
 #else
-            _avoidQuerySystem.DebugDrawGizmos(this, annotation);
+            if (selected)
+            {
+                _avoidQuerySystem.DebugDrawGizmos(this, annotation);
+
+                var boxSize = FixMath.F64Vec3.FromFloat(0.1f, 1.0f, 0.1f);
+                for (var i = 0; i < _avoidNeghborIDs.Count; ++i)
+                {
+                    var neighbor = EntityManager.GetEntityById(_avoidNeghborIDs[i]);
+                    if (neighbor == null)
+                        continue;
+                    Draw.drawBoxOutline(annotation, neighbor.Position, FixMath.F64Quat.Identity, boxSize, Colors.Red, FixMath.F64.One);
+                }
+            }
 #endif
             // draw velocity
             {
@@ -409,6 +449,7 @@ namespace DotRecast.Pathfinding.Crowds
                 collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors, ref _avoidNeighborInfo);
                 collisionAvoidance = collisionAvoidance * Template.AvoidNeighborWeight;
 #else
+                _avoidNeghborIDs.Clear();
                 _avoidQuerySystem.Init(ID, Position.Cast2D(), Radius, Velocity.Cast2D(), Template.AvoidNeighborAheadTime);
                 for (var i = 0; i < _neighbors.Count; ++i)
                 {
@@ -418,7 +459,8 @@ namespace DotRecast.Pathfinding.Crowds
                     if (!ShouldAvoidNeighbor(neighbor))
                         continue;
 
-                    _avoidQuerySystem.AddCircle(neighbor.ID, neighbor.Position.Cast2D(), neighbor.Radius, neighbor.Velocity.Cast2D());
+                    var add = _avoidQuerySystem.AddCircle(neighbor.ID, neighbor.Position.Cast2D(), neighbor.Radius, neighbor.Velocity.Cast2D());
+                    if (add) _avoidNeghborIDs.Add(neighbor.ID);
                 }
 
                 var avoidDirection = _avoidQuerySystem.QueryAvoidDirection(this, EntityManager.FrameNo, ref _avoidNeighborInfo);

@@ -346,6 +346,7 @@ namespace SharpSteer2.Helpers
 	        return new FixMath.F64Vec3(a.X * Scale, a.Y * Scale, a.Z * Scale);
         }
 
+        // Unity左手坐标系下，当b在a的右边，det < 0，当b在a的左边，det > 0 
         public static FixMath.F64 Det(this FixMath.F64Vec2 a, FixMath.F64Vec2 b)
         {
             return a.X * b.Y - a.Y * b.X;

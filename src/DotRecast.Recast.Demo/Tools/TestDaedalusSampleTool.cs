@@ -58,6 +58,8 @@ public class TestDaedalusToolMode
     }
 }
 
+// 问题记录：Unity使用左手坐标系，这里DebugDraw使用的是右手坐标系，会导致
+// VO逻辑和渲染出来的left和right边是反着的（忽略该问题）
 public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuerier
 {
     // pseudo random generator
@@ -497,7 +499,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     // End
 
     // Crowd entity interface
-    public UniqueId AddCrowdEntity(double x, double y, double r)
+    public UniqueId AddCrowdEntity(double x, double y)
     {
         var Params = new CreateEntityParams() 
         {
@@ -666,6 +668,31 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     {
         var propertyChanged = false;
 
+        if (ImGui.Button("Dump entity position"))
+        {
+            _entityManager.ForEachEntity((InEntity) =>
+            {
+                if (null != InEntity)
+                {
+                    TestDaedalusSampleTool.Logger.Information($"id:{InEntity.ID.Id}, pos:{InEntity.Position}");
+                }
+            });
+        }
+
+        if (ImGui.Button("Create test entities"))
+        {
+            var testPositions = new Vector2[] 
+            {
+                
+            };
+
+            for (var i = 0; i < testPositions.Length; ++i)
+            {
+                var pos = testPositions[i];
+                AddCrowdEntity(pos.x, pos.y);
+            }
+        }
+
         ImGui.Text($"Movable Entity Templates");
         ImGui.Separator();
 
@@ -734,7 +761,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
 public class TestDaedalusSampleTool : ISampleTool
 {
-    private static readonly ILogger Logger = Log.ForContext<TestNavmeshSampleTool>();
+    public static readonly ILogger Logger = Log.ForContext<TestNavmeshSampleTool>();
 
     private DemoSample _sample;
 
@@ -863,7 +890,6 @@ public class TestDaedalusSampleTool : ISampleTool
         }
         else if (m_mode == TestDaedalusToolMode.ADD_CROWD_ENTITY)
         {
-            var radius = 0.5f;
             if (shift)
             {
                 // Delete
@@ -874,7 +900,7 @@ public class TestDaedalusSampleTool : ISampleTool
             else
             {
                 // Add
-                _tool.AddCrowdEntity(hitPos.X, hitPos.Z, radius);
+                _tool.AddCrowdEntity(hitPos.X, hitPos.Z);
             }
         }
         else if (m_mode == TestDaedalusToolMode.SELECT_CROWD_ENTITY)
@@ -982,6 +1008,17 @@ public class TestDaedalusSampleTool : ISampleTool
 
         // debug draw
         _tool.DebugDraw(_view);
+
+        // draw world axes
+        {
+            var o = Vector3.zero; o.y += 3.0f;
+            var x = o + Vector3.right * 5;
+            var y = o + Vector3.up * 5;
+            var z = o + Vector3.forward * 5;
+            _draw.DrawArrow(o, x, new Vector2(0.0f, 0.2f), 1.0f, Color.red);
+            _draw.DrawArrow(o, y, new Vector2(0.0f, 0.2f), 1.0f, Color.green);
+            _draw.DrawArrow(o, z, new Vector2(0.0f, 0.2f), 1.0f, Color.blue);
+        }
     }
 
     public void HandleUpdate(float dt)

@@ -11,7 +11,6 @@ namespace Pathfinding.Crowds
     {
         protected UniqueId OwnerEntityId { get; set; }
         protected FixMath.F64Vec2 Position { get; set; }
-        protected FixMath.F64Vec2 PrevPosition { get; set; }
         protected FixMath.F64 Radius { get; set; }
         protected FixMath.F64Vec2 Velocity { get; set; }
 
@@ -54,6 +53,7 @@ namespace Pathfinding.Crowds
 
             public bool Contains(FixMath.F64Vec2 v)
             {
+                // left在v的左边，right在v的右边
                 return v.Det(Edges[EdgeLeftIndex].Direction) >= 0 && v.Det(Edges[EdgeRightIndex].Direction) <= 0;
             }
 
@@ -67,22 +67,19 @@ namespace Pathfinding.Crowds
                 bool leftContain = Contains(otherLeft.Direction);
                 bool rightContain = Contains(otherRight.Direction); /* attention */
 
+                if (leftContain && rightContain)
+                {
+                    return true;
+                }
+
                 if (leftContain)
                 {
-                    // 选择距离更小的
-                    if (left.DistanceSquared > otherLeft.DistanceSquared)
-                    {
-                        left.SetEdge(otherLeft.Owner, otherLeft.Direction, otherLeft.DistanceSquared);
-                    }
+                    right.SetEdge(otherRight.Owner, otherRight.Direction, otherRight.DistanceSquared);
                 }
 
                 if (rightContain)
                 {
-                    // 选择距离更小的
-                    if (right.DistanceSquared > otherRight.DistanceSquared)
-                    {
-                        right.SetEdge(otherRight.Owner, otherRight.Direction, otherRight.DistanceSquared);
-                    }
+                    left.SetEdge(otherLeft.Owner, otherLeft.Direction, otherLeft.DistanceSquared);
                 }
 
                 return leftContain || rightContain;
@@ -109,7 +106,7 @@ namespace Pathfinding.Crowds
             this.voLists.Clear();
         }
 
-        public void AddCircle(
+        public bool AddCircle(
             UniqueId neighborEntityId,
             FixMath.F64Vec2 position, 
             FixMath.F64 radius, 
@@ -135,11 +132,12 @@ namespace Pathfinding.Crowds
 
             if (distSq > combinedRadiusSq)
             {
-                FixMath.F64 tmin, tmax;
-                bool collision = Geometry.TimeToCollisionWithCircle2D(
-                    ownerPosition2D, ownerRadius, relativeVelocity,
-                    otherPosition2D, otherRadius, out tmin, out tmax);
-                if (collision && tmin > 0 && tmin < this.timeHorizon)
+                //FixMath.F64 tmin, tmax;
+                //bool collision = Geometry.TimeToCollisionWithCircle2D(
+                //    ownerPosition2D, ownerRadius, relativeVelocity,
+                //    otherPosition2D, otherRadius, out tmin, out tmax);
+                //if (collision && tmin > 0 && tmin < this.timeHorizon)
+                if (FixMath.F64Vec2.Dot(Velocity, relativePosition) > 0)  // in front
                 {
                     /* will collision */
                     FixMath.F64 leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);
@@ -162,13 +160,10 @@ namespace Pathfinding.Crowds
                         }
                     }
                     voLists.Add(tmpVO);
-                }
-                else
-                {
-                    /* no collision */
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
 
         public void AddSegement(
@@ -222,8 +217,12 @@ namespace Pathfinding.Crowds
                 }
             }
             
-            info.SetAvoidInfo(frameNo, entity, side);
-            return bestDir.Cast(FixMath.F64.Zero);
+            if (side != IVehicle.eAvoidSide.None)
+            {
+                info.SetAvoidInfo(frameNo, entity, side);
+                return bestDir.Cast(FixMath.F64.Zero);
+            }
+            return FixMath.F64Vec3.Zero;
         }
 
         public void DebugDrawGizmos(IVehicle vehicle, IAnnotationService annotation)
