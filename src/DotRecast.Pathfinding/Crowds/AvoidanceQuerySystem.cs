@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using SharpSteer2.Helpers;
 using Pathfinding.Util;
-using DotRecast.Pathfinding.Crowds;
+using DotRecast.Pathfinding;
+using SharpSteer2;
 using DotRecast.Pathfinding.Util;
 
 namespace Pathfinding.Crowds
@@ -19,60 +20,72 @@ namespace Pathfinding.Crowds
 
         public class VO
         {
-            // VO所属的Entity和距离
-            public UniqueId Owner { get; set; }
-            public FixMath.F64 DistanceSquared { get; set; }
+            public static readonly int EdgeLeftIndex = 0;
+            public static readonly int EdgeRightIndex = 1;
+            public struct VOEdge 
+            {
+                // Edge所属的Entity
+                public UniqueId Owner { get; private set; }
+                // Edge方向
+                public FixMath.F64Vec2 Direction { get; private set; }
+                //
+                public FixMath.F64 DistanceSquared { get; private set; }
 
-            protected FixMath.F64Vec2 left = FixMath.F64Vec2.Zero;
-            public FixMath.F64Vec2 Left
-            {
-                get { return left; }
-            }
-            protected FixMath.F64Vec2 right = FixMath.F64Vec2.Zero;
-            public FixMath.F64Vec2 Right
-            {
-                get { return right; }
+                public VOEdge(UniqueId id, FixMath.F64Vec2 dir, FixMath.F64 distSq)
+                {
+                    Owner = id;
+                    Direction = dir;
+                    DistanceSquared = distSq;
+                }
+
+                public void SetEdge(UniqueId id, FixMath.F64Vec2 dir, FixMath.F64 distSq)
+                {
+                    Owner = id;
+                    Direction = dir;
+                    DistanceSquared = distSq;
+                }
             }
 
-            public VO(FixMath.F64Vec2 l, FixMath.F64Vec2 r)
+            public VOEdge[] Edges = new VOEdge[2] 
             {
-                left = l;
-                right = r;
-            }
+                new VOEdge(UniqueId.InvalidID, FixMath.F64Vec2.Zero, FixMath.F64.Zero),
+                new VOEdge(UniqueId.InvalidID, FixMath.F64Vec2.Zero, FixMath.F64.Zero)
+            };
 
             public bool Contains(FixMath.F64Vec2 v)
             {
-                return v.Det(left) >= 0 && v.Det(right) >= 0;
+                return v.Det(Edges[EdgeLeftIndex].Direction) >= 0 && v.Det(Edges[EdgeRightIndex].Direction) <= 0;
             }
 
-            public bool OverlapWith(VO other, bool merge)
+            public bool TryMergeWith(VO other)
             {
-                return OverlapWith(other.Left, -other.Right, merge);
-            }
+                ref var left = ref Edges[EdgeLeftIndex];
+                ref var right = ref Edges[EdgeRightIndex];
+                ref var otherLeft = ref other.Edges[EdgeLeftIndex];
+                ref var otherRight = ref other.Edges[EdgeRightIndex];
 
-            public void TryMergeWith(VO other)
-            {
-                
-            }
+                bool leftContain = Contains(otherLeft.Direction);
+                bool rightContain = Contains(otherRight.Direction); /* attention */
 
-            public bool OverlapWith(FixMath.F64Vec2 left, FixMath.F64Vec2 right, bool merge)
-            {
-                bool leftContain = Contains(left);
-                bool rightContain = Contains(right); /* attention */
-                bool overlap = (leftContain && !rightContain) ||
-                    (!leftContain && rightContain);
-                if (overlap && merge)
+                if (leftContain)
                 {
-                    if (leftContain)
+                    // 选择距离更小的
+                    if (left.DistanceSquared > otherLeft.DistanceSquared)
                     {
-                        this.right = right;
-                    }
-                    else
-                    {
-                        this.left = left;
+                        left.SetEdge(otherLeft.Owner, otherLeft.Direction, otherLeft.DistanceSquared);
                     }
                 }
-                return overlap;
+
+                if (rightContain)
+                {
+                    // 选择距离更小的
+                    if (right.DistanceSquared > otherRight.DistanceSquared)
+                    {
+                        right.SetEdge(otherRight.Owner, otherRight.Direction, otherRight.DistanceSquared);
+                    }
+                }
+
+                return leftContain || rightContain;
             }
         }
 
@@ -84,59 +97,16 @@ namespace Pathfinding.Crowds
 
         public void Init(
             UniqueId ownerEntityId,
-            FixMath.F64Vec2 position, FixMath.F64Vec2 prevPosition, FixMath.F64 radius,
+            FixMath.F64Vec2 position, FixMath.F64 radius,
             FixMath.F64Vec2 velocity, FixMath.F64 timeHorizon)
         {
             this.Position = position;
-            this.PrevPosition = prevPosition;
             this.Radius = radius;
             this.Velocity = velocity;
             this.timeHorizon = timeHorizon;
             this.invTimeHorizon = FixMath.F64.One / timeHorizon;
 
             this.voLists.Clear();
-        }
-
-        public bool CheckCollisionWith(
-            FixMath.F64Vec2 position, FixMath.F64 radius, FixMath.F64Vec2 velocity)
-        {
-            /* calculate vo */
-            FixMath.F64Vec2 ownerPosition2D = this.Position;
-            FixMath.F64Vec2 ownerVelocity = this.Velocity;
-            FixMath.F64 ownerRadius = this.Radius;
-
-            FixMath.F64Vec2 otherVel = velocity;
-            FixMath.F64Vec2 otherPosition2D = position;
-            FixMath.F64 otherRadius = radius;   /* Maybe scale other radius for better avoid performance */
-
-            FixMath.F64Vec2 relativePosition = otherPosition2D - ownerPosition2D;
-            FixMath.F64Vec2 relativeVelocity = ownerVelocity - otherVel;
-            FixMath.F64 distSq = FixMath.F64Vec2.LengthSqr(relativePosition);
-            FixMath.F64 combinedRadius = ownerRadius + otherRadius;
-            FixMath.F64 combinedRadiusSq = combinedRadius * combinedRadius;
-
-            FixMath.F64Vec2 u = FixMath.F64Vec2.Zero;
-
-            if (distSq > combinedRadiusSq)
-            {
-                FixMath.F64 tmin, tmax;
-                bool collision = Geometry.TimeToCollisionWithCircle2D(
-                    ownerPosition2D, ownerRadius, relativeVelocity,
-                    otherPosition2D, otherRadius, out tmin, out tmax);
-                if (collision && tmin > 0 && tmin < this.timeHorizon)
-                {
-                    return true;
-                }
-                else
-                {
-                    /* no collision */
-                    return false;
-                }
-            }
-            else
-            {
-                return true;
-            }
         }
 
         public void AddCircle(
@@ -176,18 +146,17 @@ namespace Pathfinding.Crowds
 
                     left = new FixMath.F64Vec2(relativePosition.X * leg - relativePosition.Y * combinedRadius,
                             relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
-                    right = -new FixMath.F64Vec2(relativePosition.X * leg + relativePosition.Y * combinedRadius,
+                    right = new FixMath.F64Vec2(relativePosition.X * leg + relativePosition.Y * combinedRadius,
                             -relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;
 
                     /* add to vo list */
-                    VO tmpVO = new VO(left, right);
-                    tmpVO.Owner = neighborEntityId;
-                    tmpVO.DistanceSquared = distSq;
+                    VO tmpVO = new VO();
+                    tmpVO.Edges[VO.EdgeLeftIndex].SetEdge(neighborEntityId, left, distSq);
+                    tmpVO.Edges[VO.EdgeRightIndex].SetEdge(neighborEntityId, right, distSq);
                     for (int i = voLists.Count - 1; i >= 0; --i)
                     {
                         VO vo = voLists[i];
-                        var canMerge = distSq < vo.DistanceSquared;
-                        if (canMerge && tmpVO.OverlapWith(vo, true))
+                        if (tmpVO.TryMergeWith(vo))
                         {
                             voLists.RemoveAt(i);
                         }
@@ -213,53 +182,76 @@ namespace Pathfinding.Crowds
         // (2) 和上一次选择side保持一致
         // (3) 读取避让单位是否在避让自己，选择一致的避让方向（比如都选左，或者右）
         // (4) 检查选择的避让方向是否会撞墙
-        public struct FQueryBestAvoidDirectionParams
-        {
-            public FixMath.F64Vec2  desiredVelocity;
-            public int              side;  // -1 - left, 0 - any, 1 - right
-        }
-        public FixMath.F64Vec2 QueryBestAvoidDirection(ref FQueryBestAvoidDirectionParams inOutParams)
+        public FixMath.F64Vec3 QueryAvoidDirection(IVehicle vehicle, int frameNo, ref IVehicle.FAvoidNeighborInfo info)
         {
             /* selected nearest velocity */
-            var velDir = FixMath.F64Vec2.NormalizeFast(inOutParams.desiredVelocity);
+            var velDir = FixMath.F64Vec2.NormalizeFast(vehicle.Velocity.Cast2D());
+            var entity = UniqueId.InvalidID;
             var minDistSq = FixMath.F64.MaxValue;
-            var bestDir = velDir;
-            var side = 0;
+            var bestDir = FixMath.F64Vec2.Zero;
+            var side = IVehicle.eAvoidSide.None;
             for (int i = 0; i < voLists.Count; ++i)
             {
-                var left = voLists[i].Left;
-                var right = voLists[i].Right;             
+                ref var left = ref voLists[i].Edges[VO.EdgeLeftIndex];
+                ref var right = ref voLists[i].Edges[VO.EdgeRightIndex];             
                 
-                // 当side == 1时候，只能选择右边的避让方向
-                if (inOutParams.side <= 0)
+                if (info.Side != IVehicle.eAvoidSide.Right)
                 {
-                    var diffLeft = left - velDir;
+                    var diffLeft = left.Direction - velDir;
                     var diffLeftSq = FixMath.F64Vec2.LengthSqr(diffLeft);
                     if (diffLeftSq < minDistSq)
                     {
-                        bestDir = left;
+                        entity = left.Owner;
+                        bestDir = left.Direction;
                         minDistSq = diffLeftSq;
-                        side = -1;
+                        side = IVehicle.eAvoidSide.Left;
                     }
                 }
-                // 当side == -1时候，只能选择左边的避让方向
-                if (inOutParams.side >= 0)
+                // 
+                if (info.Side != IVehicle.eAvoidSide.Left)
                 {
-                    var diffRight = right - velDir;
+                    var diffRight = right.Direction - velDir;
                     var diffRightSq = FixMath.F64Vec2.LengthSqr(diffRight);
                     if (diffRightSq < minDistSq)
                     {
-                        bestDir = right;
+                        entity = right.Owner;
+                        bestDir = right.Direction;
                         minDistSq = diffRightSq;
-                        side = 1;
+                        side = IVehicle.eAvoidSide.Right;
                     }
                 }
             }
-            if (inOutParams.side == 0)
+            
+            info.SetAvoidInfo(frameNo, entity, side);
+            return bestDir.Cast(FixMath.F64.Zero);
+        }
+
+        public void DebugDrawGizmos(IVehicle vehicle, IAnnotationService annotation)
+        {
+            var pos = vehicle.Position;
+
+            // draw all vos
+            var minLen = FixMath.F64.FromFloat(5.0f);
+            var maxLen = FixMath.F64.FromFloat(20.0f);
+            var stepLen = FixMath.F64.FromFloat(2.0f);
+            for (var i = 0; i < voLists.Count; ++i)
             {
-                inOutParams.side = side;
+                var len = FixMath.F64.Max(maxLen - stepLen * i, minLen);
+
+                ref var left = ref voLists[i].Edges[VO.EdgeLeftIndex];
+                ref var right = ref voLists[i].Edges[VO.EdgeRightIndex];
+
+                // left
+                var start0 = Position;
+                var end0 = Position + left.Direction * len;
+                Draw.drawLine(annotation, start0.Cast(pos.Y), end0.Cast(pos.Y), Colors.Red);
+                // right
+                var start1 = Position;
+                var end1 = Position + right.Direction * len;
+                Draw.drawLine(annotation, start1.Cast(pos.Y), end1.Cast(pos.Y), Colors.Green);
+
+                Draw.drawLine(annotation, end0.Cast(pos.Y), end1.Cast(pos.Y), Colors.Blue);
             }
-            return bestDir;
         }
     }
 

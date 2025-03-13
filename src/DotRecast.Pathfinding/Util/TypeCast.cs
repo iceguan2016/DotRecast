@@ -35,7 +35,7 @@ namespace DotRecast.Pathfinding.Util
 
         public static FixMath.F64Vec2 Cast2D(this FixMath.F64Vec3 v)
         {
-            return new FixMath.F64Vec2(v.X, v.Y);
+            return new FixMath.F64Vec2(v.X, v.Z);
         }
     }
 }

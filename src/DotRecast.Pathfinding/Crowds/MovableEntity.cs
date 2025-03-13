@@ -8,6 +8,7 @@ using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 using Game.Utils;
 using System.Threading;
+using Pathfinding.Crowds;
 
 namespace DotRecast.Pathfinding.Crowds
 {
@@ -99,6 +100,7 @@ namespace DotRecast.Pathfinding.Crowds
         private BoundarySegement[]  _boundarySegements = null;
         private int                 _boundarySegmentNum = 0;
         private List<IObstacle>     _boundaryObstacles = new List<IObstacle>();
+        private AvoidanceQuerySystem _avoidQuerySystem = new AvoidanceQuerySystem();
 
         // local neighbors
         private List<IVehicle>      _neighbors = new List<IVehicle>();
@@ -271,7 +273,7 @@ namespace DotRecast.Pathfinding.Crowds
                 }
             }
             // draw local boundary
-            // Draw.drawCircleOrDisk(annotation, Template.QueryLocalBoundaryRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
+            // Draw.drawCircleOrDisk(annotation, QueryLocalBoundaryRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
 
             if (_boundaryObstacles.Count > 0)
             {
@@ -291,6 +293,7 @@ namespace DotRecast.Pathfinding.Crowds
             Draw.drawLineAlpha(annotation, Position, testPoint, Colors.Yellow, FixMath.F64.FromFloat(0.4f));
 
             // draw VO
+#if false
             if (_avoidNeighborInfo.EntityId != UniqueId.InvalidID)
             {
                 var neighbor = EntityManager.GetEntityById(_avoidNeighborInfo.EntityId);
@@ -329,7 +332,9 @@ namespace DotRecast.Pathfinding.Crowds
                     Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), Colors.Yellow);
                 }
             }
-
+#else
+            _avoidQuerySystem.DebugDrawGizmos(this, annotation);
+#endif
             // draw velocity
             {
                 var start = Position; start.Y += FixMath.F64.FromFloat(1.0f);
@@ -386,9 +391,10 @@ namespace DotRecast.Pathfinding.Crowds
 
             // 2.avoid neighbors
             {
+                var collisionAvoidance = FixMath.F64Vec3.Zero;
+#if false
                 // otherwise consider avoiding collisions with others
                 List<IVehicle> neighbors = new List<IVehicle>();
-                var collisionAvoidance = FixMath.F64Vec3.Zero;
                 for (int i = 0; i < _neighbors.Count; ++i)
                 {
                     var neighbor = _neighbors[i] as MovableEntity;
@@ -401,7 +407,24 @@ namespace DotRecast.Pathfinding.Crowds
 
                 // collisionAvoidance = steerToAvoidNeighbors(timeCollisionWithNeighbor, neighbors);
                 collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors, ref _avoidNeighborInfo);
-                collisionAvoidance = collisionAvoidance.Normalize() * MaxForce * Template.AvoidNeighborWeight;
+                collisionAvoidance = collisionAvoidance * Template.AvoidNeighborWeight;
+#else
+                _avoidQuerySystem.Init(ID, Position.Cast2D(), Radius, Velocity.Cast2D(), Template.AvoidNeighborAheadTime);
+                for (var i = 0; i < _neighbors.Count; ++i)
+                {
+                    var neighbor = _neighbors[i] as MovableEntity;
+                    if (null == neighbor || ID == neighbor.ID)
+                        continue;
+                    if (!ShouldAvoidNeighbor(neighbor))
+                        continue;
+
+                    _avoidQuerySystem.AddCircle(neighbor.ID, neighbor.Position.Cast2D(), neighbor.Radius, neighbor.Velocity.Cast2D());
+                }
+
+                var avoidDirection = _avoidQuerySystem.QueryAvoidDirection(this, EntityManager.FrameNo, ref _avoidNeighborInfo);
+                var lateral = Vector3Helpers.PerpendicularComponent(avoidDirection, Forward);
+                collisionAvoidance = FixMath.F64Vec3.NormalizeFast(lateral) * MaxForce * Template.AvoidNeighborWeight;
+#endif
 
 #if ENABLE_STEER_AGENT_DEBUG
                 info.avoidNeighborFoce = collisionAvoidance * forceScale;
