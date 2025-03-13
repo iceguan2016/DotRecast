@@ -19,10 +19,7 @@ namespace DotRecast.Pathfinding.Crowds
         public FixMath.F64 MaxSpeed = FixMath.F64.FromFloat(6.0f);
         // maximum force
         public FixMath.F64 MaxForce = FixMath.F64.FromFloat(27.0f);
-        // query local boundary radius
-        public FixMath.F64 QueryLocalBoundaryRadius = FixMath.F64.FromFloat(5.0f);
-        // query local neighbors radius
-        public FixMath.F64 QueryLocalNeighborRadius = FixMath.F64.FromFloat(5.0f);
+        
         //
         public FixMath.F64 FollowPathAheadTime = FixMath.F64.FromFloat(3.0f);
         public FixMath.F64 FollowPathWeight = FixMath.F64.FromFloat(1.0f);
@@ -49,6 +46,9 @@ namespace DotRecast.Pathfinding.Crowds
         // Config values
         public override FixMath.F64 MaxForce { get { return Template.MaxForce; } }
         public override FixMath.F64 MaxSpeed { get { return Template.MaxSpeed; } }
+
+        public FixMath.F64 QueryLocalBoundaryRadius { get { return Template.AvoidObstacleAheadTime * Template.MaxSpeed + Template.Radius * 3; } }
+        public FixMath.F64 QueryLocalNeighborRadius { get { return Template.AvoidNeighborAheadTime * Template.MaxSpeed + Template.Radius * 3; } }
 
         public TemplateMovableEntity Template { get; set; }
 
@@ -213,13 +213,13 @@ namespace DotRecast.Pathfinding.Crowds
             if (null != _proximityToken)
             {
                 _neighbors.Clear();
-                _proximityToken.FindNeighbors(Position, Template.QueryLocalNeighborRadius, _neighbors);
+                _proximityToken.FindNeighbors(Position, QueryLocalNeighborRadius, _neighbors);
             }
 
             // update local boundary
             if (null != LocalBoundaryQuerier)
             {
-                _boundarySegmentNum = LocalBoundaryQuerier.QueryBoundaryInCircle(this, Template.QueryLocalBoundaryRadius, _boundarySegements);
+                _boundarySegmentNum = LocalBoundaryQuerier.QueryBoundaryInCircle(this, QueryLocalBoundaryRadius, _boundarySegements);
             }
 
             // determine steering force
