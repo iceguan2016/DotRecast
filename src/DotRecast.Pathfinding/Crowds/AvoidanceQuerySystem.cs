@@ -132,12 +132,12 @@ namespace Pathfinding.Crowds
 
             if (distSq > combinedRadiusSq)
             {
-                //FixMath.F64 tmin, tmax;
-                //bool collision = Geometry.TimeToCollisionWithCircle2D(
-                //    ownerPosition2D, ownerRadius, relativeVelocity,
-                //    otherPosition2D, otherRadius, out tmin, out tmax);
-                //if (collision && tmin > 0 && tmin < this.timeHorizon)
-                if (FixMath.F64Vec2.Dot(Velocity, relativePosition) > 0)  // in front
+                FixMath.F64 tmin, tmax;
+                bool collision = Geometry.TimeToCollisionWithCircle2D(
+                    ownerPosition2D, ownerRadius, relativeVelocity,
+                    otherPosition2D, otherRadius, out tmin, out tmax);
+                if (collision && tmin > 0 && tmin < this.timeHorizon)
+                // if (FixMath.F64Vec2.Dot(Velocity, relativePosition) > 0)  // in front
                 {
                     /* will collision */
                     FixMath.F64 leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);

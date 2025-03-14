@@ -94,6 +94,8 @@ namespace DotRecast.Pathfinding.Crowds
         public IVehicle.FAvoidObstacleInfo AvoidObstacleInfo { get { return _avoidObstacleInfo; } }
         private IVehicle.FAvoidNeighborInfo _avoidNeighborInfo = new IVehicle.FAvoidNeighborInfo();
         public IVehicle.FAvoidNeighborInfo AvoidNeighborInfo { get { return _avoidNeighborInfo; } }
+        private FixMath.F64 _avoidNeighborForceWeight = FixMath.F64.Zero;
+        private FixMath.F64Vec3 _avoidNeighborDirection = FixMath.F64Vec3.Zero;
 
         // local boundary
         public static readonly int  MaxBoundarySegmentNum = 10;
@@ -253,20 +255,6 @@ namespace DotRecast.Pathfinding.Crowds
 
         public virtual void OnDraw(bool selected)
         {
-            // for test
-            if (selected)
-            {
-                var angle = FixMath.F64.DegToRad(FixMath.F64.FromFloat(30.0f));
-                var cosAngle = FixMath.F64.CosFast(angle);
-                var sinAngle = FixMath.F64.SinFast(angle);
-                var newX = Forward.X * cosAngle - Forward.Z * sinAngle;
-                var newZ = Forward.X * sinAngle + Forward.Z * cosAngle;
-
-                var start = Position;
-                var end = start + new FixMath.F64Vec3(newX, FixMath.F64.Zero, newZ) * FixMath.F64.FromFloat(10.0f);
-                Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), Colors.White);
-            }
-
             // draw vehicle
             Draw.drawBasic2dCircularVehicle(annotation, this, selected? Colors.Red : Colors.Gray50);
             // drawTrail();
@@ -464,8 +452,19 @@ namespace DotRecast.Pathfinding.Crowds
                 }
 
                 var avoidDirection = _avoidQuerySystem.QueryAvoidDirection(this, EntityManager.FrameNo, ref _avoidNeighborInfo);
-                var lateral = Vector3Helpers.PerpendicularComponent(avoidDirection, Forward);
-                collisionAvoidance = FixMath.F64Vec3.NormalizeFast(lateral) * MaxForce * Template.AvoidNeighborWeight;
+                // 防止方向突变，加个平滑插值逻辑
+                var percent = FixMath.F64.Clamp01(elapsedTime / FixMath.F64.FromFloat(0.2f));
+                if (avoidDirection == FixMath.F64Vec3.Zero)
+                {
+                    _avoidNeighborForceWeight = FixMath.F64.Lerp(_avoidNeighborForceWeight, FixMath.F64.Zero, percent);
+                }
+                else
+                {
+                    _avoidNeighborForceWeight = Template.AvoidNeighborWeight;
+                    _avoidNeighborDirection = avoidDirection;
+                }
+                var lateral = Vector3Helpers.PerpendicularComponent(_avoidNeighborDirection, Forward);
+                collisionAvoidance = FixMath.F64Vec3.NormalizeFast(lateral) * MaxForce * _avoidNeighborForceWeight;
 #endif
 
 #if ENABLE_STEER_AGENT_DEBUG
