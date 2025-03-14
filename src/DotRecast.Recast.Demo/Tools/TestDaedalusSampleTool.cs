@@ -58,6 +58,136 @@ public class TestDaedalusToolMode
     }
 }
 
+public class DrawInterfaceImplement : DrawInterface
+{
+    private DebugDraw m_draw = null;
+
+    public float MapHeight { get; set; }
+
+    public DrawInterfaceImplement(DebugDraw draw)
+    {
+        m_draw = draw;
+        Game.Utils.Debug.drawInterface = this;
+    }
+
+    public void DrawCube(Vector3 p, Vector3 size, UnityEngine.Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            var halfSize = size * 0.5f;
+            var min = p - halfSize;
+            var max = p + halfSize;
+            m_draw.DebugDrawBoxWire(min.x, min.y, min.z, max.x, max.y, max.z, color, 1.0f);
+        }
+    }
+
+    public void DrawCircle(Vector3 p, float r, UnityEngine.Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            m_draw.DebugDrawCircle(p.x, p.y, p.z, r, color, 1.0f);
+        }
+    }
+
+    public void DrawLine(Vector3 a, Vector3 b, UnityEngine.Color c, float lineWidth = 1.0f)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            m_draw.Begin(DebugDrawPrimitives.LINES, lineWidth);
+            m_draw.Vertex(new float[] { a.x, a.y, a.z }, color);
+            m_draw.Vertex(new float[] { b.x, b.y, b.z }, color);
+            m_draw.End();
+        }
+    }
+
+    public void DrawArrow(Vector3 start, Vector3 end, Vector2 arrowSize, float lineWidth, Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            m_draw.DebugDrawArrow(start.x, start.y, start.z, end.x, end.y, end.z, arrowSize.x, arrowSize.y, color, lineWidth);
+        }
+    }
+
+    public void DrawTriangle(Vector3 v0, Vector3 v1, Vector3 v2, UnityEngine.Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            m_draw.Begin(DebugDrawPrimitives.TRIS);
+            m_draw.Vertex(new float[] { v0.x, v0.y, v0.z }, color);
+            m_draw.Vertex(new float[] { v1.x, v1.y, v1.z }, color);
+            m_draw.Vertex(new float[] { v2.x, v2.y, v2.z }, color);
+            m_draw.End();
+        }
+    }
+
+    public void DrawSolidPlane(Vector3 point, Vector3 normal, Vector2 size, UnityEngine.Color c)
+    {
+        if (m_draw != null)
+        {
+            // (x - p) dot n = 0
+            var n = FixMath.F64Vec3.FromFloat(normal.x, normal.y, normal.z);
+            n.FindBestAxisVectors(out var axis1, out var axis2);
+
+            var u = axis1.Cast() * size.x * 0.5f;
+            var v = axis2.Cast() * size.y * 0.5f;
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            var points = new Vector3[4] {
+                point + u + v,
+                point - u + v,
+                point - u - v,
+                point + u - v
+            };
+
+            m_draw.Begin(DebugDrawPrimitives.QUADS);
+            // 正面
+            for (int i = 0; i < 4; i++)
+            {
+                ref var p = ref points[i];
+                m_draw.Vertex(new float[] { p.x, p.y, p.z }, color);
+            }
+            // 反面
+            for (int i = 3; i >= 0; i--)
+            {
+                ref var p = ref points[i];
+                m_draw.Vertex(new float[] { p.x, p.y, p.z }, color);
+            }
+            m_draw.End();
+        }
+    }
+
+    public void DrawSolidCube(Vector3 p, Quaternion q, Vector3 size, Color c)
+    {
+        if (m_draw != null)
+        {
+            int color = DuRGBA((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255), (int)(c.a * 255));
+
+            int[] fcol = new int[6];
+            DuCalcBoxColors(fcol, color, color);
+
+            var halfSize = size * 0.5f;
+            var min = p - halfSize;
+            var max = p + halfSize;
+            m_draw.DebugDrawBox(min.x, min.y, min.z, max.x, max.y, max.z, fcol);
+        }
+    }
+
+    public float GetMapHeight()
+    {
+        return MapHeight;
+    }
+}
+
 // 问题记录：Unity使用左手坐标系，这里DebugDraw使用的是右手坐标系，会导致
 // VO逻辑和渲染出来的left和right边是反着的（忽略该问题）
 public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuerier
@@ -762,7 +892,7 @@ public class TestDaedalusSampleTool : ISampleTool
 
     private TestDaedalusTool _tool = null;
 
-    private TileDelaunayDebugDraw _draw = null;
+    private DrawInterfaceImplement _draw = null;
 
     private hxDaedalus.view.SimpleView _view = null;
 
@@ -944,7 +1074,7 @@ public class TestDaedalusSampleTool : ISampleTool
 
         if (_draw == null)
         {
-            _draw = new TileDelaunayDebugDraw(dd);
+            _draw = new DrawInterfaceImplement(dd);
             _draw.MapHeight = bound_max.Y + 0.5f;
 
             _view = new hxDaedalus.view.SimpleView(_draw);
