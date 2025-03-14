@@ -234,34 +234,6 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             {
                 return o;
             }
-            
-            //var containt = true;
-            //var last = 0.0;
-            //for (var j=0; j<edges.length; ++j)
-            //{
-            //    var edge = edges[j] as hxDaedalus.data.Edge;
-            //    var v0 = edge.get_originVertex().get_pos();
-            //    var v1 = edge.get_destinationVertex().get_pos();
-            //    var dir = v1; dir.substract(v0);
-
-            //    var v = p; v.substract(v0);
-            //    // cross(v, dir)
-            //    var cross = v.x * dir.y - v.y * dir.x;
-            //    if (j == 0)
-            //    {
-            //        last = cross;
-            //    }
-            //    else if (last * cross < 0)
-            //    {
-            //        containt = false;
-            //        break;
-            //    }
-            //}
-
-            //if (containt) 
-            //{
-            //    return _obstacles[i];
-            //}
         }
         return null;
     }
@@ -710,6 +682,13 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         // 模板参数
         var currTemplate = MovableEntityTemplates[_templateIndex];
 
+        // debug toggles
+        for (var i = 0; i < currTemplate.DebugVec3Toggles.Length; ++i)
+        {
+            var type = (eDebugVec3Item)i;
+            propertyChanged |= ImGui.Checkbox(type.ToString(), ref currTemplate.DebugVec3Toggles[i]);
+        }
+
         var radius = currTemplate.Radius.Float;
         propertyChanged |= ImGui.SliderFloat("Radius", ref radius, 0.1f, 5.0f);
         currTemplate.Radius = FixMath.F64.FromFloat(radius);
@@ -722,12 +701,16 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         propertyChanged |= ImGui.SliderFloat("MaxForce", ref maxForce, 10.0f, 100.0f);
         currTemplate.MaxForce = FixMath.F64.FromFloat(maxForce);
 
+        var forwardMoveWeight = currTemplate.ForwardMoveWeight.Float;
+        propertyChanged |= ImGui.SliderFloat("ForwardMoveWeight", ref forwardMoveWeight, 0.0f, 10.0f);
+        currTemplate.ForwardMoveWeight = FixMath.F64.FromFloat(forwardMoveWeight);
+
         var followPathAheadTime = currTemplate.FollowPathAheadTime.Float;
         propertyChanged |= ImGui.SliderFloat("FollowPathAheadTime", ref followPathAheadTime, 0.1f, 5.0f);
         currTemplate.FollowPathAheadTime = FixMath.F64.FromFloat(followPathAheadTime);
 
         var followPathWeight = currTemplate.FollowPathWeight.Float;
-        propertyChanged |= ImGui.SliderFloat("FollowPathWeight", ref followPathWeight, 0.1f, 5.0f);
+        propertyChanged |= ImGui.SliderFloat("FollowPathWeight", ref followPathWeight, 0.0f, 5.0f);
         currTemplate.FollowPathWeight = FixMath.F64.FromFloat(followPathWeight);
 
         var avoidNeighborAheadTime = currTemplate.AvoidNeighborAheadTime.Float;
@@ -735,7 +718,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         currTemplate.AvoidNeighborAheadTime = FixMath.F64.FromFloat(avoidNeighborAheadTime);
 
         var avoidNeighborWeight = currTemplate.AvoidNeighborWeight.Float;
-        propertyChanged |= ImGui.SliderFloat("AvoidNeighborWeight", ref avoidNeighborWeight, 0.1f, 20.0f);
+        propertyChanged |= ImGui.SliderFloat("AvoidNeighborWeight", ref avoidNeighborWeight, 0.0f, 20.0f);
         currTemplate.AvoidNeighborWeight = FixMath.F64.FromFloat(avoidNeighborWeight);
 
         var avoidObstacleAheadTime = currTemplate.AvoidObstacleAheadTime.Float;
@@ -743,8 +726,20 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         currTemplate.AvoidObstacleAheadTime = FixMath.F64.FromFloat(avoidObstacleAheadTime);
 
         var avoidObstacleWeight = currTemplate.AvoidObstacleWeight.Float;
-        propertyChanged |= ImGui.SliderFloat("AvoidObstacleWeight", ref avoidObstacleWeight, 0.1f, 5.0f);
+        propertyChanged |= ImGui.SliderFloat("AvoidObstacleWeight", ref avoidObstacleWeight, 0.0f, 5.0f);
         currTemplate.AvoidObstacleWeight = FixMath.F64.FromFloat(avoidObstacleWeight);
+
+        var separationWeight = currTemplate.SeparationWeight.Float;
+        propertyChanged |= ImGui.SliderFloat("SeparationWeight", ref separationWeight, 0.0f, 10.0f);
+        currTemplate.SeparationWeight = FixMath.F64.FromFloat(separationWeight);
+
+        var alignmentWeight = currTemplate.AlignmentWeight.Float;
+        propertyChanged |= ImGui.SliderFloat("AlignmentWeight", ref alignmentWeight, 0.0f, 10.0f);
+        currTemplate.AlignmentWeight = FixMath.F64.FromFloat(alignmentWeight);
+
+        var cohesionWeight = currTemplate.CohesionWeight.Float;
+        propertyChanged |= ImGui.SliderFloat("CohesionWeight", ref cohesionWeight, 0.0f, 10.0f);
+        currTemplate.CohesionWeight = FixMath.F64.FromFloat(cohesionWeight);
 
         if (propertyChanged)
         {
