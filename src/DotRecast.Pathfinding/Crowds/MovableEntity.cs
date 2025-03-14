@@ -127,8 +127,6 @@ namespace DotRecast.Pathfinding.Crowds
         public IVehicle.FAvoidObstacleInfo AvoidObstacleInfo { get { return _avoidObstacleInfo; } }
         private IVehicle.FAvoidNeighborInfo _avoidNeighborInfo = new IVehicle.FAvoidNeighborInfo();
         public IVehicle.FAvoidNeighborInfo AvoidNeighborInfo { get { return _avoidNeighborInfo; } }
-        private FixMath.F64 _avoidNeighborForceWeight = FixMath.F64.Zero;
-        private FixMath.F64Vec3 _avoidNeighborDirection = FixMath.F64Vec3.Zero;
 
         // local boundary
         public static readonly int  MaxBoundarySegmentNum = 10;
@@ -143,7 +141,7 @@ namespace DotRecast.Pathfinding.Crowds
         // displacement for neighbor collision
         public FixMath.F64Vec3      Displacement { get; set; }
         // debug forces
-        private FixMath.F64Vec3[] _debugVec3Items = null;
+        private FixMath.F64Vec3[]   _debugVec3Items = null;
 
         // state bits
         private uint                _stateBitsValue = 0;
@@ -170,21 +168,6 @@ namespace DotRecast.Pathfinding.Crowds
         {
             // reset the vehicle
             base.Reset();
-
-            // randomize initial orientation
-            //RegenerateOrthonormalBasisUF(Vector3Helpers.RandomUnitVector());
-            //Vector3 d = Vector3Helpers.RandomUnitVector();
-            //d.X = Math.Abs(d.X);
-            //d.Y = 0;
-            //d.Z = Math.Abs(d.Z);
-            //RegenerateOrthonormalBasisUF(d);
-
-            //// randomize initial position
-            //Position = Vector3.UnitX * 10 + (Vector3Helpers.RandomVectorInUnitRadiusSphere() * 20);
-
-            // notify proximity database that our position has changed
-            //FIXME: SimpleVehicle::SimpleVehicle() calls reset() before proximityToken is set
-            
         }
 
         public void NewPD(IProximityDatabase<IVehicle> pd)
