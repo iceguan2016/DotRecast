@@ -30,8 +30,14 @@ using Game.Utils;
 using Silk.NET.OpenGL;
 using System.Security.Principal;
 
-namespace DotRecast.Recast.Demo.Tools;
 
+// type defines
+using FFixedMesh = Pathfinding.Triangulation.Data.Mesh;
+using FFixedObject = Pathfinding.Triangulation.Data.Object;
+using FFixedRectMesh = Pathfinding.Triangulation.Factories.RectMesh;
+using FFixedSimpleView = Pathfinding.Triangulation.View.SimpleView;
+
+namespace DotRecast.Recast.Demo.Tools;
 public class TestDaedalusToolMode
 {
     public static readonly TestDaedalusToolMode ADD_OBSTACLE = new TestDaedalusToolMode(0, "Add Obstacle");
@@ -197,6 +203,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
     // Graph mesh
     public hxDaedalus.data.Mesh Mesh { get; private set; }
+    public FFixedMesh FixedMesh { get; private set; }
 
     public UnityEngine.Vector3? StartPoint { get; set; }
     public UnityEngine.Vector3? EndPoint { get; set; }
@@ -424,6 +431,43 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
         Path = new HxArray<double>();
 
+        return true;
+    }
+
+    public bool BuildFixedGraphMesh(FixMath.F64 mapWidth, FixMath.F64 mapHeight)
+    {
+        // build a rectangular 2 polygons mesh of mapWidth x mapHeight
+        var mesh = FFixedRectMesh.buildRectangle(mapWidth, mapHeight);
+
+        // populate mesh with many square objects
+        FFixedObject hxObject = null;
+        List<FixMath.F64> shapeCoords = null;
+        for (int i = 0; i < 30; ++i)
+        {
+            hxObject = new FFixedObject();
+            shapeCoords = new List<FixMath.F64> {
+                            -FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One,
+                             FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One, FixMath.F64.One,
+                             FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One,
+                            -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, -FixMath.F64.One };
+
+            hxObject._coordinates = shapeCoords;
+            // randGen.rangeMin = 10;
+            // randGen.rangeMax = 40;
+            hxObject._scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapWidth.Float);
+            hxObject._scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapHeight.Float);
+            // randGen.rangeMin = 0;
+            // randGen.rangeMax = 1000;
+            hxObject._rotation = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
+            // randGen.rangeMin = 50;
+            // randGen.rangeMax = 600;
+            hxObject._x = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * mapWidth.Float);
+            hxObject._y = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * mapHeight.Float);
+            mesh.insertObject(hxObject);
+            // _obstacles.push(hxObject);
+        }  // show result mesh on screen
+
+        FixedMesh = mesh;
         return true;
     }
 
@@ -895,6 +939,7 @@ public class TestDaedalusSampleTool : ISampleTool
     private DrawInterfaceImplement _draw = null;
 
     private hxDaedalus.view.SimpleView _view = null;
+    private FFixedSimpleView _fixedSimpleView = null;
 
     private TestDaedalusToolMode m_mode = TestDaedalusToolMode.ADD_OBSTACLE;
     private int m_modeIdx = TestDaedalusToolMode.ADD_OBSTACLE.Idx;
@@ -1080,6 +1125,8 @@ public class TestDaedalusSampleTool : ISampleTool
             _view = new hxDaedalus.view.SimpleView(_draw);
             _tool.MapHeight = bound_max.Y + 0.5f;
             _tool.DrawInterface = _draw;
+
+            _fixedSimpleView = new FFixedSimpleView(_draw);
         }
 
         // draw bounds
@@ -1090,6 +1137,7 @@ public class TestDaedalusSampleTool : ISampleTool
 
         // draw graph mesh
         if (null != _tool.Mesh) _view.drawMesh(_tool.Mesh);
+        if (null != _tool.FixedMesh) _fixedSimpleView.drawMesh(_tool.FixedMesh);
 
         if (m_mode == TestDaedalusToolMode.PATH_FINDER)
         {

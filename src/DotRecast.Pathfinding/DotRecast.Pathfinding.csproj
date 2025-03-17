@@ -46,8 +46,6 @@
     <Folder Include="Navmesh\Shape\" />
     <Folder Include="Math\" />
     <Folder Include="Triangulation\AI\" />
-    <Folder Include="Triangulation\Factories\" />
-    <Folder Include="Triangulation\View\" />
   </ItemGroup>
 
   <ItemGroup>
