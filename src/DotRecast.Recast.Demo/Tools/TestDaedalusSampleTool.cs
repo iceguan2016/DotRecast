@@ -1136,7 +1136,7 @@ public class TestDaedalusSampleTool : ISampleTool
             DebugDraw.DuRGBA(255, 255, 255, 128), 1.0f);
 
         // draw graph mesh
-        if (null != _tool.Mesh) _view.drawMesh(_tool.Mesh);
+        // if (null != _tool.Mesh) _view.drawMesh(_tool.Mesh);
         if (null != _tool.FixedMesh) _fixedSimpleView.drawMesh(_tool.FixedMesh);
 
         if (m_mode == TestDaedalusToolMode.PATH_FINDER)
@@ -1399,6 +1399,7 @@ public class TestDaedalusSampleTool : ISampleTool
         if (null != _tool) _tool.Start();
 
         _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
+        _tool.BuildFixedGraphMesh(FixMath.F64.FromDouble(mapWidth), FixMath.F64.FromDouble((int)mapHeight));
 
         Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
     }

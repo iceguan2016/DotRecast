@@ -65,20 +65,16 @@ namespace Pathfinding.Triangulation.View
 
         public void drawMesh(Mesh mesh)
         {
-            var all = mesh.getVerticesAndEdges();
-            var vertices = HxReflect.field(all, "vertices") as HxArray<object>;
-            var edges = HxReflect.field(all, "edges") as HxArray<object>;
-            //var vertices = mesh._vertices;
-            //var edges = mesh._edges;
+            var (vertices, edges) = mesh.getVerticesAndEdges();
 
-            for (var i = 0; i < vertices.length; ++i)
+            for (var i = 0; i < vertices.Count; ++i)
             {
-                drawVertex((Vertex)vertices[i]);
+                drawVertex(vertices[i]);
             }
 
-            for (var i = 0; i < edges.length; ++i)
+            for (var i = 0; i < edges.Count; ++i)
             {
-                var edge = (Edge)edges[i];
+                var edge = edges[i];
                 drawEdge(edge, edge.get_isConstrained() ? UnityEngine.Color.red : UnityEngine.Color.blue);
             }
         }

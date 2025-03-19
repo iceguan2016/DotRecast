@@ -197,12 +197,12 @@ namespace Pathfinding.Triangulation.Math
 
             if (_randGen == null)
                 _randGen = new RandGenerator();
-            _randGen.set_seed((int)(x * 10 + 4 * y).Raw);
+            _randGen.set_seed(FixMath.F64.FloorToInt(x * 10 + 4 * y));
 
             int i;
 
             __samples.Clear();
-            var numSamples = FixMath.F64.RoundToInt(FixMath.F64.PowFast(FixMath.F64.FromInt(mesh._vertices.Count), FixMath.F64.One / FixMath.F64.FromInt(3)));
+            var numSamples = FixMath.F64.FloorToInt(FixMath.F64.PowFast(FixMath.F64.FromInt(mesh._vertices.Count), FixMath.F64.One / FixMath.F64.FromInt(3)));
             _randGen.rangeMin = 0;
             _randGen.rangeMax = mesh._vertices.Count - 1;
             for (i = 0; i < numSamples; ++i)
@@ -243,8 +243,24 @@ namespace Pathfinding.Triangulation.Math
             int relativPos;
             int numIter = 0;
             //while ( faceVisited[ currFace ] || !(objectContainer = isInFace(x, y, currFace)) )
-            while (!faceVisited.Contains(currFace) || (objectContainer = isInFace(x, y, currFace)) == null)
+            while (true)
             {
+                bool tmp = false;
+                if (!faceVisited.Contains(currFace))
+                {
+                    objectContainer = Geom2D.isInFace(x, y, currFace);
+                    tmp = objectContainer == null;
+                }
+                else
+                {
+                    tmp = true;
+                }
+
+                if (!tmp)
+                {
+                    break;
+                }
+
                 faceVisited.Add(currFace);
 
                 numIter++;
