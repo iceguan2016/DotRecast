@@ -162,12 +162,15 @@ namespace Pathfinding.Triangulation.Data
             if (object_._constraintShape != null)
                 deleteObject(object_);
 
+            Debug.LogToFile($"============ insertObject, id: {object_._id}");
+
             var shape = new ConstraintShape();
             ConstraintSegment segment;
             var coordinates = object_._coordinates;
+            object_.updateMatrixFromValues();
+
             var m = object_._matrix;
 
-            object_.updateMatrixFromValues();
             FixMath.F64 x1;
             FixMath.F64 y1;
             FixMath.F64 x2;
@@ -189,6 +192,7 @@ namespace Pathfinding.Triangulation.Data
                 transfx2 = m.transformX(x2, y2);
                 transfy2 = m.transformY(x2, y2);
 
+                Debug.LogToFile($"transfx1:{transfx1}, transfy1:{transfy1}, transfx2:{transfx2}, transfy2:{transfy2}");
                 segment = insertConstraintSegment(transfx1, transfy1, transfx2, transfy2);
                 if (segment != null)
                 {
@@ -522,9 +526,11 @@ namespace Pathfinding.Triangulation.Data
             var vertexDown = insertVertex(newX1, newY1);
             if (vertexDown == null)
                 return null;
+            Debug.LogToFile($"insertConstraintSegment[1] down {vertexDown._id}");
             var vertexUp = insertVertex(newX2, newY2);
             if (vertexUp == null)
                 return null;
+            Debug.LogToFile($"insertConstraintSegment[1] up {vertexUp._id}");
             if (vertexDown == vertexUp)
                 return null;
             // useful    //Debug.trace("vertices " + vertexDown.id + " " + vertexUp.id)  
@@ -562,6 +568,7 @@ namespace Pathfinding.Triangulation.Data
                     ///////////////////////////
                     //Debug.trace("case vertex");
                     currVertex = v.vertex;
+                    Debug.LogToFile($"insertConstraintSegment[2] vertex {currVertex._id}");
                     iterVertexToOutEdges.set_fromVertex(currVertex);
                     while ((currEdge = iterVertexToOutEdges.next()) != null)
                     {
@@ -610,6 +617,7 @@ namespace Pathfinding.Triangulation.Data
                     while ((currEdge = iterVertexToOutEdges.next()) != null)
                     {
                         currEdge = currEdge.get_nextLeftEdge();
+                        Debug.LogToFile($"insertConstraintSegment[2] edge {currEdge._id}");
                         if (Geom2D.intersections2edges(currEdge, tempEdgeDownUp, out pIntersect))
                         {
                             //Debug.trace("edge intersection");

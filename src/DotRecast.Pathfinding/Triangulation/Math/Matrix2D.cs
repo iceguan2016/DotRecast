@@ -18,12 +18,12 @@ namespace Pathfinding.Triangulation.Math
         */
         public Matrix2D(FixMath.F64? a_ = null, FixMath.F64? b_ = null, FixMath.F64? c_ = null, FixMath.F64? d_ = null, FixMath.F64? e_ = null, FixMath.F64? f_ = null)
         {
-            a = !a_.HasValue ? FixMath.F64.One : a_.Value;
-            b = !b_.HasValue ? FixMath.F64.Zero : b_.Value;
-            c = !c_.HasValue ? FixMath.F64.Zero : c_.Value;
-            d = !d_.HasValue ? FixMath.F64.One : d_.Value;
-            e = !e_.HasValue ? FixMath.F64.Zero : e_.Value;
-            f = !f_.HasValue ? FixMath.F64.Zero : f_.Value;
+            a = a_ ?? FixMath.F64.One;
+            b = b_ ?? FixMath.F64.Zero;
+            c = c_ ?? FixMath.F64.Zero;
+            d = d_ ?? FixMath.F64.One;
+            e = e_ ?? FixMath.F64.Zero;
+            f = f_ ?? FixMath.F64.Zero;
         }
 
         public FixMath.F64 a;
