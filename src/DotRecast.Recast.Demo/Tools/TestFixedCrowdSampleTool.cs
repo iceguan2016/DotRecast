@@ -154,8 +154,8 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         //hxObject._scaleY = infos[i * 5 + 3];
         hxObject._rotation = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
         //hxObject._rotation = infos[i * 5 + 4];
-        hxObject._x = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * Mesh._width.Float);
-        hxObject._y = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * Mesh._height.Float);
+        hxObject._x = FixMath.F64.FromDouble(x);
+        hxObject._y = FixMath.F64.FromDouble(y);
         //hxObject._x = infos[i * 5 + 0];
         //hxObject._y = infos[i * 5 + 1];
 
@@ -204,10 +204,9 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     public bool BuildGraphMesh(FixMath.F64 mapWidth, FixMath.F64 mapHeight)
     {
         // build a rectangular 2 polygons mesh of mapWidth x mapHeight
-        var mesh = RectMesh.buildRectangle(mapWidth, mapHeight);
+        Mesh = RectMesh.buildRectangle(mapWidth, mapHeight);
 
         // populate mesh with many square objects
-        Object hxObject = null;
         for (int i = 0; i < 30; ++i)
         {
             var x = RandomRange(50, 600) / 600.0f * mapWidth.Float;
@@ -216,7 +215,6 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             AddObstacle(x, y);
         }  // show result mesh on screen
 
-        Mesh = mesh;
         return true;
     }
 

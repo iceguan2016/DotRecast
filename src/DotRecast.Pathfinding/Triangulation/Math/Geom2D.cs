@@ -203,8 +203,8 @@ namespace Pathfinding.Triangulation.Math
 
             __samples.Clear();
             var numSamples = FixMath.F64.FloorToInt(FixMath.F64.PowFast(FixMath.F64.FromInt(mesh._vertices.Count), FixMath.F64.One / FixMath.F64.FromInt(3)));
-            _randGen.rangeMin = 0;
-            _randGen.rangeMax = mesh._vertices.Count - 1;
+            _randGen._rangeMin = 0;
+            _randGen._rangeMax = mesh._vertices.Count - 1;
             Debug.LogToFile($"locatePosition ({x}, {y}) numSamples:{numSamples} _vertices.Count:{mesh._vertices.Count}");
             for (i = 0; i < numSamples; ++i)
             {
