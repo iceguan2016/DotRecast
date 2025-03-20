@@ -110,7 +110,7 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
 
     public string GetName()
     {
-        return "Test Daedalus Tool";
+        return "Test FixedCrowd Tool";
     }
 
     public void Start()

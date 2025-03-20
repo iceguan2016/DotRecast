@@ -30,14 +30,8 @@ using Game.Utils;
 using Silk.NET.OpenGL;
 using System.Security.Principal;
 
-
-// type defines
-using FFixedMesh = Pathfinding.Triangulation.Data.Mesh;
-using FFixedObject = Pathfinding.Triangulation.Data.Object;
-using FFixedRectMesh = Pathfinding.Triangulation.Factories.RectMesh;
-using FFixedSimpleView = Pathfinding.Triangulation.View.SimpleView;
-
 namespace DotRecast.Recast.Demo.Tools;
+
 public class TestDaedalusToolMode
 {
     public static readonly TestDaedalusToolMode ADD_OBSTACLE = new TestDaedalusToolMode(0, "Add Obstacle");
@@ -203,7 +197,6 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
     // Graph mesh
     public hxDaedalus.data.Mesh Mesh { get; private set; }
-    public FFixedMesh FixedMesh { get; private set; }
 
     public UnityEngine.Vector3? StartPoint { get; set; }
     public UnityEngine.Vector3? EndPoint { get; set; }
@@ -386,35 +379,30 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             vertex._pos.y += y;
         }
 
-        var infos = new FixMath.F64[] {
-            FixMath.F64.FromDouble(9.698759303661063), FixMath.F64.FromDouble(9.690226845443249), FixMath.F64.FromDouble(5.593086792388931), FixMath.F64.FromDouble(3.59380416222848), FixMath.F64.FromDouble(0.984241756843403),
-            FixMath.F64.FromDouble(13.12744181160815), FixMath.F64.FromDouble(10.631320004118606), FixMath.F64.FromDouble(5.710272471420467), FixMath.F64.FromDouble(2.254039869643748), FixMath.F64.FromDouble(1.5449649603106081)
-        };
-
-        var count = infos.Length / 5;
         // populate mesh with many square objects
         hxDaedalus.data.Object hxObject = null;
-        for (int i = 0; i < count; ++i)
+        HxArray<double> shapeCoords = null;
+        for (int i=0; i<30; ++i)
         {
             hxObject = new hxDaedalus.data.Object();
-            var shapeCoords = new HxArray<double>(new double[] {
+            shapeCoords = new HxArray<double>(new double[] {
                             -1, -1, 1, -1,
                              1, -1, 1, 1,
                              1, 1, -1, 1,
                             -1, 1, -1, -1});
 
             hxObject._coordinates = shapeCoords;
-            //hxObject._scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapWidth.Float);
-            //hxObject._scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapHeight.Float);
-            hxObject._scaleX = infos[i * 5 + 2].Float;
-            hxObject._scaleY = infos[i * 5 + 3].Float;
-            //hxObject._rotation = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
-            hxObject._rotation = infos[i * 5 + 4].Float;
-            //hxObject._x = FixMath.F64.FromDouble(RandomRange(50, 100) / 600.0f * mapWidth.Float);
-            //hxObject._y = FixMath.F64.FromDouble(RandomRange(50, 100) / 600.0f * mapHeight.Float);
-            hxObject._x = infos[i * 5 + 0].Float;
-            hxObject._y = infos[i * 5 + 1].Float;
-
+            // randGen.rangeMin = 10;
+            // randGen.rangeMax = 40;
+            hxObject._scaleX = RandomRange(10, 40) / 600.0f * mapWidth;
+            hxObject._scaleY = RandomRange(10, 40) / 600.0f * mapHeight;
+            // randGen.rangeMin = 0;
+            // randGen.rangeMax = 1000;
+            hxObject._rotation = (RandomRange(0, 1000) / 1000) * Math.PI / 2;
+            // randGen.rangeMin = 50;
+            // randGen.rangeMax = 600;
+            hxObject._x = x + RandomRange(50, 600) / 600.0f * mapWidth;
+            hxObject._y = y + RandomRange(50, 600) / 600.0f * mapHeight;
             mesh.insertObject(hxObject);
             _obstacles.push(hxObject);
         }  // show result mesh on screen
@@ -436,50 +424,6 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
         Path = new HxArray<double>();
 
-        return true;
-    }
-
-    public bool BuildFixedGraphMesh(FixMath.F64 mapWidth, FixMath.F64 mapHeight)
-    {
-        // build a rectangular 2 polygons mesh of mapWidth x mapHeight
-        var mesh = FFixedRectMesh.buildRectangle(mapWidth, mapHeight);
-
-        //var infos = new FixMath.F64[] {
-        //    FixMath.F64.FromDouble(9.698759303661063), FixMath.F64.FromDouble(9.690226845443249), FixMath.F64.FromDouble(5.593086792388931), FixMath.F64.FromDouble(3.59380416222848), FixMath.F64.FromDouble(0.984241756843403),
-        //    FixMath.F64.FromDouble(13.12744181160815), FixMath.F64.FromDouble(10.631320004118606), FixMath.F64.FromDouble(5.710272471420467), FixMath.F64.FromDouble(2.254039869643748), FixMath.F64.FromDouble(1.5449649603106081)
-        //};
-
-        //var count = infos.Length / 5;
-        // populate mesh with many square objects
-        FFixedObject hxObject = null;
-        for (int i = 0; i < 30; ++i)
-        {
-            hxObject = new FFixedObject();
-            var shapeCoords = new List<FixMath.F64> {
-                            -FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One,
-                             FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One, FixMath.F64.One,
-                             FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One,
-                            -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, -FixMath.F64.One };
-
-            hxObject._coordinates = shapeCoords;
-            hxObject._scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapWidth.Float);
-            hxObject._scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapHeight.Float);
-            //hxObject._scaleX = infos[i * 5 + 2];
-            //hxObject._scaleY = infos[i * 5 + 3];
-            hxObject._rotation = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
-            //hxObject._rotation = infos[i * 5 + 4];
-            hxObject._x = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * mapWidth.Float);
-            hxObject._y = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * mapHeight.Float);
-            //hxObject._x = infos[i * 5 + 0];
-            //hxObject._y = infos[i * 5 + 1];
-
-            Debug.LogToFile($"BuildFixedGraphMesh pos:({hxObject._x}, {hxObject._y}), scale:({hxObject._scaleX}, {hxObject._scaleY}), rotation:{hxObject._rotation}");
-
-            mesh.insertObject(hxObject);
-            // _obstacles.push(hxObject);
-        }  // show result mesh on screen
-
-        FixedMesh = mesh;
         return true;
     }
 
@@ -951,7 +895,6 @@ public class TestDaedalusSampleTool : ISampleTool
     private DrawInterfaceImplement _draw = null;
 
     private hxDaedalus.view.SimpleView _view = null;
-    private FFixedSimpleView _fixedSimpleView = null;
 
     private TestDaedalusToolMode m_mode = TestDaedalusToolMode.ADD_OBSTACLE;
     private int m_modeIdx = TestDaedalusToolMode.ADD_OBSTACLE.Idx;
@@ -1137,8 +1080,6 @@ public class TestDaedalusSampleTool : ISampleTool
             _view = new hxDaedalus.view.SimpleView(_draw);
             _tool.MapHeight = bound_max.Y + 0.5f;
             _tool.DrawInterface = _draw;
-
-            _fixedSimpleView = new FFixedSimpleView(_draw);
         }
 
         // draw bounds
@@ -1148,8 +1089,7 @@ public class TestDaedalusSampleTool : ISampleTool
             DebugDraw.DuRGBA(255, 255, 255, 128), 1.0f);
 
         // draw graph mesh
-        // if (null != _tool.Mesh) _view.drawMesh(_tool.Mesh);
-        if (null != _tool.FixedMesh) _fixedSimpleView.drawMesh(_tool.FixedMesh);
+        if (null != _tool.Mesh) _view.drawMesh(_tool.Mesh);
 
         if (m_mode == TestDaedalusToolMode.PATH_FINDER)
         {
@@ -1410,8 +1350,7 @@ public class TestDaedalusSampleTool : ISampleTool
         _tool = new TestDaedalusTool();
         if (null != _tool) _tool.Start();
 
-        //_tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
-        _tool.BuildFixedGraphMesh(FixMath.F64.FromDouble(mapWidth), FixMath.F64.FromDouble((int)mapHeight));
+        _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
 
         Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
     }
