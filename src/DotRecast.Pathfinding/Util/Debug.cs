@@ -39,7 +39,7 @@ namespace Game.Utils
 
         public static void LogToFile(string text)
         {
-            if (LogCount >= 1500) return;
+            if (LogCount >= 5000) return;
             ++LogCount;
 
             if (null == LogWriter)

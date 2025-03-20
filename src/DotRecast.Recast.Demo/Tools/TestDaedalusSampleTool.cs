@@ -386,9 +386,15 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             vertex._pos.y += y;
         }
 
+        var infos = new FixMath.F64[] {
+            FixMath.F64.FromDouble(9.698759303661063), FixMath.F64.FromDouble(9.690226845443249), FixMath.F64.FromDouble(5.593086792388931), FixMath.F64.FromDouble(3.59380416222848), FixMath.F64.FromDouble(0.984241756843403),
+            FixMath.F64.FromDouble(13.12744181160815), FixMath.F64.FromDouble(10.631320004118606), FixMath.F64.FromDouble(5.710272471420467), FixMath.F64.FromDouble(2.254039869643748), FixMath.F64.FromDouble(1.5449649603106081)
+        };
+
+        var count = infos.Length / 5;
         // populate mesh with many square objects
         hxDaedalus.data.Object hxObject = null;
-        for (int i=0; i<1; ++i)
+        for (int i = 0; i < count; ++i)
         {
             hxObject = new hxDaedalus.data.Object();
             var shapeCoords = new HxArray<double>(new double[] {
@@ -398,16 +404,16 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
                             -1, 1, -1, -1});
 
             hxObject._coordinates = shapeCoords;
-            //hxObject._scaleX = RandomRange(10, 40) / 600.0f * mapWidth;
-            //hxObject._scaleY = RandomRange(10, 40) / 600.0f * mapHeight;
-            hxObject._scaleX = 1.6699836708139628;
-            hxObject._scaleY = 1.4552916826214641;
-            //hxObject._rotation = (RandomRange(0, 1000) / 1000) * Math.PI / 2;
-            hxObject._rotation = 0.12840946367941797;
-            //hxObject._x = x + RandomRange(50, 600) / 600.0f * mapWidth;
-            //hxObject._y = y + RandomRange(50, 600) / 600.0f * mapHeight;
-            hxObject._x = 54.240739362547174;
-            hxObject._y = 21.9613453396596;
+            //hxObject._scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapWidth.Float);
+            //hxObject._scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapHeight.Float);
+            hxObject._scaleX = infos[i * 5 + 2].Float;
+            hxObject._scaleY = infos[i * 5 + 3].Float;
+            //hxObject._rotation = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
+            hxObject._rotation = infos[i * 5 + 4].Float;
+            //hxObject._x = FixMath.F64.FromDouble(RandomRange(50, 100) / 600.0f * mapWidth.Float);
+            //hxObject._y = FixMath.F64.FromDouble(RandomRange(50, 100) / 600.0f * mapHeight.Float);
+            hxObject._x = infos[i * 5 + 0].Float;
+            hxObject._y = infos[i * 5 + 1].Float;
 
             mesh.insertObject(hxObject);
             _obstacles.push(hxObject);
@@ -438,9 +444,15 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         // build a rectangular 2 polygons mesh of mapWidth x mapHeight
         var mesh = FFixedRectMesh.buildRectangle(mapWidth, mapHeight);
 
+        //var infos = new FixMath.F64[] {
+        //    FixMath.F64.FromDouble(9.698759303661063), FixMath.F64.FromDouble(9.690226845443249), FixMath.F64.FromDouble(5.593086792388931), FixMath.F64.FromDouble(3.59380416222848), FixMath.F64.FromDouble(0.984241756843403),
+        //    FixMath.F64.FromDouble(13.12744181160815), FixMath.F64.FromDouble(10.631320004118606), FixMath.F64.FromDouble(5.710272471420467), FixMath.F64.FromDouble(2.254039869643748), FixMath.F64.FromDouble(1.5449649603106081)
+        //};
+
+        //var count = infos.Length / 5;
         // populate mesh with many square objects
         FFixedObject hxObject = null;
-        for (int i = 0; i < 1; ++i)
+        for (int i = 0; i < 30; ++i)
         {
             hxObject = new FFixedObject();
             var shapeCoords = new List<FixMath.F64> {
@@ -450,16 +462,18 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
                             -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, -FixMath.F64.One };
 
             hxObject._coordinates = shapeCoords;
-            //hxObject._scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapWidth.Float);
-            //hxObject._scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapHeight.Float);
-            hxObject._scaleX = FixMath.F64.FromDouble(1.6699836708139628);
-            hxObject._scaleY = FixMath.F64.FromDouble(1.4552916826214641);
-            //hxObject._rotation = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
-            hxObject._rotation = FixMath.F64.FromDouble(0.12840946367941797);
-            //hxObject._x = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * mapWidth.Float);
-            //hxObject._y = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * mapHeight.Float);
-            hxObject._x = FixMath.F64.FromDouble(54.240739362547174);
-            hxObject._y = FixMath.F64.FromDouble(21.9613453396596);
+            hxObject._scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapWidth.Float);
+            hxObject._scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * mapHeight.Float);
+            //hxObject._scaleX = infos[i * 5 + 2];
+            //hxObject._scaleY = infos[i * 5 + 3];
+            hxObject._rotation = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
+            //hxObject._rotation = infos[i * 5 + 4];
+            hxObject._x = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * mapWidth.Float);
+            hxObject._y = FixMath.F64.FromDouble(RandomRange(50, 600) / 600.0f * mapHeight.Float);
+            //hxObject._x = infos[i * 5 + 0];
+            //hxObject._y = infos[i * 5 + 1];
+
+            Debug.LogToFile($"BuildFixedGraphMesh pos:({hxObject._x}, {hxObject._y}), scale:({hxObject._scaleX}, {hxObject._scaleY}), rotation:{hxObject._rotation}");
 
             mesh.insertObject(hxObject);
             // _obstacles.push(hxObject);

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using Game.Utils;
 
 namespace Pathfinding.Triangulation.Data
 {
@@ -32,18 +32,24 @@ namespace Pathfinding.Triangulation.Data
 
         public void addEdge(Edge edge)
         {
-            if (!_edges.Contains(edge) && _edges.Contains(edge._oppositeEdge))
+            if (!_edges.Contains(edge) && !_edges.Contains(edge._oppositeEdge))
+            {
+                Debug.LogToFile($"ConstraintSegment addEdge id:{_id}, edge_id:{edge._id}");
                 _edges.Add(edge);
+            }
         }
 
 
-        public virtual void removeEdge(Edge edge)
+        public void removeEdge(Edge edge)
         {
-            var index = _edges.FindIndex(item => item == edge);
+            var index = _edges.IndexOf(edge);
             if (index == -1)
-                index = _edges.FindIndex(item => item == edge._oppositeEdge);
+                index = _edges.IndexOf(edge._oppositeEdge);
             if (index != -1)
+            {
+                Debug.LogToFile($"ConstraintSegment removeEdge id:{_id}, edge_id:{edge._id}, index:{index}");
                 _edges.RemoveAt(index);
+            }
         }
 
 
