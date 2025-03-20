@@ -17,6 +17,7 @@ using Pathfinding.Triangulation.View;
 using Pathfinding.Triangulation.Math;
 using Object = Pathfinding.Triangulation.Data.Object;
 using Pathfinding.Triangulation.Factories;
+using Pathfinding.Triangulation.AI;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -37,9 +38,8 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     public FixMath.F64 MapHeight { get; set; }
 
     // pathfinder
-    // public hxDaedalus.ai.PathFinder Pathfinder { get; private set; }
-    // public hxDaedalus.ai.EntityAI EntityAI { get; private set; }
-    // public HxArray<double> Path { get; private set; }
+    public PathFinder Pathfinder { get; private set; }
+    public List<FixMath.F64> Path { get; private set; }
 
     // obstacles
     private List<Object> _obstacles = new List<Object>();
@@ -221,34 +221,30 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     // IPathwayQuerier interface
     public virtual SharpSteer2.Pathway.PolylinePathway FindPath(SharpSteer2.IVehicle vehicle, FixMath.F64Vec3 target)
     {
-        //var pathfinder = Pathfinder;
-        //if (null == pathfinder)
-        //    return null;
+        var pathfinder = Pathfinder;
+        if (null == pathfinder)
+            return null;
 
-        //var start = vehicle.PredictFuturePosition(FixMath.F64.Zero);
-        //// 1.Create template entity
-        //var entityAI = new hxDaedalus.ai.EntityAI();
-        //EntityAI.set_radius(vehicle.Radius.Double);
-        //EntityAI.x = start.X.Double;
-        //EntityAI.y = start.Z.Double;
+        var start = vehicle.PredictFuturePosition(FixMath.F64.Zero);
+        var radius = vehicle.Radius;
 
-        //// 2.Set pathfinder params
-        //pathfinder.entity = EntityAI;
+        // 1.Create template entity
 
-        //var resultPath = new HxArray<double>();
-        //pathfinder.findPath(target.X.Double, target.Z.Double, resultPath);
+        // 2.Set pathfinder params
+        var resultPath = new List<FixMath.F64>();
+        pathfinder.findPath(start.X, start.Z, target.X, target.Z, radius, resultPath);
 
-        //// 3.Convert to PolylinePathway 
-        //if (resultPath.length > 0)
-        //{
-        //    var points = new List<FixMath.F64Vec3>();
-        //    for (var i = 0; i < resultPath.length; i += 2)
-        //    {
-        //        var v = FixMath.F64Vec3.FromFloat((float)resultPath[i], MapHeight, (float)resultPath[i + 1]);
-        //        points.Add(v);
-        //    }
-        //    return new SharpSteer2.Pathway.PolylinePathway(points, FixMath.F64.Zero, false);
-        //}
+        // 3.Convert to PolylinePathway 
+        if (resultPath.Count > 0)
+        {
+            var points = new List<FixMath.F64Vec3>();
+            for (var i = 0; i < resultPath.Count; i += 2)
+            {
+                var v = new FixMath.F64Vec3(resultPath[i], MapHeight, resultPath[i + 1]);
+                points.Add(v);
+            }
+            return new SharpSteer2.Pathway.PolylinePathway(points, FixMath.F64.Zero, false);
+        }
         return null;
     }
     // End
