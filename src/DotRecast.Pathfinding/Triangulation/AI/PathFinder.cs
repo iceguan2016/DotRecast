@@ -68,8 +68,8 @@ namespace Pathfinding.Triangulation.AI
             if (Geom2D.isCircleIntersectingAnyConstraint(toX, toY, radius, _mesh))
                 return;
 
-            astar._radius = radius;
-            funnel._radius = radius;
+            astar.set_radius(radius);
+            funnel.set_radius(radius);
 
             listFaces.Clear();
             listEdges.Clear();

@@ -39,7 +39,6 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
 
     // pathfinder
     public PathFinder Pathfinder { get; private set; }
-    public List<FixMath.F64> Path { get; private set; }
 
     // obstacles
     private List<Object> _obstacles = new List<Object>();
@@ -205,6 +204,10 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     {
         // build a rectangular 2 polygons mesh of mapWidth x mapHeight
         Mesh = RectMesh.buildRectangle(mapWidth, mapHeight);
+        if (null == Mesh)
+        {
+            return false;
+        }
 
         // populate mesh with many square objects
         for (int i = 0; i < 30; ++i)
@@ -214,6 +217,10 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             
             AddObstacle(x, y);
         }  // show result mesh on screen
+
+        // pathfinder
+        Pathfinder = new PathFinder();
+        Pathfinder.set_mesh(Mesh);
 
         return true;
     }

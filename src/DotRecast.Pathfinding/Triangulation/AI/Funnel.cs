@@ -62,15 +62,15 @@ namespace Pathfinding.Triangulation.AI
             }
         }
 
-        public FixMath.F64 _radius = FixMath.F64.Zero;
+        private FixMath.F64 _radius = FixMath.F64.Zero;
 
-        public FixMath.F64 _radiusSquared = FixMath.F64.Zero;
+        private FixMath.F64 _radiusSquared = FixMath.F64.Zero;
 
-        public int _numSamplesCircle = 16;
+        private int _numSamplesCircle = 16;
 
-        public List<FixMath.F64Vec2> _sampleCircle;
+        private List<FixMath.F64Vec2> _sampleCircle;
 
-        public FixMath.F64 _sampleCircleDistanceSquared = FixMath.F64.Zero;
+        private FixMath.F64 _sampleCircleDistanceSquared = FixMath.F64.Zero;
 
         public virtual void dispose()
         {

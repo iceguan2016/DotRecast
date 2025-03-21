@@ -7,6 +7,12 @@ using Pathfinding.Triangulation.Math;
 
 namespace Pathfinding.Triangulation.AI
 {
+    public enum EFindPathResult
+    {
+        Success = 0,
+        Failed,
+        Progress
+    }
     public class AStar
     {
         public AStar()
@@ -14,45 +20,27 @@ namespace Pathfinding.Triangulation.AI
             iterEdge = new FromFaceToInnerEdges();
         }
 
-        public FixMath.F64 _radius;
+        private FixMath.F64 _radius;
 
+        private Mesh _mesh;
 
-
-        public Mesh _mesh;
-
-        public Dictionary<Face, bool> closedFaces;
-
-        public List<Face> sortedOpenedFaces;
-
-        public Dictionary<Face, bool> openedFaces;
-
-        public Dictionary<Face, Edge> entryEdges;
-
-        public Dictionary<Face, FixMath.F64> entryX;
-
-        public Dictionary<Face, FixMath.F64> entryY;
-
-        public Dictionary<Face, FixMath.F64> scoreF;
-
-        public Dictionary<Face, FixMath.F64> scoreG;
-
-        public Dictionary<Face, FixMath.F64> scoreH;
-
-        public Dictionary<Face, Face> predecessor;
-
-        public FromFaceToInnerEdges iterEdge;
-
-        public FixMath.F64 radiusSquared;
-
-        public FixMath.F64 diameter;
-
-        public FixMath.F64 diameterSquared;
-
-        public Face fromFace;
-
-        public Face toFace;
-
-        public Face curFace;
+        private Dictionary<Face, bool> closedFaces;
+        private List<Face> sortedOpenedFaces;
+        private Dictionary<Face, bool> openedFaces;
+        private Dictionary<Face, Edge> entryEdges;
+        private Dictionary<Face, FixMath.F64> entryX;
+        private Dictionary<Face, FixMath.F64> entryY;
+        private Dictionary<Face, FixMath.F64> scoreF;
+        private Dictionary<Face, FixMath.F64> scoreG;
+        private Dictionary<Face, FixMath.F64> scoreH;
+        private Dictionary<Face, Face> predecessor;
+        private FromFaceToInnerEdges iterEdge;
+        private FixMath.F64 radiusSquared;
+        private FixMath.F64 diameter;
+        private FixMath.F64 diameterSquared;
+        private Face fromFace;
+        private Face toFace;
+        private Face curFace;
 
         public void dispose()
         {
@@ -89,6 +77,19 @@ namespace Pathfinding.Triangulation.AI
         {
             this._mesh = mesh;
             return mesh;
+        }
+
+        public EFindPathResult initialPath(FixMath.F64 fromX, FixMath.F64 fromY
+                                    , FixMath.F64 toX, FixMath.F64 toY)
+        {
+            return EFindPathResult.Failed;
+        }
+
+        public EFindPathResult updatePath(int stepNum
+                            , List<Face> resultListFaces
+                            , List<Edge> resultListEdges)
+        {
+            return EFindPathResult.Failed;
         }
 
         public void findPath(FixMath.F64 fromX, FixMath.F64 fromY
@@ -199,7 +200,7 @@ namespace Pathfinding.Triangulation.AI
                     if (innerEdge._isConstrained)
                         continue;
                     neighbourFace = innerEdge.get_rightFace();
-                    if (!closedFaces[neighbourFace])
+                    if (!closedFaces.TryGetValue(neighbourFace, out var closed) || !closed)
                     {
                         if (curFace != fromFace && _radius > 0 && !isWalkableByRadius(entryEdges[curFace], curFace, innerEdge))
                         {
@@ -273,18 +274,7 @@ namespace Pathfinding.Triangulation.AI
         // faces with low distance value are at the end of the array
         int sortingFaces(Face a, Face b)
         {
-            if (scoreF[a] == scoreF[b] )
-            {
-                return 0;
-            } 
-            else if (scoreF[a] < scoreF[b] ) 
-            {
-                return 1;
-            } 
-            else 
-            { 
-                return -1;
-            }
+            return scoreF[a].CompareTo(scoreG[b]);
         }
 
         bool isWalkableByRadius(Edge fromEdge, Face throughFace, Edge toEdge) 
@@ -462,7 +452,8 @@ namespace Pathfinding.Triangulation.AI
                         }
                         // we check if the next face is not already in pipe
                         // and if the edge A is close to pivot vertex
-                        if (!facesDone[nextFaceA] && Geom2D.distanceSquaredVertexToEdge(vC, currEdgeA) < diameterSquared)
+                        var nextFaceA_not_done = !facesDone.TryGetValue(nextFaceA, out var doneA) || !doneA;
+                        if (nextFaceA_not_done && Geom2D.distanceSquaredVertexToEdge(vC, currEdgeA) < diameterSquared)
                         {
                             // if the edge is constrained
                             if (currEdgeA._isConstrained)
@@ -479,7 +470,8 @@ namespace Pathfinding.Triangulation.AI
                             }
                         }  // and if the edge B is close to pivot vertex    // we check if the next face is not already in pipe  
 
-                        if (!facesDone[nextFaceB] && Geom2D.distanceSquaredVertexToEdge(vC, currEdgeB) < diameterSquared)
+                        var nextFaceB_not_done = !facesDone.TryGetValue(nextFaceB, out var doneB) || !doneB;
+                        if (nextFaceB_not_done && Geom2D.distanceSquaredVertexToEdge(vC, currEdgeB) < diameterSquared)
                         {
                             // if the edge is constrained
                             if (currEdgeB._isConstrained)
