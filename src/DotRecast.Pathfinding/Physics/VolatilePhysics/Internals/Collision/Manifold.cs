@@ -84,6 +84,10 @@ namespace Volatile
       return true;
     }
 
+    internal int GetContactNum() { return this.used; }
+
+    internal Contact GetContact(int index) { return contacts[index]; }
+
     internal void PreStep()
     {
       for (int i = 0; i < this.used; i++)

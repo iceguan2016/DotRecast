@@ -86,6 +86,8 @@ namespace Volatile
         internal Fix64 Elasticity { get; private set; }
         internal Fix64 Damping { get; private set; }
 
+        private ContactManager contactManager;
+
         private CheapList<VoltBody> bodies;
         private List<Manifold> manifolds;
 
@@ -113,6 +115,7 @@ namespace Volatile
             this.IterationCount = VoltConfig.DEFAULT_ITERATION_COUNT;
             this.DeltaTime = VoltConfig.DEFAULT_DELTA_TIME;
 
+            this.contactManager = new ContactManager();
             this.bodies = new CheapList<VoltBody>();
             this.manifolds = new List<Manifold>();
 
@@ -134,6 +137,12 @@ namespace Volatile
         public VoltWorld(int historyLength = 0) : this(historyLength, VoltConfig.DEFAULT_DAMPING)
         {
 
+        }
+
+        // Set IContactListener
+        public void SetContactListener(IContactListener listener)
+        {
+            contactManager.Listener = listener;
         }
 
         /// <summary>
@@ -303,6 +312,8 @@ namespace Volatile
             }
 
             this.BroadPhase();
+
+            this.contactManager.UpdateContacts(this.manifolds);
 
             this.UpdateCollision();
             this.FreeManifolds();

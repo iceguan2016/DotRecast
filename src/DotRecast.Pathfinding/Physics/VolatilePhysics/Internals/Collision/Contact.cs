@@ -59,6 +59,10 @@ namespace Volatile
     private Fix64 cachedNormalImpulse;
     private Fix64 cachedTangentImpulse;
 
+    public VoltVector2 Position { get { return position; } }
+    public VoltVector2 Normal { get { return normal; } }
+    public Fix64 Penetration { get { return penetration; } }
+
     public Contact()
     {
       this.Reset();
