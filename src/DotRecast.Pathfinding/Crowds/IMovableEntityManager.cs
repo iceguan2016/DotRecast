@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using DotRecast.Pathfinding.Util;
+using Pathfinding.Util;
 using SharpSteer2;
 
-namespace DotRecast.Pathfinding.Crowds
+namespace Pathfinding.Crowds
 {
     public class CreateEntityParams
     {

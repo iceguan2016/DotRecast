@@ -1,12 +1,8 @@
 
-using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Reflection;
-using Game.Utils;
 using Pathfinding.Triangulation.Data;
 using Pathfinding.Triangulation.Math;
+using Pathfinding.Util;
 
 namespace Pathfinding.Triangulation.AI
 {

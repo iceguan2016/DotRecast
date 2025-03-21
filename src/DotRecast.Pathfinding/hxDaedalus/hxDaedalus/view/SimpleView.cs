@@ -1,14 +1,13 @@
-using System;
-using System.Security.Cryptography;
 using hxDaedalus.data;
+using Pathfinding.Util;
 
 namespace hxDaedalus.view
 {
     public class SimpleView
     {
-        Game.Utils.DrawInterface _draw = null;
+        DrawInterface _draw = null;
 
-        public SimpleView(Game.Utils.DrawInterface draw) 
+        public SimpleView(DrawInterface draw) 
         {
             _draw = draw;
         }

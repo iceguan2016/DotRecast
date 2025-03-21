@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using DotRecast.Pathfinding.Crowds;
-using SharpSteer2;
 using SharpSteer2.Obstacles;
 
 namespace Pathfinding.Crowds.Flowfield

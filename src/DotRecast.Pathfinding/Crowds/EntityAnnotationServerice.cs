@@ -1,20 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Numerics;
-using System.Text;
-using DotRecast.Pathfinding.Util;
+using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 
-namespace DotRecast.Pathfinding.Crowds
+namespace Pathfinding.Crowds
 {
     public class EntityAnnotationServerice : IAnnotationService
     {
-        Game.Utils.DrawInterface _draw = null;
+        DrawInterface _draw = null;
 
-        public EntityAnnotationServerice(Game.Utils.DrawInterface inDraw)
+        public EntityAnnotationServerice(DrawInterface inDraw)
         {
             _draw = inDraw;
         }

@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
-using DotRecast.Pathfinding.Util;
+using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;
 using SharpSteer2.Helpers;
 
-namespace DotRecast.Pathfinding.Crowds
+namespace Pathfinding.Crowds
 {
     public class MovableEntityManager : IMovableEntityManager
     {

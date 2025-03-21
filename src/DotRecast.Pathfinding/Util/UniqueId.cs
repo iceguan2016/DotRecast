@@ -1,6 +1,6 @@
 
 
-namespace DotRecast.Pathfinding.Util
+namespace Pathfinding.Util
 {
     public struct UniqueId
     {

@@ -1,8 +1,5 @@
-using System;
-using System.ComponentModel;
-using System.Numerics;
-using DotRecast.Pathfinding.Util;
-using SharpSteer2.Helpers;
+
+using Pathfinding.Util;
 
 namespace SharpSteer2.Obstacles
 {

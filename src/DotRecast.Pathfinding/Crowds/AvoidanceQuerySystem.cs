@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using SharpSteer2.Helpers;
 using Pathfinding.Util;
-using DotRecast.Pathfinding;
 using SharpSteer2;
-using DotRecast.Pathfinding.Util;
 
 namespace Pathfinding.Crowds
 {

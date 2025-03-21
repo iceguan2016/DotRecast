@@ -1,6 +1,5 @@
-using System;
 using System.Collections.Generic;
-using Game.Utils;
+using Pathfinding.Util;
 
 namespace Pathfinding.Triangulation.Data
 {

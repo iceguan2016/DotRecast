@@ -2,11 +2,8 @@ using System;
 using SharpSteer2;
 using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
-using DotRecast.Pathfinding.Util;
-using DotRecast.Detour;
-using System.Threading;
 
-namespace DotRecast.Pathfinding.Crowds
+namespace Pathfinding.Crowds
 {
     public class FCycleDataBuffer<T> where T : struct
     {

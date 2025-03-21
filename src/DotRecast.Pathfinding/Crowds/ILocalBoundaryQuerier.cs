@@ -1,7 +1,7 @@
 
 using SharpSteer2;
 
-namespace DotRecast.Pathfinding.Crowds
+namespace Pathfinding.Crowds
 {
     public struct BoundarySegement
     {

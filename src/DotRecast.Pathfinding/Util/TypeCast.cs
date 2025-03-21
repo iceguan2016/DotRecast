@@ -1,5 +1,5 @@
 
-namespace DotRecast.Pathfinding.Util
+namespace Pathfinding.Util
 {
     public static class TypeCast
     {

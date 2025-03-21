@@ -2,33 +2,18 @@ using System;
 using System.Collections.Generic;
 using DotRecast.Core;
 using DotRecast.Core.Numerics;
-using DotRecast.Detour;
-using DotRecast.Recast.Toolset.Builder;
 using DotRecast.Recast.Demo.Draw;
 using DotRecast.Recast.Toolset;
-using DotRecast.Recast.Toolset.Tools;
 using ImGuiNET;
 using Serilog;
 using static DotRecast.Recast.Demo.Draw.DebugDraw;
-using static DotRecast.Recast.Demo.Draw.DebugDrawPrimitives;
-using Silk.NET.GLFW;
-using Newtonsoft.Json.Linq;
 using hxDaedalus.factories;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.IO;
 using UnityEngine;
 using DotRecast.Core.Collections;
-using haxe.lang;
-using DotRecast.Pathfinding.Crowds;
-using DotRecast.Pathfinding.Util;
+using Pathfinding.Crowds;
+using Pathfinding.Util;
 using hxDaedalus.ai;
-using Serilog.Core;
-using Silk.NET.Windowing;
 using SharpSteer2.Helpers;
-using Game.Utils;
-using Silk.NET.OpenGL;
-using System.Security.Principal;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -67,7 +52,7 @@ public class DrawInterfaceImplement : DrawInterface
     public DrawInterfaceImplement(DebugDraw draw)
     {
         m_draw = draw;
-        Game.Utils.Debug.drawInterface = this;
+        Debug.drawInterface = this;
     }
 
     public void DrawCube(Vector3 p, Vector3 size, UnityEngine.Color c)

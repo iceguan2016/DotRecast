@@ -2,7 +2,7 @@
 using SharpSteer2;
 using SharpSteer2.Helpers;
 
-namespace DotRecast.Pathfinding.Util
+namespace Pathfinding.Util
 {
     public static class Draw
     {

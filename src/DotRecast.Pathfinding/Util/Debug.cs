@@ -1,10 +1,9 @@
 using System;
 using System.IO;
-using DotRecast.Pathfinding.Crowds;
-using DotRecast.Pathfinding.Util;
+using Pathfinding.Crowds;
 using UnityEngine;
 
-namespace Game.Utils
+namespace Pathfinding.Util
 {
     public interface DrawInterface
     {

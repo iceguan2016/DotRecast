@@ -1,6 +1,6 @@
 using System;
 
-namespace DotRecast.Pathfinding.Util
+namespace Pathfinding.Util
 {
     public static class Crc32
     {

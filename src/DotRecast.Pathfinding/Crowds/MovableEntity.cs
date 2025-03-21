@@ -1,17 +1,14 @@
 using System;
 using SharpSteer2;
 using SharpSteer2.Database;
-using DotRecast.Pathfinding.Util;
 using System.Collections.Generic;
 using SharpSteer2.Pathway;
 using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
-using Game.Utils;
-using System.Threading;
 using Pathfinding.Crowds;
-using System.Diagnostics.Contracts;
+using Pathfinding.Util;
 
-namespace DotRecast.Pathfinding.Crowds
+namespace Pathfinding.Crowds
 {
     public enum eDebugVec3Item
     { 

@@ -2,14 +2,15 @@
 
 using Pathfinding.Triangulation.Data;
 using Pathfinding.Triangulation.Iterators;
+using Pathfinding.Util;
 
 namespace Pathfinding.Triangulation.View
 {
     public class SimpleView
     {
-        Game.Utils.DrawInterface _draw = null;
+        DrawInterface _draw = null;
 
-        public SimpleView(Game.Utils.DrawInterface draw)
+        public SimpleView(DrawInterface draw)
         {
             _draw = draw;
         }
