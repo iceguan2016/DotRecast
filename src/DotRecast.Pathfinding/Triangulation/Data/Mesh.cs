@@ -159,8 +159,6 @@ namespace Pathfinding.Triangulation.Data
             if (object_._constraintShape != null)
                 deleteObject(object_);
 
-            Debug.LogToFile($"============ insertObject, id: {object_._id}");
-
             var shape = new ConstraintShape();
             ConstraintSegment segment;
             var coordinates = object_._coordinates;
@@ -189,7 +187,6 @@ namespace Pathfinding.Triangulation.Data
                 transfx2 = m.transformX(x2, y2);
                 transfy2 = m.transformY(x2, y2);
 
-                Debug.LogToFile($"transfx1:{transfx1}, transfy1:{transfy1}, transfx2:{transfx2}, transfy2:{transfy2}");
                 segment = insertConstraintSegment(transfx1, transfy1, transfx2, transfy2);
                 if (segment != null)
                 {
@@ -523,11 +520,9 @@ namespace Pathfinding.Triangulation.Data
             var vertexDown = insertVertex(newX1, newY1);
             if (vertexDown == null)
                 return null;
-            Debug.LogToFile($"insertConstraintSegment[1] down {vertexDown._id}");
             var vertexUp = insertVertex(newX2, newY2);
             if (vertexUp == null)
                 return null;
-            Debug.LogToFile($"insertConstraintSegment[1] up {vertexUp._id}");
             if (vertexDown == vertexUp)
                 return null;
             // useful    //Debug.trace("vertices " + vertexDown.id + " " + vertexUp.id)  
@@ -565,7 +560,6 @@ namespace Pathfinding.Triangulation.Data
                     ///////////////////////////
                     //Debug.trace("case vertex");
                     currVertex = v.vertex;
-                    Debug.LogToFile($"insertConstraintSegment[2] vertex {currVertex._id}");
                     iterVertexToOutEdges.set_fromVertex(currVertex);
                     while ((currEdge = iterVertexToOutEdges.next()) != null)
                     {
@@ -614,13 +608,10 @@ namespace Pathfinding.Triangulation.Data
                     while ((currEdge = iterVertexToOutEdges.next()) != null)
                     {
                         currEdge = currEdge.get_nextLeftEdge();
-                        Debug.LogToFile($"insertConstraintSegment[2] iterVertexToOutEdges {currEdge._id}");
                         if (Geom2D.intersections2edges(currEdge, tempEdgeDownUp, out pIntersect))
                         {
-                            Debug.LogToFile($"edge intersection, pIntersect:{pIntersect}");
                             if (currEdge._isConstrained)
                             {
-                                Debug.LogToFile("edge is constrained");
                                 vertexDown = splitEdge(currEdge, pIntersect.X, pIntersect.Y);
                                 iterVertexToOutEdges.set_fromVertex(currVertex);
                                 while ((currEdge = iterVertexToOutEdges.next()) != null)
@@ -641,7 +632,6 @@ namespace Pathfinding.Triangulation.Data
                             }
                             else
                             {
-                                Debug.LogToFile("edge is not constrained");
                                 intersectedEdges.Add(currEdge);
                                 leftBoundingEdges.Insert(0, currEdge.get_nextLeftEdge());
                                 rightBoundingEdges.Add(currEdge.get_prevLeftEdge());
@@ -655,7 +645,6 @@ namespace Pathfinding.Triangulation.Data
                 else if (currObjet is Intersection_EEdge e)
                 {
                     currEdge = e.edge;
-                    Debug.LogToFile($"insertConstraintSegment[2] edge {currEdge._id}");
                     edgeLeft = currEdge.get_nextLeftEdge();
                     if (edgeLeft.get_destinationVertex() == vertexUp)
                     {
@@ -974,7 +963,6 @@ namespace Pathfinding.Triangulation.Data
 
         public Vertex splitEdge(Edge edge, FixMath.F64 x, FixMath.F64 y)
         {
-            Debug.LogToFile($"splitEdge, edge:{edge._id}, fromConstraintSegments:{edge.fromConstraintSegments.Count}");
             this.__edgesToCheck.Clear();
             Edge eLeft_Right = edge;
             Edge eRight_Left = eLeft_Right.get_oppositeEdge();
@@ -1080,11 +1068,9 @@ namespace Pathfinding.Triangulation.Data
                 for (var i = 0; i < eLeft_Right.fromConstraintSegments.Count; ++i)
                 {
                     edges = eLeft_Right.fromConstraintSegments[i]._edges;
-                    Debug.LogToFile($"splitEdge, eLeft_Right._isConstrained, fromConstraintSegments:{eLeft_Right.fromConstraintSegments[i]._id}, edges:{edges.Count}");
                     index = edges.IndexOf(eLeft_Right);
                     if (index != -1)
                     {
-                        Debug.LogToFile($"splitEdge, eLeft_Right._isConstrained, remove eLeft_Right, index:{index}");
                         edges.RemoveAt(index);
                         edges.Insert(index, eLeft_Center);
                         edges.Insert(index + 1, eCenter_Right);
@@ -1092,7 +1078,6 @@ namespace Pathfinding.Triangulation.Data
                     else
                     {
                         index = edges.IndexOf(eRight_Left);
-                        Debug.LogToFile($"splitEdge, eLeft_Right._isConstrained, remove eRight_Left, index:{index}");
                         edges.RemoveAt(index);
                         edges.Insert(index, eRight_Center);
                         edges.Insert(index + 1, eCenter_Left);

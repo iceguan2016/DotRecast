@@ -33,7 +33,6 @@ namespace Pathfinding.Triangulation.Data
         {
             if (!_edges.Contains(edge) && !_edges.Contains(edge._oppositeEdge))
             {
-                Debug.LogToFile($"ConstraintSegment addEdge id:{_id}, edge_id:{edge._id}");
                 _edges.Add(edge);
             }
         }
@@ -46,7 +45,6 @@ namespace Pathfinding.Triangulation.Data
                 index = _edges.IndexOf(edge._oppositeEdge);
             if (index != -1)
             {
-                Debug.LogToFile($"ConstraintSegment removeEdge id:{_id}, edge_id:{edge._id}, index:{index}");
                 _edges.RemoveAt(index);
             }
         }
