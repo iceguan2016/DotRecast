@@ -84,6 +84,8 @@ namespace Volatile
         public void UpdateContacts(List<Manifold> manifolds)
         {
             ++frameCounter;
+
+            // process new contact
             for (var i = 0; i < manifolds.Count; ++i)
             {
                 Manifold manifold = manifolds[i];
