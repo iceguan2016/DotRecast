@@ -109,6 +109,7 @@ namespace Volatile
                         contact = contactInfos[contactIndex];    
                     }
 
+                    VoltDebug.Assert(contact != null);
                     // trigger BeginContact()
                     if (contact.m_bodyA.IsInWorld && contact.m_bodyB.IsInWorld)
                     {
@@ -117,6 +118,7 @@ namespace Volatile
                     }
                     else
                     {
+                        contactInfoPool.Deallocate(contact);
                         contactInfos.RemoveAt(contactIndex);
                     }
                 }
@@ -133,6 +135,7 @@ namespace Volatile
                     {
                         contact.Update(null, Listener);
                     }
+                    contactInfoPool.Deallocate(contact);
                     contactInfos.RemoveAt(i);
                 }
             }
