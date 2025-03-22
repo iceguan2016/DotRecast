@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using DotRecast.Pathfinding.Crowds;
+using Pathfinding.Crowds;
 using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;

@@ -7,7 +7,6 @@ using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 using Pathfinding.Crowds;
 using Pathfinding.Util;
-using DotRecast.Pathfinding.Crowds;
 
 namespace Pathfinding.Crowds
 {
