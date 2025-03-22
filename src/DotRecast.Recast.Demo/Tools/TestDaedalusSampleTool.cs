@@ -200,8 +200,8 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     private HxArray<hxDaedalus.data.Object> _obstacles = new HxArray<hxDaedalus.data.Object>();
 
     // crowd entity templates
-    public TemplateMovableEntity[] MovableEntityTemplates = new TemplateMovableEntity[] {
-        new TemplateMovableEntity()
+    public TMovableEntityTemplate[] MovableEntityTemplates = new TMovableEntityTemplate[] {
+        new TMovableEntityTemplate()
         {
             // 
             Radius = FixMath.F64.FromFloat(0.5f),
@@ -220,7 +220,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             AvoidNeighborAheadTime = FixMath.F64.FromFloat(1.0f),
             AvoidNeighborWeight = FixMath.F64.FromFloat(1.0f),
         },
-        new TemplateMovableEntity()
+        new TMovableEntityTemplate()
         {
             // 
             Radius = FixMath.F64.FromFloat(1.5f),

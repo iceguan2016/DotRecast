@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DotRecast.Pathfinding.Crowds;
 using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;
@@ -12,7 +13,7 @@ namespace Pathfinding.Crowds
 
         // 记录单位Id到索引对象的映射
         Dictionary<UniqueId, int> EntityId2Index =  new Dictionary<UniqueId, int>();
-        List<MovableEntity> MovableEntities = new List<MovableEntity>();
+        List<ICrowdEntityActor> Entities = new List<ICrowdEntityActor>();
 
         // pointer to database used to accelerate proximity queries
         private IProximityDatabase<IVehicle> _pd;
@@ -34,34 +35,52 @@ namespace Pathfinding.Crowds
         private bool _initialized = false;
         private uint _entityIdCounter = 1;
 
+        // physics world
+        private Volatile.VoltWorld _physicsWorld = null;
+
         public int FrameNo { get; set; }
+
+        public Volatile.VoltWorld PhysicsWorld { get { return _physicsWorld; } }
 
         public UniqueId CreateEntity(CreateEntityParams inParams)
         {
-            var entity = new MovableEntity(this, inParams.PathwayQuerier, inParams.LocalBoundaryQuerier, inParams.AnnotationService);
-            if (null == entity) return UniqueId.InvalidID;
+            ICrowdEntityActor entityActor = null;
+            if (inParams.Template is TMovableEntityTemplate)
+            {
+                entityActor = new MovableEntity(this, inParams.PathwayQuerier, inParams.LocalBoundaryQuerier, inParams.AnnotationService);
+            }
+            else if (inParams.Template is TUnMovableEntityTemplate)
+            {
+                entityActor = new UnMovableEntity(this);
+            }
 
-            entity.ID = inParams.EntityId.IsValid()? inParams.EntityId : new UniqueId(_entityIdCounter++);
+            if (null == entityActor)
+                return UniqueId.InvalidID;
+
+            entityActor.ID = inParams.EntityId.IsValid()? inParams.EntityId : new UniqueId(_entityIdCounter++);
 
             // map EntityId and Entity
-            MovableEntities.Add(entity);
-            var entityIndex = MovableEntities.Count - 1;
-            EntityId2Index.Add(entity.ID, entityIndex);
+            Entities.Add(entityActor);
+            var entityIndex = Entities.Count - 1;
+            EntityId2Index.Add(entityActor.ID, entityIndex);
             // Set template
-            entity.Template = inParams.Template;
+            entityActor.Template = inParams.Template;
 
             // position
-            entity.Position = inParams.SpawnPosition;
+            entityActor.SetPosition(inParams.SpawnPosition);
             // rotation
-            entity.Forward = inParams.SpawnRotation * Vector3Helpers.Forward;
-            entity.Side = inParams.SpawnRotation * Vector3Helpers.Right;
-            entity.Up = inParams.SpawnRotation * Vector3Helpers.Up;
+            entityActor.SetRotation(inParams.SpawnRotation);
 
-            // add to pd
-            entity.NewPD(_pd);
-            entity.OnCreate();
+            if (entityActor is MovableEntity entity)
+            {
+                // add to pd
+                entity.NewPD(_pd);
+            }
 
-            return entity.ID;
+            entityActor.OnCreate();
+            if (null != _physicsWorld) entityActor.OnCreatePhysicsState();
+
+            return entityActor.ID;
         }
 
         public bool DeleteEntity(UniqueId inEntityId)
@@ -69,19 +88,20 @@ namespace Pathfinding.Crowds
             if (EntityId2Index.TryGetValue(inEntityId, out var findIndex))
 	        {
                 var slotIndex = findIndex;
-                var entity = MovableEntities[slotIndex];
+                var entity = Entities[slotIndex];
 
-                entity.NewPD(null);
+                if (entity is MovableEntity movable) movable.NewPD(null);
+                if (null != _physicsWorld) entity.OnDestroyPhysicsState();
                 entity.OnDelete();
 
-                if ((slotIndex + 1) < MovableEntities.Count)
+                if ((slotIndex + 1) < Entities.Count)
                 {
-                    var lastSlotIndex = MovableEntities.Count - 1;
-                    var lastEntity = MovableEntities[lastSlotIndex];
+                    var lastSlotIndex = Entities.Count - 1;
+                    var lastEntity = Entities[lastSlotIndex];
                     var lastEntityId = lastEntity.ID;
                     EntityId2Index[lastEntityId] = slotIndex;
                 }
-                Utilities.RemoveAtSwap(MovableEntities, slotIndex);
+                Utilities.RemoveAtSwap(Entities, slotIndex);
                 EntityId2Index.Remove(inEntityId);
                 return true;
             }
@@ -92,7 +112,7 @@ namespace Pathfinding.Crowds
         {
             if (EntityId2Index.TryGetValue(inEntityId, out var entityIndex))
             {
-                return MovableEntities[entityIndex];
+                return Entities[entityIndex] as MovableEntity;
             }
             return null;
         }
@@ -114,7 +134,7 @@ namespace Pathfinding.Crowds
             var entities = new List<MovableEntity>();
             foreach ( var neighbor in result ) 
             {
-                if (neighbor is MovableEntity) entities.Add(neighbor as MovableEntity);
+                if (neighbor is MovableEntity neiEntity) entities.Add(neiEntity);
             }
             return entities.ToArray();
         }
@@ -126,12 +146,21 @@ namespace Pathfinding.Crowds
             FrameNo = 1;
 
             AllocPD();
+
+            // initialize physics world
+            var Damping = FixMath.F64.FromFloat(1.0f).ToF64();
+            _physicsWorld = new Volatile.VoltWorld(0, Damping);
+            _physicsWorld.DeltaTime = FixMath.F64.FromDouble(0.05).ToF64();
+            _physicsWorld.IterationCount = 5;
+
             return true;
         }
 
         public bool UnInitialize()
         {
             if (!_initialized) return true;
+
+            _physicsWorld = null;
 
             return true;
         }
@@ -141,40 +170,63 @@ namespace Pathfinding.Crowds
             ++FrameNo;
 
             // update movement
-            for ( var i = 0; i < MovableEntities.Count; i++ )
+            for ( var i = 0; i < Entities.Count; i++ )
             {
-                MovableEntities[i].OnUpdate(inDelteTime);
+                Entities[i].OnUpdate(inDelteTime);
+            }
+
+            // update physics
+            if (_physicsWorld != null)
+            {
+                for (var i = 0; i < Entities.Count; i++)
+                {
+                    Entities[i].OnPrePhysics();
+                }
+
+                _physicsWorld.Update();
+
+                for (var i = 0; i < Entities.Count; i++)
+                {
+                    Entities[i].OnPostPhysics();
+                }
             }
 
             // resolve collision
             int MaxIterNum = 4;
             for (int iter = 0; iter < MaxIterNum; ++iter)
             {
-                for (int i = 0; i < MovableEntities.Count; ++i)
+                for (int i = 0; i < Entities.Count; ++i)
                 {
-                    var entity = MovableEntities[i];
-                    if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
-                        continue;
+                    if (Entities[i] is MovableEntity entity)
+                    {
+                        if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
+                            continue;
 
-                    entity.Displacement = entity.ResolveCollisionWithNeighbors();
+                        entity.Displacement = entity.ResolveCollisionWithNeighbors();
+                    }
                 }
 
-                for (int i = 0; i < MovableEntities.Count; ++i)
+                for (int i = 0; i < Entities.Count; ++i)
                 {
-                    var entity = MovableEntities[i];
-                    if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
-                        continue;
+                    if (Entities[i] is MovableEntity entity)
+                    {
+                        if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
+                            continue;
 
-                    entity.Position += entity.Displacement;
+                        entity.Position += entity.Displacement;
+                    }
                 }
             }
         }
 
         public void ForEachEntity(System.Action<MovableEntity> InAction)
         {
-            for (var i = 0; i < MovableEntities.Count; i++)
+            for (var i = 0; i < Entities.Count; i++)
             {
-                InAction(MovableEntities[i]);
+                if (Entities[i] is MovableEntity entity)
+                {
+                    InAction(entity);
+                }
             }
         }
     }

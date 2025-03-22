@@ -43,8 +43,8 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     private List<Object> _obstacles = new List<Object>();
 
     // crowd entity templates
-    public TemplateMovableEntity[] MovableEntityTemplates = new TemplateMovableEntity[] {
-        new TemplateMovableEntity()
+    public TMovableEntityTemplate[] MovableEntityTemplates = new TMovableEntityTemplate[] {
+        new TMovableEntityTemplate()
         {
             // 
             Radius = FixMath.F64.FromFloat(0.5f),
@@ -63,7 +63,7 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             AvoidNeighborAheadTime = FixMath.F64.FromFloat(1.0f),
             AvoidNeighborWeight = FixMath.F64.FromFloat(1.0f),
         },
-        new TemplateMovableEntity()
+        new TMovableEntityTemplate()
         {
             // 
             Radius = FixMath.F64.FromFloat(1.5f),
@@ -157,7 +157,7 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         //hxObject._x = infos[i * 5 + 0];
         //hxObject._y = infos[i * 5 + 1];
 
-        Debug.LogToFile($"BuildFixedGraphMesh pos:({hxObject._x}, {hxObject._y}), scale:({hxObject._scaleX}, {hxObject._scaleY}), rotation:{hxObject._rotation}");
+        // Debug.LogToFile($"BuildFixedGraphMesh pos:({hxObject._x}, {hxObject._y}), scale:({hxObject._scaleX}, {hxObject._scaleY}), rotation:{hxObject._rotation}");
 
         Mesh.insertObject(hxObject);
         _obstacles.Add(hxObject);

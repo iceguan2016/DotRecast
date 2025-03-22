@@ -7,6 +7,7 @@ using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 using Pathfinding.Crowds;
 using Pathfinding.Util;
+using DotRecast.Pathfinding.Crowds;
 
 namespace Pathfinding.Crowds
 {
@@ -24,7 +25,7 @@ namespace Pathfinding.Crowds
 
         Count,
     }
-    public class TemplateMovableEntity
+    public class TMovableEntityTemplate : TEntityTemplate
     {
         // radius
         public FixMath.F64 Radius = FixMath.F64.FromFloat(0.5f);
@@ -62,7 +63,7 @@ namespace Pathfinding.Crowds
         public bool[] DebugVec3Toggles = new bool[(int)eDebugVec3Item.Count];
     }
 
-    public class MovableEntity : SimpleVehicle
+    public class MovableEntity : SimpleVehicle, ICrowdEntityActor
     {
         // 单位状态
         public enum  eEntityState
@@ -75,15 +76,25 @@ namespace Pathfinding.Crowds
         private ITokenForProximityDatabase<IVehicle> _proximityToken;
 
         // Config values
-        public override FixMath.F64 MaxForce { get { return Template.MaxForce; } }
-        public override FixMath.F64 MaxSpeed { get { return Template.MaxSpeed; } }
+        public override FixMath.F64 MaxForce { get { return (Template as TMovableEntityTemplate).MaxForce; } }
+        public override FixMath.F64 MaxSpeed { get { return (Template as TMovableEntityTemplate).MaxSpeed; } }
 
-        public FixMath.F64 QueryLocalBoundaryRadius { get { return Template.AvoidObstacleAheadTime * Template.MaxSpeed + Template.Radius * 3; } }
-        public FixMath.F64 QueryLocalNeighborRadius { get { return Template.AvoidNeighborAheadTime * Template.MaxSpeed + Template.Radius * 3; } }
+        public FixMath.F64 QueryLocalBoundaryRadius { 
+            get {
+                var template = Template as TMovableEntityTemplate;
+                return template.AvoidObstacleAheadTime * template.MaxSpeed + template.Radius * 3; 
+            } 
+        }
+        public FixMath.F64 QueryLocalNeighborRadius { 
+            get {
+                var template = Template as TMovableEntityTemplate;
+                return template.AvoidNeighborAheadTime * template.MaxSpeed + template.Radius * 3; 
+            } 
+        }
 
-        public TemplateMovableEntity Template { get; set; }
+        public TEntityTemplate Template { get; set; }
 
-        public IMovableEntityManager EntityManager { get; private set; }
+        public IMovableEntityManager EntityManager { get; set; }
 
         public ILocalBoundaryQuerier LocalBoundaryQuerier { get; private set; }
 
@@ -143,9 +154,31 @@ namespace Pathfinding.Crowds
         // state bits
         private uint                _stateBitsValue = 0;
 
+        // physics body
+        private Volatile.VoltBody   _physicsBody = null;
+
         public void SetEntityState(eEntityState inState) { _stateBitsValue |= (uint)(1 << (int)inState); }
         public void ClearEntityState(eEntityState inState) { _stateBitsValue &= ~(uint)(1 << (int)inState); }
         public bool HasEntityState(eEntityState inState) { return (_stateBitsValue & (uint)(1 << (int)inState)) > 0; }
+
+        public void SetPosition(FixMath.F64Vec3 position)
+        {
+            Position = position;
+        }
+        public FixMath.F64Vec3 GetPosition()
+        {
+            return Position;
+        }
+        public void SetRotation(FixMath.F64Quat rotation)
+        {
+            Forward = rotation * Vector3Helpers.Forward;
+            Side = rotation * Vector3Helpers.Right;
+            Up = rotation * Vector3Helpers.Up;
+        }
+        public FixMath.F64Quat GetRotation()
+        {
+            return FixMath.F64Quat.LookRotation(Forward, Up);
+        }
 
         // constructor
         public MovableEntity(IMovableEntityManager manager, 
@@ -191,18 +224,21 @@ namespace Pathfinding.Crowds
 
         public void OnTemplatePropertyChanged()
         {
-            Radius = Template.Radius;
+            var template = Template as TMovableEntityTemplate; 
+            Radius = template.Radius;
         }
 
         public virtual void OnCreate()
         {
+            var template = Template as TMovableEntityTemplate;
+
             _boundarySegements = new BoundarySegement[MaxBoundarySegmentNum];
             Array.Fill(_boundarySegements, default);
             _boundarySegmentNum = 0;
 
             // initial slow speed
             Speed = FixMath.F64.Zero;
-            Radius = Template.Radius;
+            Radius = template.Radius;
 
             if (_proximityToken != null)
                 _proximityToken.UpdateForNewPosition(Position);
@@ -219,6 +255,25 @@ namespace Pathfinding.Crowds
         {
             Debuger = null;
         }
+
+        public void OnCreatePhysicsState()
+        {
+            var physicsWorld = EntityManager.PhysicsWorld;
+            // 创建Shape
+            var shape = physicsWorld.CreateCircleWorldSpace(Position.ToVoltVec2(), Radius.ToF64());
+            // 创建Body
+            _physicsBody = ICrowdEntityActor.CreatePhysicsBody(this, new Volatile.VoltShape[] { shape });
+        }
+
+        public void OnDestroyPhysicsState()
+        {
+            // 销毁物理体
+            ICrowdEntityActor.DestroyPhysicsBody(this, _physicsBody);
+            _physicsBody = null;
+        }
+
+        public virtual void OnPrePhysics() { }
+        public virtual void OnPostPhysics() { }
 
         public virtual void OnUpdate(FixMath.F64 inDeltaTime)
         {
@@ -286,6 +341,8 @@ namespace Pathfinding.Crowds
 
         public virtual void OnDraw(bool selected)
         {
+            var template = Template as TMovableEntityTemplate;
+
             System.Func<FixMath.F64Vec3, FixMath.F64, FixMath.F64Vec2, FixMath.F64Vec2, FixMath.F64Vec3, FixMath.F64, bool> 
                 drawVec3 = (vec3, yOffset, inRange, clampRange, color, alpha) => 
             {
@@ -335,7 +392,7 @@ namespace Pathfinding.Crowds
                 }
 
                 // 4. draw avoid neighbor check distance
-                var testPoint = PredictFuturePosition(Template.AvoidNeighborAheadTime);
+                var testPoint = PredictFuturePosition(template.AvoidNeighborAheadTime);
                 Draw.drawLineAlpha(annotation, Position, testPoint, Colors.Yellow, FixMath.F64.FromFloat(0.4f));
 
                 // 5. draw avoid info
@@ -410,23 +467,23 @@ namespace Pathfinding.Crowds
                 var forceRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxForce);
                 var clampRange = new FixMath.F64Vec2(FixMath.F64.Zero, Radius * 3);
 
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.Velocity]) 
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.Velocity]) 
                     drawVec3(Velocity, FixMath.F64.FromFloat(1.0f), velocityRange, clampRange, Colors.White, FixMath.F64.One);
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.ForwardMoveForce]) 
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.ForwardMoveForce]) 
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.ForwardMoveForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray10, FixMath.F64.One);
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.PathFollowForce])
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.PathFollowForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.PathFollowForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray20, FixMath.F64.One);
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.AvoidNeighborForce])
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.AvoidNeighborForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.AvoidNeighborForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray30, FixMath.F64.One);
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.AvoidObstacleForce])
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.AvoidObstacleForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.AvoidObstacleForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray40, FixMath.F64.One);
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.FlockSeparationForce])
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.FlockSeparationForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.FlockSeparationForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray50, FixMath.F64.One);
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.FlockAligmentForce])
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.FlockAligmentForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.FlockAligmentForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray60, FixMath.F64.One);
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.FlockCohesionForce])
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.FlockCohesionForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.FlockCohesionForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray70, FixMath.F64.One);
-                if (Template.DebugVec3Toggles[(int)eDebugVec3Item.TotalSteerForce])
+                if (template.DebugVec3Toggles[(int)eDebugVec3Item.TotalSteerForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.TotalSteerForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray80, FixMath.F64.One);
             }
         }
@@ -435,6 +492,8 @@ namespace Pathfinding.Crowds
         // or neighbors if needed, otherwise follow the path and wander
         FixMath.F64Vec3 determineCombinedSteering(FixMath.F64 elapsedTime)
         {
+            var template = Template as TMovableEntityTemplate;
+
             if (null == EntityManager || null == targetLocation)
                 return FixMath.F64Vec3.Zero;
 
@@ -458,8 +517,8 @@ namespace Pathfinding.Crowds
             {
                 if (null != Pathway)
                 {
-                    var predictionTime = Template.FollowPathAheadTime;
-                    pathFollowForce = this.SteerToFollowPath(_pathDirection, predictionTime, Pathway, MaxSpeed, out var currentPathDistance, annotation) * Template.FollowPathWeight;
+                    var predictionTime = template.FollowPathAheadTime;
+                    pathFollowForce = this.SteerToFollowPath(_pathDirection, predictionTime, Pathway, MaxSpeed, out var currentPathDistance, annotation) * template.FollowPathWeight;
 
                     // float pathDistanceOffset = (_pathDirection ? 1 : -1) * predictionTime * Speed;
                     // referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + FixMath.F64.FromFloat(0.5f));
@@ -467,7 +526,7 @@ namespace Pathfinding.Crowds
 
                 if (pathFollowForce == FixMath.F64Vec3.Zero)
                 {
-                    pathFollowForce = SteerForSeek(targetLocation.Value) * Template.FollowPathWeight;
+                    pathFollowForce = SteerForSeek(targetLocation.Value) * template.FollowPathWeight;
                 }
 
                 pathFollowForce = pathFollowForce.TruncateLength(MaxForce);
@@ -500,7 +559,7 @@ namespace Pathfinding.Crowds
                 collisionAvoidance = collisionAvoidance * Template.AvoidNeighborWeight;
 #else
                 _avoidNeghborIDs.Clear();
-                _avoidQuerySystem.Init(ID, Position.Cast2D(), Radius, Velocity.Cast2D(), Template.AvoidNeighborAheadTime);
+                _avoidQuerySystem.Init(ID, Position.Cast2D(), Radius, Velocity.Cast2D(), template.AvoidNeighborAheadTime);
                 for (var i = 0; i < _neighbors.Count; ++i)
                 {
                     var neighbor = _neighbors[i] as MovableEntity;
@@ -526,7 +585,7 @@ namespace Pathfinding.Crowds
                 //    _avoidNeighborDirection = avoidDirection;
                 //}
                 var lateral = Vector3Helpers.PerpendicularComponent(avoidDirection, Forward);
-                collisionAvoidance = FixMath.F64Vec3.NormalizeFast(lateral) * MaxForce * Template.AvoidNeighborWeight;
+                collisionAvoidance = FixMath.F64Vec3.NormalizeFast(lateral) * MaxForce * template.AvoidNeighborWeight;
 #endif
 
 #if ENABLE_STEER_AGENT_DEBUG
@@ -560,7 +619,7 @@ namespace Pathfinding.Crowds
 
                 if (_boundaryObstacles.Count > 0)
                 {
-                    obstacleAvoidance = SteerToAvoidObstacles(Template.AvoidObstacleAheadTime, _boundaryObstacles, ref _avoidObstacleInfo) * Template.AvoidObstacleWeight;
+                    obstacleAvoidance = SteerToAvoidObstacles(template.AvoidObstacleAheadTime, _boundaryObstacles, ref _avoidObstacleInfo) * template.AvoidObstacleWeight;
 
 #if ENABLE_STEER_AGENT_DEBUG
                     info.obstacleForce = obstacleAvoidance * forceScale;
@@ -577,7 +636,7 @@ namespace Pathfinding.Crowds
             {
                 var forwardMoveForce = FixMath.F64Vec3.Zero;
                 {
-                    forwardMoveForce = Forward * MaxForce * Template.ForwardMoveWeight;
+                    forwardMoveForce = Forward * MaxForce * template.ForwardMoveWeight;
                     steeringForce += forwardMoveForce;
                 }
                 _debugVec3Items[(int)eDebugVec3Item.ForwardMoveForce] = forwardMoveForce;
@@ -601,21 +660,22 @@ namespace Pathfinding.Crowds
 
         FixMath.F64Vec3 steerToFlock(FixMath.F64 elapsedTime)
         {
+            var template = Template as TMovableEntityTemplate;
             // determine each of the three component behaviors of flocking
-            var separation = SteerForSeparation(Template.SeparationRadius,
-                                                Template.SeparationAngle,
+            var separation = SteerForSeparation(template.SeparationRadius,
+                                                template.SeparationAngle,
                                                 _neighbors);
-            var alignment = SteerForAlignment(Template.AlignmentRadius,
-                                              Template.AlignmentAngle,
+            var alignment = SteerForAlignment(template.AlignmentRadius,
+                                              template.AlignmentAngle,
                                               _neighbors);
-            var cohesion = SteerForCohesion(Template.CohesionRadius,
-                                            Template.CohesionAngle,
+            var cohesion = SteerForCohesion(template.CohesionRadius,
+                                            template.CohesionAngle,
                                             _neighbors);
 
             // apply weights to components (save in variables for annotation)
-            var separationForce = separation * Template.SeparationWeight;
-            var alignmentForce = alignment * Template.AlignmentWeight;
-            var cohesionForce = cohesion * Template.CohesionWeight;
+            var separationForce = separation * template.SeparationWeight;
+            var alignmentForce = alignment * template.AlignmentWeight;
+            var cohesionForce = cohesion * template.CohesionWeight;
 
             _debugVec3Items[(int)eDebugVec3Item.FlockSeparationForce] = separationForce;
             _debugVec3Items[(int)eDebugVec3Item.FlockAligmentForce] = alignmentForce;
@@ -659,6 +719,8 @@ namespace Pathfinding.Crowds
 
         public override FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, PathIntersection? intersection, ref IVehicle.FAvoidNeighborInfo info) 
         {
+            var template = Template as TMovableEntityTemplate;
+
             // 选择最优避让方向规则：
             // (1) 与desiredVelocity方向最接近
             // (2) 和上一次选择side保持一致, 如果为none，则检查_avoidObstacleInfo的side，与其保持一致
@@ -702,7 +764,7 @@ namespace Pathfinding.Crowds
                     else
                     {
                         // 选择不撞墙的方向
-                        var minDistanceToCollision = Template.AvoidObstacleAheadTime * Speed;
+                        var minDistanceToCollision = template.AvoidObstacleAheadTime * Speed;
                         var testDirs = new FixMath.F64Vec3[] { left, right };
                         var testSides = new IVehicle.eAvoidSide[] { IVehicle.eAvoidSide.Left, IVehicle.eAvoidSide.Right };
 

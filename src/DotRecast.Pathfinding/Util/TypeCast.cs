@@ -37,5 +37,37 @@ namespace Pathfinding.Util
         {
             return new FixMath.F64Vec2(v.X, v.Z);
         }
+
+        public static FixMath.NET.Fix64 ToF64(this FixMath.F32 InF32)
+        {
+            return FixMath.NET.Fix64.FromRaw(((long)InF32.Raw) << 16);
+        }
+        public static FixMath.NET.Fix64 ToF64(this FixMath.F64 InF64)
+        {
+            return FixMath.NET.Fix64.FromRaw(InF64.Raw);
+        }
+        public static FixMath.F32 ToF32(this FixMath.NET.Fix64 InF64)
+        {
+            return FixMath.F32.FromRaw((int)(InF64.RawValue >> 16));
+        }
+        public static FixMath.F64 ToF64(this FixMath.NET.Fix64 InF64)
+        {
+            return FixMath.F64.FromRaw(InF64.RawValue);
+        }
+
+        public static Volatile.VoltVector2 ToVoltVec2(this FixMath.F64Vec3 InVec3)
+        {
+            return new Volatile.VoltVector2(InVec3.X.ToF64(), InVec3.Z.ToF64());
+        }
+
+        public static Volatile.VoltVector2 ToVoltVec2(this FixMath.F64Vec2 InVec2)
+        {
+            return new Volatile.VoltVector2(InVec2.X.ToF64(), InVec2.Y.ToF64());
+        }
+
+        public static FixMath.F64Vec3 ToVec3(this Volatile.VoltVector2 InVec2, FixMath.F64 InHeight)
+        {
+            return new FixMath.F64Vec3(InVec2.x.ToF64(), InHeight, InVec2.y.ToF64());
+        }
     }
 }
