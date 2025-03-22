@@ -160,6 +160,29 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         // Debug.LogToFile($"BuildFixedGraphMesh pos:({hxObject._x}, {hxObject._y}), scale:({hxObject._scaleX}, {hxObject._scaleY}), rotation:{hxObject._rotation}");
 
         Mesh.insertObject(hxObject);
+
+        // 添加到物理层
+        var angle = hxObject._rotation;
+        var cos = FixMath.F64.CosFast(angle);
+        var sin = FixMath.F64.SinFast(angle);
+        var xHalfSize = hxObject._scaleX / 2;
+        var yHalfSize = hxObject._scaleY / 2;
+        var template = new TUnMovableEntityTemplate() 
+        { 
+            DirU = new FixMath.F64Vec2(cos, sin),
+            DirV = new FixMath.F64Vec2(-sin, cos),
+            HalfExtent = new FixMath.F64Vec2(xHalfSize, yHalfSize),
+        };
+
+        var param = new CreateEntityParams() 
+        {
+            SpawnPosition = new FixMath.F64Vec3(hxObject._x, MapHeight, hxObject._y),
+            SpawnRotation = FixMath.F64Quat.Identity,
+
+            Template = template,
+        };
+        _entityManager.CreateEntity(param);
+
         _obstacles.Add(hxObject);
     }
 
