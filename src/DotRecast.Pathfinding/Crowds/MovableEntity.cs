@@ -271,8 +271,44 @@ namespace Pathfinding.Crowds
             _physicsBody = null;
         }
 
-        public virtual void OnPrePhysics() { }
-        public virtual void OnPostPhysics() { }
+        public virtual void OnPrePhysics()
+        {
+            // 设置逻辑层位置到物理层
+            if (null != _physicsBody)
+            {
+                var position = GetPosition();
+                var rotation = GetRotation();
+
+
+                if (FixMath.F64Quat.ToEulerAnglesDegree(rotation, out var Eluer))
+                {
+                    _physicsBody.Set(position.ToVoltVec2(), Eluer.Y.ToF64());
+                }
+                else
+                {
+                    _physicsBody.Set(position.ToVoltVec2(), FixMath.NET.Fix64.Zero);
+                }
+
+                _physicsBody.LinearVelocity = Volatile.VoltVector2.zero;
+            }
+        }
+
+        public virtual void OnPostPhysics() 
+        {
+            if (null != _physicsBody)
+            {
+                var NewPosition = _physicsBody.Position.ToVec3(Position.Y);
+                // var NewRotation = FixMath.F64Quat.FromYawPitchRoll(
+                //    FixMath.F64.DegToRad(PhysicsBody.Angle.ToF64()),
+                //    FixMath.F64.Zero,
+                //    FixMath.F64.Zero);
+                // var NewVelocity = PhysicsBody.LinearVelocity.ToVec3(FixMath.F32.Zero);
+
+                SetPosition(NewPosition);
+                // SetRotation(NewRotation);
+                // SetVelocity(NewVelocity);
+            }
+        }
 
         public virtual void OnUpdate(FixMath.F64 inDeltaTime)
         {
