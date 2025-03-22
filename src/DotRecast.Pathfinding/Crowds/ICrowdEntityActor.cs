@@ -32,12 +32,38 @@ namespace Pathfinding.Crowds
 
         public static Volatile.VoltBody CreatePhysicsBody(ICrowdEntityActor entity, params Volatile.VoltShape[] shapesToAdd)
         {
-            return null;
+            var physicsWorld = entity.EntityManager.PhysicsWorld;
+            if (null == physicsWorld)
+                return null;
+
+            var position = entity.GetPosition().ToVoltVec2();
+            FixMath.F64Quat.ToEulerAnglesRad(entity.GetRotation(), out var euler);
+            var angle = euler.Y.ToF64();
+            // 创建Body
+            Volatile.VoltBody body = null;
+            if (entity is UnMovableEntity)
+            {
+                body = physicsWorld.CreateStaticBody(position, angle, shapesToAdd);
+            }
+            else
+            {
+                body = physicsWorld.CreateDynamicBody(position, angle, shapesToAdd);
+            }
+            if (null != body) body.UserData = entity;
+            return body;
         }
 
         public static void DestroyPhysicsBody(ICrowdEntityActor entity, Volatile.VoltBody body)
         {
-            
+            var physicsWorld = entity.EntityManager.PhysicsWorld;
+            if (null == physicsWorld)
+                return;
+
+            if (null != body)
+            {
+                body.UserData = null;
+                physicsWorld.RemoveBody(body);
+            }
         }
     }
 }
