@@ -4,12 +4,50 @@ using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;
 using SharpSteer2.Helpers;
+using Volatile;
 
 namespace Pathfinding.Crowds
 {
-    public class MovableEntityManager : IMovableEntityManager
+    public class MovableEntityManager : IMovableEntityManager, IContactListener
     {
+        #region IContactListener
+        List<(UniqueId, UniqueId)> ContactPairs = new List<(UniqueId, UniqueId)> ();
+        public void BeginContact(ContactInfo contact)
+        {
+            if (contact != null) 
+            {
+                var EntityA = contact.m_bodyA.UserData as ICrowdEntityActor;              
+                var EntityB = contact.m_bodyB.UserData as ICrowdEntityActor;
+                if (null != EntityA && null != EntityB)
+                {
+                    var Index = ContactPairs.FindIndex(e => (e.Item1 == EntityA.ID &&  e.Item2 == EntityB.ID || e.Item1 == EntityB.ID && e.Item2 == EntityA.ID));
+                    if (-1 == Index) ContactPairs.Add((EntityA.ID, EntityB.ID));
+                }
+            }
+        }
+
+        public void EndContact(ContactInfo contact)
+        {
+            if (contact != null)
+            {
+                var EntityA = contact.m_bodyA.UserData as ICrowdEntityActor;
+                var EntityB = contact.m_bodyB.UserData as ICrowdEntityActor;
+                if (null != EntityA && null != EntityB)
+                {
+                    var Index = ContactPairs.FindIndex(e => (e.Item1 == EntityA.ID && e.Item2 == EntityB.ID || e.Item1 == EntityB.ID && e.Item2 == EntityA.ID));
+                    ContactPairs.RemoveAt(Index);
+                }
+            }
+        }
+        #endregion
+
         public const float WORLD_RADIUS = 50;
+        public const int TICK_FRAME_PERSECOND = 20;
+        public FixMath.F64 TICK_FRAME_DELTATIME = FixMath.F64.FromDouble(1.0 / TICK_FRAME_PERSECOND);
+        public const int PHYSICS_SUBSTEP_NUM = 5;
+        public FixMath.F64 PHYSICS_FRAME_DELTATIME = FixMath.F64.FromDouble(1.0 / (TICK_FRAME_PERSECOND * PHYSICS_SUBSTEP_NUM));
+
+        private FixMath.F64 _tickElapsedTime = FixMath.F64.Zero;
 
         // 记录单位Id到索引对象的映射
         Dictionary<UniqueId, int> EntityId2Index =  new Dictionary<UniqueId, int>();
@@ -152,8 +190,10 @@ namespace Pathfinding.Crowds
             // initialize physics world
             var Damping = FixMath.F64.FromFloat(1.0f).ToF64();
             _physicsWorld = new Volatile.VoltWorld(0, Damping);
-            _physicsWorld.DeltaTime = FixMath.F64.FromDouble(0.05).ToF64();
+            _physicsWorld.DeltaTime = PHYSICS_FRAME_DELTATIME.ToF64();
             _physicsWorld.IterationCount = 5;
+
+            _physicsWorld.SetContactListener(this);
 
             return true;
         }
@@ -162,6 +202,7 @@ namespace Pathfinding.Crowds
         {
             if (!_initialized) return true;
 
+            _physicsWorld.SetContactListener(null);
             _physicsWorld = null;
 
             return true;
@@ -169,10 +210,22 @@ namespace Pathfinding.Crowds
 
         public void Tick(FixMath.F64 inDelteTime)
         {
+            _tickElapsedTime += inDelteTime;
+
+            while (_tickElapsedTime > TICK_FRAME_DELTATIME)
+            {
+                _tickElapsedTime -= TICK_FRAME_DELTATIME;
+
+                TickInteral(TICK_FRAME_DELTATIME);
+            }
+        }
+
+        public void TickInteral(FixMath.F64 inDelteTime)
+        {
             ++FrameNo;
 
             // update movement
-            for ( var i = 0; i < Entities.Count; i++ )
+            for (var i = 0; i < Entities.Count; i++)
             {
                 Entities[i].OnUpdate(inDelteTime);
             }
@@ -180,42 +233,47 @@ namespace Pathfinding.Crowds
             // update physics
             if (_physicsWorld != null)
             {
-                for (var i = 0; i < Entities.Count; i++)
+                for (var step = 0; step < PHYSICS_SUBSTEP_NUM; ++step)
                 {
-                    Entities[i].OnPrePhysics();
-                }
-
-                _physicsWorld.Update();
-
-                for (var i = 0; i < Entities.Count; i++)
-                {
-                    Entities[i].OnPostPhysics();
-                }
-            }
-
-            // resolve collision
-            int MaxIterNum = 4;
-            for (int iter = 0; iter < MaxIterNum; ++iter)
-            {
-                for (int i = 0; i < Entities.Count; ++i)
-                {
-                    if (Entities[i] is MovableEntity entity)
+                    for (var i = 0; i < Entities.Count; i++)
                     {
-                        if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
-                            continue;
+                        Entities[i].OnPrePhysics();
+                    }
 
-                        entity.Displacement = entity.ResolveCollisionWithNeighbors();
+                    _physicsWorld.Update();
+
+                    for (var i = 0; i < Entities.Count; i++)
+                    {
+                        Entities[i].OnPostPhysics();
                     }
                 }
-
-                for (int i = 0; i < Entities.Count; ++i)
+            }
+            else
+            {
+                // resolve collision
+                int MaxIterNum = 4;
+                for (int iter = 0; iter < MaxIterNum; ++iter)
                 {
-                    if (Entities[i] is MovableEntity entity)
+                    for (int i = 0; i < Entities.Count; ++i)
                     {
-                        if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
-                            continue;
+                        if (Entities[i] is MovableEntity entity)
+                        {
+                            if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
+                                continue;
 
-                        entity.Position += entity.Displacement;
+                            entity.Displacement = entity.ResolveCollisionWithNeighbors();
+                        }
+                    }
+
+                    for (int i = 0; i < Entities.Count; ++i)
+                    {
+                        if (Entities[i] is MovableEntity entity)
+                        {
+                            if (!entity.HasEntityState(MovableEntity.eEntityState.Moving))
+                                continue;
+
+                            entity.Position += entity.Displacement;
+                        }
                     }
                 }
             }
@@ -226,6 +284,14 @@ namespace Pathfinding.Crowds
             for (var i = 0; i < Entities.Count; i++)
             {
                 InAction(Entities[i]);
+            }
+        }
+
+        public void ForEachContactPair(System.Action<UniqueId, UniqueId> InAction)
+        {
+            for (var i = 0; i < ContactPairs.Count; ++i)
+            {
+                InAction(ContactPairs[i].Item1, ContactPairs[i].Item2);
             }
         }
     }

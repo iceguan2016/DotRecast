@@ -19,6 +19,7 @@ using Pathfinding.Triangulation.Factories;
 using Pathfinding.Triangulation.AI;
 using Volatile;
 using FixMath.NET;
+using System.Security.Principal;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -615,8 +616,14 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         }
     }
 
+    public bool IsDrawNavmeshGrpah = false;
+    public bool IsDrawPhysicsWorld = false;
+
     public void Layout()
     {
+        ImGui.Checkbox("Draw Navmesh Graph", ref IsDrawNavmeshGrpah);
+        ImGui.Checkbox("Draw Physics World", ref IsDrawPhysicsWorld);
+
         var propertyChanged = false;
 
         if (ImGui.Button("Dump entity position"))
@@ -916,7 +923,10 @@ public class TestFixedCrowdSampleTool : ISampleTool
             DebugDraw.DuRGBA(255, 255, 255, 128), 1.0f);
 
         // draw graph mesh
-        if (null != _tool.Mesh) _view.drawMesh(_tool.Mesh);
+        if (_tool.IsDrawNavmeshGrpah && null != _tool.Mesh) 
+        {
+            _view.drawMesh(_tool.Mesh);
+        }
 
         if (m_mode == TestDaedalusToolMode.PATH_FINDER)
         {
@@ -959,18 +969,37 @@ public class TestFixedCrowdSampleTool : ISampleTool
         _tool.DrawCrowdEntity();
 
         // draw physics body
+        Volatile.Color edgeColor = Volatile.Color.white;
+        Volatile.Color normalColor = Volatile.Color.green;
+        Volatile.Color bodyOriginColor = Volatile.Color.blue;
+        Volatile.Color shapeOriginColor = Volatile.Color.yellow;
+        Volatile.Color bodyAabbColor = Volatile.Color.magenta;
+        Volatile.Color shapeAabbColor = Volatile.Color.cyan;
+
+        if (_tool.IsDrawPhysicsWorld)
         {
             _tool.EntityManager.ForEachEntity((InEntity) =>
             {
                 if (null != InEntity && null != InEntity.PhysicsBody)
                 {
-                    Volatile.Color edgeColor        = Volatile.Color.white;
-                    Volatile.Color normalColor      = Volatile.Color.green;
-                    Volatile.Color bodyOriginColor  = Volatile.Color.blue;
-                    Volatile.Color shapeOriginColor = Volatile.Color.yellow;
-                    Volatile.Color bodyAabbColor    = Volatile.Color.magenta;
-                    Volatile.Color shapeAabbColor   = Volatile.Color.cyan;
                     InEntity.PhysicsBody.GizmoDraw(_physicsWorldDrawer, edgeColor, normalColor, bodyOriginColor, shapeOriginColor, bodyAabbColor, shapeAabbColor, FixMath.NET.Fix64.One);
+                }
+            });
+        }
+
+        // draw contact pairs
+        {
+            _tool.EntityManager.ForEachContactPair((EntityIDA, EntityIDB)  => { 
+                var EntityA = _tool.EntityManager.GetEntityById(EntityIDA);
+                if (null != EntityA && null != EntityA.PhysicsBody)
+                {
+                    EntityA.PhysicsBody.GizmoDraw(_physicsWorldDrawer, edgeColor, normalColor, bodyOriginColor, shapeOriginColor, bodyAabbColor, shapeAabbColor, FixMath.NET.Fix64.One);
+                }
+                
+                var EntityB = _tool.EntityManager.GetEntityById(EntityIDB);
+                if (null != EntityB && null != EntityB.PhysicsBody)
+                {
+                    EntityB.PhysicsBody.GizmoDraw(_physicsWorldDrawer, edgeColor, normalColor, bodyOriginColor, shapeOriginColor, bodyAabbColor, shapeAabbColor, FixMath.NET.Fix64.One);
                 }
             });
         }

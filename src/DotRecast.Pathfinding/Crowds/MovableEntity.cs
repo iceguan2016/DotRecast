@@ -273,6 +273,8 @@ namespace Pathfinding.Crowds
             _physicsBody = null;
         }
 
+        // 是否是物理驱动模式
+        private bool _phyiscsDrivenMode = false;
         public virtual void OnPrePhysics()
         {
             // 设置逻辑层位置到物理层
@@ -282,16 +284,23 @@ namespace Pathfinding.Crowds
                 var rotation = GetRotation();
 
 
-                if (FixMath.F64Quat.ToEulerAnglesDegree(rotation, out var Eluer))
+                if (_phyiscsDrivenMode)
                 {
-                    _physicsBody.Set(position.ToVoltVec2(), Eluer.Y.ToF64());
+                    _physicsBody.LinearVelocity = Velocity.ToVoltVec2();
                 }
                 else
                 {
-                    _physicsBody.Set(position.ToVoltVec2(), FixMath.NET.Fix64.Zero);
-                }
+                    if (FixMath.F64Quat.ToEulerAnglesDegree(rotation, out var Eluer))
+                    {
+                        _physicsBody.Set(position.ToVoltVec2(), Eluer.Y.ToF64());
+                    }
+                    else
+                    {
+                        _physicsBody.Set(position.ToVoltVec2(), FixMath.NET.Fix64.Zero);
+                    }
 
-                _physicsBody.LinearVelocity = Volatile.VoltVector2.zero;
+                    _physicsBody.LinearVelocity = Volatile.VoltVector2.zero;
+                }
             }
         }
 
@@ -417,7 +426,7 @@ namespace Pathfinding.Crowds
                 }
 
                 // 2. draw QueryLocalNeighborRadius
-                Draw.drawCircleOrDisk(annotation, QueryLocalNeighborRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
+                // Draw.drawCircleOrDisk(annotation, QueryLocalNeighborRadius, FixMath.F64Vec3.Up, Position, Colors.Yellow, 10, false, false);
 
                 // 3. draw local boundary segments
                 if (_boundaryObstacles.Count > 0)

@@ -37,6 +37,7 @@ namespace Pathfinding.Crowds
 
         // entity iteration
         void ForEachEntity(System.Action<ICrowdEntityActor> InAction);
+        void ForEachContactPair(System.Action<UniqueId, UniqueId> InAction);
 
         // tick
         void Tick(FixMath.F64 inDelteTime);

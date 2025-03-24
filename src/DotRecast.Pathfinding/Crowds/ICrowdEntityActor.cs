@@ -46,7 +46,7 @@ namespace Pathfinding.Crowds
             {
                 body = physicsWorld.CreateStaticBody(position, angle, shapesToAdd);
             }
-            else
+            else if (entity is MovableEntity)
             {
                 body = physicsWorld.CreateDynamicBody(position, angle, shapesToAdd);
             }
