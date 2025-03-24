@@ -4,8 +4,13 @@ using System.Collections.Generic;
 namespace Volatile
 {
     // 管理Contact事件通知
-    public class ContactInfo
+    public class ContactInfo : IVoltPoolable<ContactInfo>
     {
+        #region Interface
+        IVoltPool<ContactInfo> IVoltPoolable<ContactInfo>.Pool { get; set; }
+        void IVoltPoolable<ContactInfo>.Reset() { this.Reset(); }
+        #endregion
+
         // Flags stored in m_flags
         public enum ContactFlags
         {
@@ -60,6 +65,18 @@ namespace Volatile
             }
         }
 
+        void Reset()
+        {
+            m_frameNo = 0;
+            m_flags = 0;
+            m_bodyA = null;
+            m_bodyB = null;
+
+            position = VoltVector2.zero;
+            normal = VoltVector2.zero;
+            penetration = FixMath.NET.Fix64.Zero;
+        }
+
         // hit info
         public VoltVector2 position;
         public VoltVector2 normal;
@@ -77,7 +94,7 @@ namespace Volatile
         public IContactListener Listener { get; set; }
 
         private List<ContactInfo> contactInfos = new List<ContactInfo>();
-        private IVoltPool<ContactInfo> contactInfoPool;
+        private IVoltPool<ContactInfo> contactInfoPool = new VoltPool<ContactInfo>();
 
         private int frameCounter = 1;
 

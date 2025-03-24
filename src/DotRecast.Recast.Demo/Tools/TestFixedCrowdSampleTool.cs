@@ -210,8 +210,8 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         var angle = hxObject._rotation;
         var cos = FixMath.F64.CosFast(angle);
         var sin = FixMath.F64.SinFast(angle);
-        var xHalfSize = hxObject._scaleX / 2;
-        var yHalfSize = hxObject._scaleY / 2;
+        var xHalfSize = hxObject._scaleX;
+        var yHalfSize = hxObject._scaleY;
         var template = new TUnMovableEntityTemplate() 
         { 
             DirU = new FixMath.F64Vec2(cos, sin),
