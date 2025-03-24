@@ -17,6 +17,10 @@ namespace FixMath.NET
         public static readonly Fix64 MaxValue = new Fix64(MAX_VALUE);
         public static readonly Fix64 MinValue = new Fix64(MIN_VALUE);
         public static readonly Fix64 One = new Fix64(ONE);
+        public static readonly Fix64 Two = new Fix64(TWO);
+        public static readonly Fix64 Three = new Fix64(THREE);
+        public static readonly Fix64 Four = new Fix64(FOUR);
+        public static readonly Fix64 Half = new Fix64(HALF);
         public static readonly Fix64 Zero = new Fix64();
         /// <summary>
         /// The value of Pi
@@ -36,6 +40,10 @@ namespace FixMath.NET
         const int NUM_BITS = 64;
         const int FRACTIONAL_PLACES = 32;
         const long ONE = 1L << FRACTIONAL_PLACES;
+        const long TWO = 2L << FRACTIONAL_PLACES;
+        const long THREE = 3L << FRACTIONAL_PLACES;
+        const long FOUR = 4L << FRACTIONAL_PLACES;
+        const long HALF = ONE >> 1;
         const long PI_TIMES_2 = 0x6487ED511;
         const long PI = 0x3243F6A88;
         const long PI_OVER_2 = 0x1921FB544;

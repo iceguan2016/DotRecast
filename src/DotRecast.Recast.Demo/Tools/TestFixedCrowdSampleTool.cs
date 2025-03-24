@@ -17,8 +17,53 @@ using Pathfinding.Triangulation.Math;
 using Object = Pathfinding.Triangulation.Data.Object;
 using Pathfinding.Triangulation.Factories;
 using Pathfinding.Triangulation.AI;
+using Volatile;
+using FixMath.NET;
 
 namespace DotRecast.Recast.Demo.Tools;
+
+public class PhysicsWorldGizmosDrawer : IGizmosDrawer
+{
+    private DrawInterface _draw = null;
+    private float _height = 0.0f;
+
+    public PhysicsWorldGizmosDrawer(DrawInterface draw)
+    {
+        this._draw = draw;
+        this._height = _draw.GetMapHeight() + 0.5f;
+    }
+
+    public void DrawArrow(VoltVector2 start, VoltVector2 end, VoltVector2 arrowSize, float lineWidth, Volatile.Color c)
+    {
+        _draw.DrawArrow(start.ToUnityVec3(_height), end.ToUnityVec3(_height), arrowSize.ToUnityVec2(), lineWidth, c.ToUnityColor());
+    }
+
+    public void DrawCircle(VoltVector2 p, float r, Volatile.Color c)
+    {
+        _draw.DrawCircle(p.ToUnityVec3(_height), r, c.ToUnityColor());
+    }
+
+    public void DrawCube(VoltVector2 p, VoltVector2 size, Volatile.Color c)
+    {
+        _draw.DrawCube(p.ToUnityVec3(_height),  size.ToUnityVec3(0.0f), c.ToUnityColor());
+    }
+
+    public void DrawLine(VoltVector2 a, VoltVector2 b, Volatile.Color c, float lineWidth = 1)
+    {
+        _draw.DrawLine(a.ToUnityVec3(_height),  b.ToUnityVec3(_height), c.ToUnityColor(), lineWidth);
+    }
+
+    public void DrawSolidCube(VoltVector2 p, Fix64 angle, VoltVector2 size, Volatile.Color c)
+    {
+        var rotation = UnityEngine.Quaternion.Euler(0.0f, (float)angle, 0.0f);
+        _draw.DrawSolidCube(p.ToUnityVec3(_height), rotation, size.ToUnityVec3(0.0f), c.ToUnityColor());
+    }
+
+    public void DrawTriangle(VoltVector2 v0, VoltVector2 v1, VoltVector2 v2, Volatile.Color c)
+    {
+        _draw.DrawTriangle(v0.ToUnityVec3(_height),  v1.ToUnityVec3(_height), v1.ToUnityVec3(_height), c.ToUnityColor());
+    }
+}
 
 public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuerier
 {
@@ -438,13 +483,13 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         var hitEntityId = UniqueId.InvalidID;
         _entityManager.ForEachEntity((InEntity) =>
         {
-            if (null != InEntity)
+            if (InEntity is MovableEntity entity)
             {
-                var q = FixMath.F64Quat.LookRotation(InEntity.Forward, InEntity.Up);
-                var local_p = FixMath.F64Quat.Inverse(q) * (hitPos - InEntity.Position);
-                if (FixMath.F64.Abs(local_p.X) < InEntity.Radius && FixMath.F64.Abs(local_p.Z) < InEntity.Radius)
+                var q = FixMath.F64Quat.LookRotation(entity.Forward, entity.Up);
+                var local_p = FixMath.F64Quat.Inverse(q) * (hitPos - entity.Position);
+                if (FixMath.F64.Abs(local_p.X) < entity.Radius && FixMath.F64.Abs(local_p.Z) < entity.Radius)
                 {
-                    hitEntityId = InEntity.ID;
+                    hitEntityId = entity.ID;
                 }
             }
         });
@@ -462,7 +507,7 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         //});
         for (var i = 0; i < _selectEntities.Count; ++i)
         {
-            var entity = _entityManager.GetEntityById(_selectEntities[i]);
+            var entity = _entityManager.GetEntityById(_selectEntities[i]) as MovableEntity;
             if (null != entity)
             {
                 entity.TargetLocation = Position;
@@ -474,18 +519,18 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     {
         _entityManager.ForEachEntity((InEntity) =>
         {
-            if (null != InEntity)
+            if (InEntity is MovableEntity entity)
             {
                 if (Debug.IsSimulationMode(eSimulationMode.Normal))
                 {
-                    var index = SelectEntities.FindIndex(Id => Id == InEntity.ID);
-                    InEntity.OnDraw(index != -1);
+                    var index = SelectEntities.FindIndex(Id => Id == entity.ID);
+                    entity.OnDraw(index != -1);
                 }
                 else if (Debug.IsSimulationMode(eSimulationMode.Playback))
                 {
-                    if (InEntity.ID == Debug.DebugEntityId)
+                    if (entity.ID == Debug.DebugEntityId)
                     {
-                        InEntity.Debuger?.Draw(InEntity.Annotation, InEntity, _entityManager.FrameNo, Debug.PlaybackFrameNo);
+                        entity.Debuger?.Draw(entity.Annotation, entity, _entityManager.FrameNo, Debug.PlaybackFrameNo);
                     }
                 }
             }
@@ -526,11 +571,6 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         
     }
 
-    public void DebugDraw(SimpleView view)
-    { 
-        
-    }
-
     // Selection
     public bool IsSelecting { get; private set; }
     public RcVec3f SelectionStartPosition { get; private set; }
@@ -562,9 +602,9 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             _selectEntities.Clear();
             _entityManager.ForEachEntity((InEntity) =>
             {
-                if (null != InEntity)
+                if (InEntity is MovableEntity entity)
                 {
-                    var pos = InEntity.Position;
+                    var pos = entity.Position;
                     if (Math.Abs(pos.X.Float - center.X) < halfSizeX &&
                         Math.Abs(pos.Z.Float - center.Z) < halfSizeZ)
                     {
@@ -583,9 +623,9 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         {
             _entityManager.ForEachEntity((InEntity) =>
             {
-                if (null != InEntity)
+                if (InEntity is MovableEntity entity)
                 {
-                    TestDaedalusSampleTool.Logger.Information($"id:{InEntity.ID.Id}, pos:{InEntity.Position}");
+                    TestDaedalusSampleTool.Logger.Information($"id:{InEntity.ID.Id}, pos:{entity.Position}");
                 }
             });
         }
@@ -684,9 +724,9 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         {
             EntityManager.ForEachEntity((InEntity) =>
             {
-                if (null != InEntity)
+                if (InEntity is MovableEntity entity)
                 {
-                    InEntity.OnTemplatePropertyChanged();
+                    entity.OnTemplatePropertyChanged();
                 }
             });
         }
@@ -702,6 +742,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
     private TestFixedCrowdTool _tool = null;
 
     private DrawInterfaceImplement _draw = null;
+    private PhysicsWorldGizmosDrawer _physicsWorldDrawer = null;
 
     private SimpleView _view = null;
 
@@ -864,6 +905,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
             _view = new SimpleView(_draw);
             _tool.MapHeight = FixMath.F64.FromDouble(bound_max.Y + 0.5f);
             _tool.DrawInterface = _draw;
+
+            _physicsWorldDrawer = new PhysicsWorldGizmosDrawer(_draw);
         }
 
         // draw bounds
@@ -907,7 +950,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             {
                 var p = (_tool.SelectionStartPosition + _tool.SelectionEndPosition) * 0.5f;
                 var size = _tool.SelectionEndPosition - _tool.SelectionStartPosition;
-                _draw.DrawSolidCube(new Vector3(p.X, p.Y, p.Z), Quaternion.identity, new Vector3(Math.Abs(size.X), 0.01f, Math.Abs(size.Z)), new Color(1.0f, 0.0f, 0.0f, 0.3f));
+                _draw.DrawSolidCube(new Vector3(p.X, p.Y, p.Z), Quaternion.identity, new Vector3(Math.Abs(size.X), 0.01f, Math.Abs(size.Z)), new UnityEngine.Color(1.0f, 0.0f, 0.0f, 0.3f));
                 // _draw.DrawCircle(new Vector3(p.X, p.Y, p.Z), size.X)
             }
         }
@@ -915,8 +958,22 @@ public class TestFixedCrowdSampleTool : ISampleTool
         // draw crowd entities
         _tool.DrawCrowdEntity();
 
-        // debug draw
-        _tool.DebugDraw(_view);
+        // draw physics body
+        {
+            _tool.EntityManager.ForEachEntity((InEntity) =>
+            {
+                if (null != InEntity && null != InEntity.PhysicsBody)
+                {
+                    Volatile.Color edgeColor        = Volatile.Color.red;
+                    Volatile.Color normalColor      = Volatile.Color.green;
+                    Volatile.Color bodyOriginColor  = Volatile.Color.blue;
+                    Volatile.Color shapeOriginColor = Volatile.Color.yellow;
+                    Volatile.Color bodyAabbColor    = Volatile.Color.magenta;
+                    Volatile.Color shapeAabbColor   = Volatile.Color.cyan;
+                    InEntity.PhysicsBody.GizmoDraw(_physicsWorldDrawer, edgeColor, normalColor, bodyOriginColor, shapeOriginColor, bodyAabbColor, shapeAabbColor, FixMath.NET.Fix64.One);
+                }
+            });
+        }
 
         // draw world axes
         {
@@ -924,9 +981,9 @@ public class TestFixedCrowdSampleTool : ISampleTool
             var x = o + Vector3.right * 5;
             var y = o + Vector3.up * 5;
             var z = o + Vector3.forward * 5;
-            _draw.DrawArrow(o, x, new Vector2(0.0f, 0.2f), 1.0f, Color.red);
-            _draw.DrawArrow(o, y, new Vector2(0.0f, 0.2f), 1.0f, Color.green);
-            _draw.DrawArrow(o, z, new Vector2(0.0f, 0.2f), 1.0f, Color.blue);
+            _draw.DrawArrow(o, x, new Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.red);
+            _draw.DrawArrow(o, y, new Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.green);
+            _draw.DrawArrow(o, z, new Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.blue);
         }
     }
 
@@ -1004,7 +1061,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             {
                 if (Debug.DebugEntityId.IsValid())
                 {
-                    var Entity = _tool.EntityManager.GetEntityById(Debug.DebugEntityId);
+                    var Entity = _tool.EntityManager.GetEntityById(Debug.DebugEntityId) as MovableEntity;
                     if (null != Entity)
                     {
                         if (Reason == eUpdatePlaybackFrameReason.Reset || 

@@ -614,13 +614,13 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         var hitEntityId = UniqueId.InvalidID;
         _entityManager.ForEachEntity((InEntity) =>
         {
-            if (null != InEntity)
+            if (InEntity is MovableEntity entity)
             {
-                var q = FixMath.F64Quat.LookRotation(InEntity.Forward, InEntity.Up);
-                var local_p = FixMath.F64Quat.Inverse(q) * (hitPos - InEntity.Position);
-                if (FixMath.F64.Abs(local_p.X) < InEntity.Radius && FixMath.F64.Abs(local_p.Z) < InEntity.Radius)
+                var q = FixMath.F64Quat.LookRotation(entity.Forward, entity.Up);
+                var local_p = FixMath.F64Quat.Inverse(q) * (hitPos - entity.Position);
+                if (FixMath.F64.Abs(local_p.X) < entity.Radius && FixMath.F64.Abs(local_p.Z) < entity.Radius)
                 {
-                    hitEntityId = InEntity.ID;
+                    hitEntityId = entity.ID;
                 }
             }
         });
@@ -638,7 +638,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         //});
         for (var i = 0; i < _selectEntities.Count; ++i)
         {
-            var entity = _entityManager.GetEntityById(_selectEntities[i]);
+            var entity = _entityManager.GetEntityById(_selectEntities[i]) as MovableEntity;
             if (null != entity)
             {
                 entity.TargetLocation = Position;
@@ -650,18 +650,18 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     {
         _entityManager.ForEachEntity((InEntity) =>
         {
-            if (null != InEntity)
+            if (InEntity is MovableEntity entity)
             {
                 if (Debug.IsSimulationMode(eSimulationMode.Normal))
                 {
-                    var index = SelectEntities.FindIndex(Id => Id == InEntity.ID);
-                    InEntity.OnDraw(index != -1);
+                    var index = SelectEntities.FindIndex(Id => Id == entity.ID);
+                    entity.OnDraw(index != -1);
                 }
                 else if (Debug.IsSimulationMode(eSimulationMode.Playback))
                 {
-                    if (InEntity.ID == Debug.DebugEntityId)
+                    if (entity.ID == Debug.DebugEntityId)
                     {
-                        InEntity.Debuger?.Draw(InEntity.Annotation, InEntity, _entityManager.FrameNo, Debug.PlaybackFrameNo);
+                        entity.Debuger?.Draw(entity.Annotation, entity, _entityManager.FrameNo, Debug.PlaybackFrameNo);
                     }
                 }
             }
@@ -738,9 +738,9 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
             _selectEntities.Clear();
             _entityManager.ForEachEntity((InEntity) =>
             {
-                if (null != InEntity)
+                if (InEntity is MovableEntity entity)
                 {
-                    var pos = InEntity.Position;
+                    var pos = entity.Position;
                     if (Math.Abs(pos.X.Float - center.X) < halfSizeX &&
                         Math.Abs(pos.Z.Float - center.Z) < halfSizeZ)
                     {
@@ -759,9 +759,9 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         {
             _entityManager.ForEachEntity((InEntity) =>
             {
-                if (null != InEntity)
+                if (InEntity is MovableEntity entity)
                 {
-                    TestDaedalusSampleTool.Logger.Information($"id:{InEntity.ID.Id}, pos:{InEntity.Position}");
+                    TestDaedalusSampleTool.Logger.Information($"id:{InEntity.ID.Id}, pos:{entity.Position}");
                 }
             });
         }
@@ -860,9 +860,9 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         {
             EntityManager.ForEachEntity((InEntity) =>
             {
-                if (null != InEntity)
+                if (InEntity is MovableEntity entity)
                 {
-                    InEntity.OnTemplatePropertyChanged();
+                    entity.OnTemplatePropertyChanged();
                 }
             });
         }
@@ -1205,7 +1205,7 @@ public class TestDaedalusSampleTool : ISampleTool
             {
                 if (Debug.DebugEntityId.IsValid())
                 {
-                    var Entity = _tool.EntityManager.GetEntityById(Debug.DebugEntityId);
+                    var Entity = _tool.EntityManager.GetEntityById(Debug.DebugEntityId) as MovableEntity;
                     if (null != Entity)
                     {
                         if (Reason == eUpdatePlaybackFrameReason.Reset || 

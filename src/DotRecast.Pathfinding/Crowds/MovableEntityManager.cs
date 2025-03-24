@@ -108,7 +108,7 @@ namespace Pathfinding.Crowds
             return false;
         }
 
-        public MovableEntity GetEntityById(UniqueId inEntityId)
+        public ICrowdEntityActor GetEntityById(UniqueId inEntityId)
         {
             if (EntityId2Index.TryGetValue(inEntityId, out var entityIndex))
             {
@@ -116,16 +116,18 @@ namespace Pathfinding.Crowds
             }
             return null;
         }
-        public MovableEntity[] GetEntitiesInCircle(FixMath.F64Vec3 inCenter, FixMath.F64 inRadius)
+        public ICrowdEntityActor[] GetEntitiesInCircle(FixMath.F64Vec3 inCenter, FixMath.F64 inRadius)
         {
             var createEntityParams = new CreateEntityParams() 
             {
                 SpawnPosition = inCenter,
+
+                Template = new TMovableEntityTemplate(),
             };
             var entityId = CreateEntity(createEntityParams);
             if (!entityId.IsValid()) return null;
 
-            var entity = GetEntityById(entityId);
+            var entity = GetEntityById(entityId) as MovableEntity;
             var result = entity.FindNeighbors(inRadius);
             DeleteEntity(entityId);
 
@@ -219,7 +221,7 @@ namespace Pathfinding.Crowds
             }
         }
 
-        public void ForEachEntity(System.Action<MovableEntity> InAction)
+        public void ForEachEntity(System.Action<ICrowdEntityActor> InAction)
         {
             for (var i = 0; i < Entities.Count; i++)
             {

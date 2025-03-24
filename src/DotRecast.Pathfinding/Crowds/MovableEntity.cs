@@ -102,6 +102,8 @@ namespace Pathfinding.Crowds
         // Entity unique id
         public UniqueId ID { get; set; }
 
+        public Volatile.VoltBody PhysicsBody { get { return _physicsBody; } }
+
         // Move destination
         protected bool isTargetDirty { get; private set; }
         protected FixMath.F64Vec3? targetLocation = null;
@@ -433,7 +435,7 @@ namespace Pathfinding.Crowds
                 // 5. draw avoid info
                 if (_avoidNeighborInfo.EntityId != UniqueId.InvalidID)
                 {
-                    var neighbor = EntityManager.GetEntityById(_avoidNeighborInfo.EntityId);
+                    var neighbor = EntityManager.GetEntityById(_avoidNeighborInfo.EntityId) as MovableEntity;
                     if (null != neighbor)
                     {
                         var d = neighbor.Radius.Float * 2;
@@ -489,7 +491,7 @@ namespace Pathfinding.Crowds
                     var boxSize = FixMath.F64Vec3.FromFloat(0.1f, 1.0f, 0.1f);
                     for (var i = 0; i < _avoidNeghborIDs.Count; ++i)
                     {
-                        var neighbor = EntityManager.GetEntityById(_avoidNeghborIDs[i]);
+                        var neighbor = EntityManager.GetEntityById(_avoidNeghborIDs[i]) as MovableEntity;
                         if (neighbor == null)
                             continue;
                         Draw.drawBoxOutline(annotation, neighbor.Position, FixMath.F64Quat.Identity, boxSize, Colors.Red, FixMath.F64.One);

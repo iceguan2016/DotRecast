@@ -19,6 +19,8 @@ namespace Pathfinding.Crowds
         public IMovableEntityManager EntityManager { get; set; }
         public UniqueId ID { get; set; }
 
+        public Volatile.VoltBody PhysicsBody { get { return _physicsBody; } }
+
         private FixMath.F64Vec3 _poistion;
         private FixMath.F64Quat _rotation;
         private Volatile.VoltBody _physicsBody;

@@ -709,24 +709,22 @@ namespace Volatile
     #endregion
 
     #region Debug
-#if UNITY && DEBUG
-    public void GizmoDraw(Color aabbColor)
+    public void GizmoDraw(IGizmosDrawer drawer, Color aabbColor)
     {
-      this.DoGizmoDraw(aabbColor, this.rootId);
+      this.DoGizmoDraw(drawer, aabbColor, this.rootId);
     }
 
-    private void DoGizmoDraw(Color color, int nodeId)
+    private void DoGizmoDraw(IGizmosDrawer drawer, Color color, int nodeId)
     {
       if (nodeId == TreeBroadphase.NULL_NODE)
         return;
 
       Node node = this.nodes[nodeId];
-      node.aabb.GizmoDraw(color);
+      node.aabb.GizmoDraw(drawer, color);
 
-      this.DoGizmoDraw(color, node.left);
-      this.DoGizmoDraw(color, node.right);
+      this.DoGizmoDraw(drawer, color, node.left);
+      this.DoGizmoDraw(drawer, color, node.right);
     }
-#endif
     #endregion
   }
 }

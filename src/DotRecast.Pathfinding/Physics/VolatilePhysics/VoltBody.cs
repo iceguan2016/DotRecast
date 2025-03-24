@@ -677,8 +677,8 @@ namespace Volatile
 #endregion
 
     #region Debug
-#if UNITY && DEBUG
     public void GizmoDraw(
+      IGizmosDrawer drawer,
       Color edgeColor,
       Color normalColor,
       Color bodyOriginColor,
@@ -687,42 +687,32 @@ namespace Volatile
       Color shapeAabbColor,
       Fix64 normalLength)
     {
-      Color current = Gizmos.color;
-
       // Draw origin
-      Gizmos.color = bodyOriginColor;
-      Gizmos.DrawWireSphere(this.Position.ToVector(), 0.1f);
+      drawer.DrawCircle(this.Position, 0.1f, bodyOriginColor);
 
       // Draw facing
-      Gizmos.color = normalColor;
-      Gizmos.DrawLine(
-        this.Position.ToVector(),
-        this.Position.ToVector() + this.Facing.ToVector() * (float)normalLength);
+      drawer.DrawLine(
+        this.Position,
+        this.Position + this.Facing * normalLength, normalColor);
 
-      this.AABB.GizmoDraw(bodyAabbColor);
+      this.AABB.GizmoDraw(drawer, bodyAabbColor);
 
       for (int i = 0; i < this.shapeCount; i++)
         this.shapes[i].GizmoDraw(
+          drawer,
           edgeColor,
           normalColor,
           shapeOriginColor,
           shapeAabbColor,
           normalLength);
-
-      Gizmos.color = current;
     }
 
-    public void GizmoDrawHistory(Color aabbColor)
+    public void GizmoDrawHistory(IGizmosDrawer drawer, Color aabbColor)
     {
-      Color current = Gizmos.color;
-
       if (this.history != null)
         foreach (HistoryRecord record in this.history.GetValues())
-          record.aabb.GizmoDraw(aabbColor);
-
-      Gizmos.color = current;
+          record.aabb.GizmoDraw(drawer, aabbColor);
     }
-#endif
     #endregion
   }
 }

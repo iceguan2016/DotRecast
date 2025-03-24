@@ -15,6 +15,7 @@ namespace Pathfinding.Crowds
 
         public IMovableEntityManager EntityManager { get; set; }
         public UniqueId ID { get; set; }
+        public Volatile.VoltBody PhysicsBody { get; }
 
         void SetPosition(FixMath.F64Vec3 position);
         FixMath.F64Vec3 GetPosition();

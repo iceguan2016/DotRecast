@@ -20,11 +20,6 @@
 
 using FixMath.NET;
 using System;
-using System.Collections.Generic;
-
-#if UNITY
-using UnityEngine;
-#endif
 
 namespace Volatile
 {
@@ -542,39 +537,32 @@ namespace Volatile
     #endregion
 
     #region Debug
-#if UNITY && DEBUG
     public override void GizmoDraw(
+      IGizmosDrawer drawer,
       Color edgeColor,
       Color normalColor,
       Color originColor,
       Color aabbColor,
       Fix64 normalLength)
     {
-      Color current = Gizmos.color;
-
       for (int i = 0; i < this.countWorld; i++)
       {
-        Vector2 u = this.worldVertices[i].ToVector();
-        Vector2 v = this.worldVertices[(i + 1) % this.countWorld].ToVector();
-        Vector2 n = worldAxes[i].Normal.ToVector();
+        var u = this.worldVertices[i];
+        var v = this.worldVertices[(i + 1) % this.countWorld];
+        var n = worldAxes[i].Normal;
 
-        Vector2 delta = v - u;
-        Vector2 midPoint = u + (delta * 0.5f);
+        var delta = v - u;
+        var midPoint = u + (delta * Fix64.Half);
 
         // Draw edge
-        Gizmos.color = edgeColor;
-        Gizmos.DrawLine(u, v);
+        drawer.DrawLine(u, v, edgeColor);
 
         // Draw normal
-        Gizmos.color = normalColor;
-        Gizmos.DrawLine(midPoint, midPoint + (n * (float)normalLength));
+        drawer.DrawLine(midPoint, midPoint + (n * normalLength), normalColor);
       }
 
-      this.AABB.GizmoDraw(aabbColor);
-
-      Gizmos.color = current;
+      this.AABB.GizmoDraw(drawer, aabbColor);
     }
-#endif
     #endregion
   }
 }

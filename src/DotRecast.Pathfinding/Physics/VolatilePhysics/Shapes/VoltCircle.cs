@@ -151,24 +151,19 @@ namespace Volatile
     #endregion
 
     #region Debug
-#if UNITY && DEBUG
+
     public override void GizmoDraw(
+      IGizmosDrawer drawer,
       Color edgeColor, 
       Color normalColor, 
       Color originColor, 
       Color aabbColor, 
       Fix64 normalLength)
     {
-      Color current = Gizmos.color;
 
-      Gizmos.color = edgeColor;
-      Gizmos.DrawWireSphere(this.worldSpaceOrigin.ToVector(), (float)this.radius);
-
-      this.AABB.GizmoDraw(aabbColor);
-
-      Gizmos.color = current;
+      drawer.DrawCircle(this.worldSpaceOrigin, (float)this.radius, edgeColor);
+      this.AABB.GizmoDraw(drawer, aabbColor);
     }
-#endif
     #endregion
   }
 }

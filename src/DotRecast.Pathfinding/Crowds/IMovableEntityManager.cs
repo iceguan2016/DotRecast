@@ -32,11 +32,11 @@ namespace Pathfinding.Crowds
         bool DeleteEntity(UniqueId inEntityId);
 
         // find entity
-        MovableEntity GetEntityById(UniqueId inEntityId);
-        MovableEntity[] GetEntitiesInCircle(FixMath.F64Vec3 inCenter, FixMath.F64 inRadius);
+        ICrowdEntityActor GetEntityById(UniqueId inEntityId);
+        ICrowdEntityActor[] GetEntitiesInCircle(FixMath.F64Vec3 inCenter, FixMath.F64 inRadius);
 
         // entity iteration
-        void ForEachEntity(System.Action<MovableEntity> InAction);
+        void ForEachEntity(System.Action<ICrowdEntityActor> InAction);
 
         // tick
         void Tick(FixMath.F64 inDelteTime);

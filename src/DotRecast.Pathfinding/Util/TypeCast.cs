@@ -69,5 +69,25 @@ namespace Pathfinding.Util
         {
             return new FixMath.F64Vec3(InVec2.x.ToF64(), InHeight, InVec2.y.ToF64());
         }
+
+        public static FixMath.F64Vec2 ToVec2(this Volatile.VoltVector2 InVec2)
+        {
+            return new FixMath.F64Vec2(InVec2.x.ToF64(), InVec2.y.ToF64());
+        }
+
+        public static UnityEngine.Vector3 ToUnityVec3(this Volatile.VoltVector2 InVec2, float InHeight)
+        {
+            return new UnityEngine.Vector3(((float)InVec2.x), InHeight, (float)InVec2.y);
+        }
+
+        public static UnityEngine.Vector2 ToUnityVec2(this Volatile.VoltVector2 InVec2)
+        {
+            return new UnityEngine.Vector2((float)InVec2.x, (float)InVec2.y);
+        }
+
+        public static UnityEngine.Color ToUnityColor(this Volatile.Color InColor)
+        {
+            return new UnityEngine.Color(InColor.r, InColor.g, InColor.b, InColor.a);
+        }
     }
 }

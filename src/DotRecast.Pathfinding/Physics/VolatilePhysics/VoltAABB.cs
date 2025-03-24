@@ -269,25 +269,18 @@ namespace Volatile
     }
 
     #region Debug
-#if UNITY && DEBUG
-    public void GizmoDraw(Color aabbColor)
+    public void GizmoDraw(IGizmosDrawer drawer, Color aabbColor)
     {
-      Color current = Gizmos.color;
+      var A = new VoltVector2(this.Left, this.Top);
+      var B = new VoltVector2(this.Right, this.Top);
+      var C = new VoltVector2(this.Right, this.Bottom);
+      var D = new VoltVector2(this.Left, this.Bottom);
 
-      Vector2 A = new Vector2((float)this.Left, (float)this.Top);
-      Vector2 B = new Vector2((float)this.Right,(float) this.Top);
-      Vector2 C = new Vector2((float)this.Right,(float) this.Bottom);
-      Vector2 D = new Vector2((float)this.Left, (float)this.Bottom);
-
-      Gizmos.color = aabbColor;
-      Gizmos.DrawLine(A, B);
-      Gizmos.DrawLine(B, C);
-      Gizmos.DrawLine(C, D);
-      Gizmos.DrawLine(D, A);
-
-      Gizmos.color = current;
+      drawer.DrawLine(A, B, aabbColor);
+      drawer.DrawLine(B, C, aabbColor);
+      drawer.DrawLine(C, D, aabbColor);
+      drawer.DrawLine(D, A, aabbColor);
     }
-#endif
     #endregion
   }
 }
