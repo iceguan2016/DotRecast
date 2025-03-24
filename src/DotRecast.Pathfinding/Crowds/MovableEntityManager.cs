@@ -225,10 +225,7 @@ namespace Pathfinding.Crowds
         {
             for (var i = 0; i < Entities.Count; i++)
             {
-                if (Entities[i] is MovableEntity entity)
-                {
-                    InAction(entity);
-                }
+                InAction(Entities[i]);
             }
         }
     }

@@ -964,7 +964,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             {
                 if (null != InEntity && null != InEntity.PhysicsBody)
                 {
-                    Volatile.Color edgeColor        = Volatile.Color.red;
+                    Volatile.Color edgeColor        = Volatile.Color.white;
                     Volatile.Color normalColor      = Volatile.Color.green;
                     Volatile.Color bodyOriginColor  = Volatile.Color.blue;
                     Volatile.Color shapeOriginColor = Volatile.Color.yellow;
