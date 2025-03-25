@@ -664,7 +664,7 @@ namespace SharpSteer2.Helpers
             return FixMath.F64Vec3.Dot(vehicle.Forward, targetDirection) < cosThreshold;
         }
 
-        private static bool IsInBoidNeighborhood(this ILocalSpaceBasis vehicle, ILocalSpaceBasis other, FixMath.F64 minDistance, FixMath.F64 maxDistance, FixMath.F64 cosMaxAngle)
+        public static bool IsInBoidNeighborhood(this ILocalSpaceBasis vehicle, ILocalSpaceBasis other, FixMath.F64 minDistance, FixMath.F64 maxDistance, FixMath.F64 cosMaxAngle)
         {
             if (other == vehicle)
                 return false;

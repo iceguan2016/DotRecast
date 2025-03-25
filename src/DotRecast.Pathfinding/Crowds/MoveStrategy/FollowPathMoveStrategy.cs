@@ -11,7 +11,9 @@ namespace Pathfinding.Crowds.MoveStrategy
         AvoidIdleNeighborForce _avoidIdleNeighborForce;
         AvoidObstacleForce _avoidObstacleForce;
         ForwardMoveForce _forwadMoveForce;
-        GroupFlockForce _groupFlockForce;
+        FlockSeparationForce _flockSeparationForce;
+        FlockAlignmentForce _flockAlignmentForce;
+        FlockCohesionForce _flockCohesionForce;
 
         public FollowPathMoveStrategy(MovableEntity owner)
         {
@@ -32,18 +34,20 @@ namespace Pathfinding.Crowds.MoveStrategy
             _forwadMoveForce = new ForwardMoveForce();
             _forwadMoveForce.Weight = template.ForwardMoveWeight;
 
-            _groupFlockForce = new GroupFlockForce();
-            _groupFlockForce.SeparationRadius = template.SeparationRadius;
-            _groupFlockForce.SeparationAngle = template.SeparationAngle;
-            _groupFlockForce.SeparationWeight = template.SeparationWeight;
+            _flockSeparationForce = new FlockSeparationForce();
+            _flockSeparationForce.SeparationRadius = template.SeparationRadius;
+            _flockSeparationForce.SeparationAngle = template.SeparationAngle;
+            _flockSeparationForce.Weight = template.SeparationWeight;
 
-            _groupFlockForce.AlignmentRadius = template.AlignmentRadius;
-            _groupFlockForce.AlignmentAngle = template.AlignmentAngle;
-            _groupFlockForce.AlignmentWeight = template.AlignmentWeight;
+            _flockAlignmentForce = new FlockAlignmentForce();
+            _flockAlignmentForce.AlignmentRadius = template.AlignmentRadius;
+            _flockAlignmentForce.AlignmentAngle = template.AlignmentAngle;
+            _flockAlignmentForce.Weight = template.AlignmentWeight;
 
-            _groupFlockForce.CohesionRadius = template.CohesionRadius;
-            _groupFlockForce.CohesionAngle = template.CohesionAngle;
-            _groupFlockForce.CohesionWeight = template.CohesionWeight;
+            _flockCohesionForce = new FlockCohesionForce();
+            _flockCohesionForce.CohesionRadius = template.CohesionRadius;
+            _flockCohesionForce.CohesionAngle = template.CohesionAngle;
+            _flockCohesionForce.Weight = template.CohesionWeight;
 
         }
 
@@ -62,7 +66,9 @@ namespace Pathfinding.Crowds.MoveStrategy
             _avoidIdleNeighborForce.Reset();
             _avoidObstacleForce.Reset();
             _forwadMoveForce.Reset();
-            _groupFlockForce.Reset();
+            _flockSeparationForce.Reset();
+            _flockAlignmentForce.Reset();
+            _flockCohesionForce.Reset();
         }
 
         public override void OnStop(MovableEntity owner)
@@ -86,7 +92,9 @@ namespace Pathfinding.Crowds.MoveStrategy
             else
             {
                 // 没有避让，则施加群体行为驱动力
-                flockMoveForce = _groupFlockForce.GetSteeringForce(owner);
+                flockMoveForce = _flockSeparationForce.GetSteeringForce(owner)
+                    + _flockAlignmentForce.GetSteeringForce(owner)
+                    + _flockCohesionForce.GetSteeringForce(owner);
             }
             return followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce + flockMoveForce;
         }
@@ -97,7 +105,9 @@ namespace Pathfinding.Crowds.MoveStrategy
             _avoidIdleNeighborForce.DrawGizmos(owner);
             _avoidObstacleForce.DrawGizmos(owner);
             _forwadMoveForce.DrawGizmos(owner);
-            _groupFlockForce.DrawGizmos(owner);
+            _flockSeparationForce.DrawGizmos(owner);
+            _flockAlignmentForce.DrawGizmos(owner);
+            _flockCohesionForce.DrawGizmos(owner);
         }
     }
 }

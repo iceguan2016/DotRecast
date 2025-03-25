@@ -236,6 +236,14 @@ namespace Pathfinding.Crowds
         {
             var template = Template as TMovableEntityTemplate; 
             Radius = template.Radius;
+
+            // 重新创建移动策略
+            _moveStrategyIndex = -1;
+            _moveStrategies = new IMoveStrategy[] {
+                new IdleMoveStrategy(this),
+                new FollowPathMoveStrategy(this),
+                new AttackMoveStrategy(this),
+            };
         }
 
         public virtual void OnCreate()
