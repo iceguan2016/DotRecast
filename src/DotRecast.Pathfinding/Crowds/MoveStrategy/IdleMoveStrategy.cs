@@ -6,9 +6,13 @@ namespace Pathfinding.Crowds.MoveStrategy
     // 空闲状态下的移动策略: 可以被单位挤开，向目标点聚集
     public class IdleMoveStrategy : AbstractMoveStrategy
     {
+        public IdleMoveStrategy(MovableEntity owner)
+        {
+        }
+
         public override bool Condition(MovableEntity owner)
         {
-            if (owner.HasEntityState(MovableEntity.eEntityState.Idle))
+            if (!owner.HasEntityState(MovableEntity.eEntityState.Moving))
             {
                 return true;
             }

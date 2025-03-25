@@ -6,6 +6,10 @@ namespace Pathfinding.Crowds.MoveStrategy
     // 攻击状态下的移动策略: 不可被单位推挤开，其他单位需要绕行
     public class AttackMoveStrategy : AbstractMoveStrategy
     {
+        public AttackMoveStrategy(MovableEntity owner)
+        { 
+        }
+
         public override bool Condition(MovableEntity owner)
         {
             if (owner.HasEntityState(MovableEntity.eEntityState.Attack))

@@ -20,12 +20,12 @@ namespace Pathfinding.Crowds.SteeringForce
 
         bool NeedAvoidNeighbor(MovableEntity owner, MovableEntity neighbor)
         {
-            if (!neighbor.HasEntityState(MovableEntity.eEntityState.Idle))
+            if (!neighbor.HasEntityState(MovableEntity.eEntityState.Moving))
             {
-                return false;
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         public override F64Vec3 GetSteeringForce(MovableEntity owner)
@@ -62,6 +62,38 @@ namespace Pathfinding.Crowds.SteeringForce
         {
             _avoidNeghborIDs.Clear();
             _avoidNeighborInfo.Reset();
+        }
+
+        public override void DrawGizmos(MovableEntity owner)
+        {
+            var annotation = owner.Annotation;
+            var entityManager = owner.EntityManager;
+
+            // draw avoid info
+            if (_avoidNeighborInfo.EntityId != UniqueId.InvalidID)
+            {
+                var neighbor = entityManager.GetEntityById(_avoidNeighborInfo.EntityId) as MovableEntity;
+                if (null != neighbor)
+                {
+                    var d = neighbor.Radius.Float * 2;
+                    var boxSize = FixMath.F64Vec3.FromFloat(d, 0.1f, d);
+                    Draw.drawBoxOutline(annotation, neighbor.Position, FixMath.F64Quat.Identity, boxSize, Colors.OrangeRed, FixMath.F64.One);
+                }
+            }
+
+            // 6. draw avoid neighbor detail info
+            {
+                _avoidQuerySystem.DebugDrawGizmos(owner, annotation);
+
+                var boxSize = FixMath.F64Vec3.FromFloat(0.1f, 1.0f, 0.1f);
+                for (var i = 0; i < _avoidNeghborIDs.Count; ++i)
+                {
+                    var neighbor = entityManager.GetEntityById(_avoidNeghborIDs[i]) as MovableEntity;
+                    if (neighbor == null)
+                        continue;
+                    Draw.drawBoxOutline(annotation, neighbor.Position, FixMath.F64Quat.Identity, boxSize, Colors.Red, FixMath.F64.One);
+                }
+            }
         }
 
         void updateAvoidNeighborInfo(MovableEntity owner)

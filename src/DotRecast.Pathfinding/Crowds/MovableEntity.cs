@@ -7,6 +7,8 @@ using SharpSteer2.Helpers;
 using SharpSteer2.Obstacles;
 using Pathfinding.Crowds;
 using Pathfinding.Util;
+using Pathfinding.Crowds.AvoidStrategy;
+using Pathfinding.Crowds.MoveStrategy;
 
 namespace Pathfinding.Crowds
 {
@@ -69,8 +71,7 @@ namespace Pathfinding.Crowds
         // 单位状态
         public enum  eEntityState
         {
-            Idle = 0,
-	        Moving,
+	        Moving = 0,
             Attack,
         };
 
@@ -122,7 +123,14 @@ namespace Pathfinding.Crowds
                 if (isTargetDirty) 
                 {
                     targetLocation = value;
-                    SetEntityState(null != targetLocation? eEntityState.Moving : eEntityState.Idle);
+                    if (null != targetLocation)
+                    {
+                        SetEntityState(eEntityState.Moving);
+                    }
+                    else
+                    {
+                        ClearEntityState(eEntityState.Moving);
+                    }
                 }
             }
         }
@@ -133,22 +141,13 @@ namespace Pathfinding.Crowds
 
         // route for path following (waypoints and legs)
         public PolylinePathway Pathway { get; private set; }
-        // True means walking forward along the path, false means walking backward along the path
-        private bool _pathDirection = true;
-        // history avoid info
-        private IVehicle.FAvoidObstacleInfo _avoidObstacleInfo = new IVehicle.FAvoidObstacleInfo();
-        public IVehicle.FAvoidObstacleInfo AvoidObstacleInfo { get { return _avoidObstacleInfo; } }
-        private IVehicle.FAvoidNeighborInfo _avoidNeighborInfo = new IVehicle.FAvoidNeighborInfo();
-        public IVehicle.FAvoidNeighborInfo AvoidNeighborInfo { get { return _avoidNeighborInfo; } }
-
+        
         // local boundary
         public static readonly int  MaxBoundarySegmentNum = 10;
         private BoundarySegement[]  _boundarySegements = null;
         private int                 _boundarySegmentNum = 0;
         private List<IObstacle>     _boundaryObstacles = new List<IObstacle>();
         public List<IObstacle>      BoundaryObstacles { get { return _boundaryObstacles; } }
-        private AvoidanceQuerySystem _avoidQuerySystem = new AvoidanceQuerySystem();
-        private List<UniqueId>      _avoidNeghborIDs = new List<UniqueId>();
 
         // local neighbors
         private List<IVehicle>      _neighbors = new List<IVehicle>();
@@ -163,6 +162,10 @@ namespace Pathfinding.Crowds
 
         // physics body
         private Volatile.VoltBody   _physicsBody = null;
+
+        // move strategies
+        private int                 _moveStrategyIndex = -1;
+        private IMoveStrategy[]     _moveStrategies = null;
 
         public void SetEntityState(eEntityState inState) { _stateBitsValue |= (uint)(1 << (int)inState); }
         public void ClearEntityState(eEntityState inState) { _stateBitsValue &= ~(uint)(1 << (int)inState); }
@@ -250,6 +253,13 @@ namespace Pathfinding.Crowds
             if (_proximityToken != null)
                 _proximityToken.UpdateForNewPosition(Position);
 
+            // 初始化移动策略
+            _moveStrategies = new IMoveStrategy[] {
+                new IdleMoveStrategy(this),
+                new FollowPathMoveStrategy(this),
+                new AttackMoveStrategy(this),
+            };
+
 #if ENABLE_STEER_AGENT_DEBUG
             Debuger = new MovableEntityDebuger();
 #endif
@@ -260,6 +270,7 @@ namespace Pathfinding.Crowds
 
         public virtual void OnDelete()
         {
+            _moveStrategies = null;
             ICrowdEntityActor.DestroyPhysicsBody(this, _physicsBody);
 
             Debuger = null;
@@ -331,18 +342,22 @@ namespace Pathfinding.Crowds
 
         public virtual void OnUpdate(FixMath.F64 inDeltaTime)
         {
-            if (!HasEntityState(eEntityState.Moving)) return;
             if (null == targetLocation) return;
 
             var template = Template as TMovableEntityTemplate;
 
             // check in stop radius
-            var distance = FixMath.F64Vec3.DistanceFast(Position, targetLocation.Value);
-            if (distance < template.StopMoveRadius)
+            if (HasEntityState(eEntityState.Moving))
             {
-                SetEntityState(eEntityState.Idle);
-                return;
+                var distance = FixMath.F64Vec3.DistanceFast(Position, targetLocation.Value);
+                if (distance < template.StopMoveRadius)
+                {
+                    ClearEntityState(eEntityState.Moving);
+                }
             }
+
+            // 更新移动策略
+            updateMoveStrategy();
 
             // check if you are too far from the path
             if (null != Pathway)
@@ -395,14 +410,17 @@ namespace Pathfinding.Crowds
 
             // determine steering force
 #if ENABLE_STEER_AGENT_DEBUG
-            ref var info = ref Debuger.EntityInfoBuff.Alloc(EntityManager.FrameNo);
-            info.maxSpeed = MaxSpeed;
-            info.radius = Radius;
-            info.position = Position;
-            info.velocity = Velocity;
-            info.forward = Forward;
-            info.side = Side;
-            info.up = Up;
+            if (HasEntityState(eEntityState.Moving))
+            {
+                ref var info = ref Debuger.EntityInfoBuff.Alloc(EntityManager.FrameNo);
+                info.maxSpeed = MaxSpeed;
+                info.radius = Radius;
+                info.position = Position;
+                info.velocity = Velocity;
+                info.forward = Forward;
+                info.side = Side;
+                info.up = Up;
+            }
 #endif
 
             var steerForce = determineCombinedSteering(inDeltaTime);
@@ -415,10 +433,6 @@ namespace Pathfinding.Crowds
 
                 _debugVec3Items[(int)eDebugVec3Item.Velocity] = Velocity;
             }
-
-            // 更新避让状态信息
-            updateAvoidNeighborInfo();
-            updateAvoidObstacleInfo();
         }
 
         public virtual void OnDraw(bool selected)
@@ -477,74 +491,13 @@ namespace Pathfinding.Crowds
                 var testPoint = PredictFuturePosition(template.AvoidNeighborAheadTime);
                 Draw.drawLineAlpha(annotation, Position, testPoint, Colors.Yellow, FixMath.F64.FromFloat(0.4f));
 
-                // 5. draw avoid info
-                if (_avoidNeighborInfo.EntityId != UniqueId.InvalidID)
+                // 5. draw move strategy infos
+                if (-1 != _moveStrategyIndex)
                 {
-                    var neighbor = EntityManager.GetEntityById(_avoidNeighborInfo.EntityId) as MovableEntity;
-                    if (null != neighbor)
-                    {
-                        var d = neighbor.Radius.Float * 2;
-                        var boxSize = FixMath.F64Vec3.FromFloat(d, 0.1f, d);
-                        Draw.drawBoxOutline(annotation, neighbor.Position, FixMath.F64Quat.Identity, boxSize, Colors.OrangeRed, FixMath.F64.One);
-                    }
+                    _moveStrategies[_moveStrategyIndex].DrawGizmos(this);
                 }
 
-                // 6. draw avoid neighbor detail info
-#if false
-            if (_avoidNeighborInfo.EntityId != UniqueId.InvalidID)
-            {
-                var neighbor = EntityManager.GetEntityById(_avoidNeighborInfo.EntityId);
-                var relativePosition = neighbor.Position - Position;
-                relativePosition.SetYtoZero();
-                var distSq = relativePosition.LengthSquared2D();
-                var combinedRadius = neighbor.Radius + Radius;
-                var combinedRadiusSq = combinedRadius * combinedRadius;
-
-                FixMath.F64Vec3 left, right;
-
-                var leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);
-
-                left = new FixMath.F64Vec3(relativePosition.X * leg - relativePosition.Z * combinedRadius,
-                        FixMath.F64.Zero,
-                        relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
-                right = new FixMath.F64Vec3(relativePosition.X * leg + relativePosition.Z * combinedRadius,
-                        FixMath.F64.Zero,
-                        -relativePosition.X * combinedRadius + relativePosition.Z * leg) / distSq;
-
-                // left
-                var start = Position;
-                var end = Position + left* FixMath.F64.FromFloat(5.0f);
-                Util.Draw.drawLine(annotation, start, end, Colors.Red);
-                // right
-                start = Position;
-                end = Position + right * FixMath.F64.FromFloat(5.0f);
-                Util.Draw.drawLine(annotation, start, end, Colors.Green);
-
-                // draw side
-                if (_avoidNeighborInfo.Side != IVehicle.eAvoidSide.None)
-                {
-                    var sideDir = _avoidNeighborInfo.Side == IVehicle.eAvoidSide.Left? left : right;
-                    start = Position;
-                    end = Position + sideDir * FixMath.F64.FromFloat(2.0f);
-                    Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), Colors.Yellow);
-                }
-            }
-#else
-                {
-                    _avoidQuerySystem.DebugDrawGizmos(this, annotation);
-
-                    var boxSize = FixMath.F64Vec3.FromFloat(0.1f, 1.0f, 0.1f);
-                    for (var i = 0; i < _avoidNeghborIDs.Count; ++i)
-                    {
-                        var neighbor = EntityManager.GetEntityById(_avoidNeghborIDs[i]) as MovableEntity;
-                        if (neighbor == null)
-                            continue;
-                        Draw.drawBoxOutline(annotation, neighbor.Position, FixMath.F64Quat.Identity, boxSize, Colors.Red, FixMath.F64.One);
-                    }
-                }
-#endif
-
-                // 7. draw vectors
+                // 6. draw vectors
                 var velocityRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxSpeed);
                 var forceRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxForce);
                 var clampRange = new FixMath.F64Vec2(FixMath.F64.Zero, Radius * 3);
@@ -574,195 +527,31 @@ namespace Pathfinding.Crowds
         // or neighbors if needed, otherwise follow the path and wander
         FixMath.F64Vec3 determineCombinedSteering(FixMath.F64 elapsedTime)
         {
-            var template = Template as TMovableEntityTemplate;
-
-            if (null == EntityManager || null == targetLocation)
-                return FixMath.F64Vec3.Zero;
-
-            var forceScale = FixMath.F64.FromFloat(1.0f);
-#if ENABLE_STEER_AGENT_DEBUG
-	        ref var info = ref Debuger.SteerFoceInfoBuff.Alloc(EntityManager.FrameNo);
-	        info.reset();
-	        info.position = Position;
-	        info.maxForce = MaxForce;
-#endif
-
-            // probability that a lower priority behavior will be given a
-            // chance to "drive" even if a higher priority behavior might
-            // otherwise be triggered.
-            // var leakThrough = FixMath.F64.FromFloat(0.1f);
-
-            var steeringForce = FixMath.F64Vec3.Zero;
-
-            // 1.path follow corner point
-            var pathFollowForce = FixMath.F64Vec3.Zero;
+            if (-1 != _moveStrategyIndex)
             {
-                if (null != Pathway)
-                {
-                    var predictionTime = template.FollowPathAheadTime;
-                    pathFollowForce = this.SteerToFollowPath(_pathDirection, predictionTime, Pathway, MaxSpeed, out var currentPathDistance, annotation) * template.FollowPathWeight;
-
-                    // float pathDistanceOffset = (_pathDirection ? 1 : -1) * predictionTime * Speed;
-                    // referencePoint = Pathway.MapPathDistanceToPoint(currentPathDistance + FixMath.F64.FromFloat(0.5f));
-                }
-
-                if (pathFollowForce == FixMath.F64Vec3.Zero)
-                {
-                    pathFollowForce = SteerForSeek(targetLocation.Value) * template.FollowPathWeight;
-                }
-
-                pathFollowForce = pathFollowForce.TruncateLength(MaxForce);
-
-#if ENABLE_STEER_AGENT_DEBUG
-                info.targetForce = pathFollowForce * forceScale;
-#endif
-                steeringForce += pathFollowForce;
-            }
-            _debugVec3Items[(int)eDebugVec3Item.PathFollowForce] = pathFollowForce;
-
-            // 2.avoid neighbors
-            var collisionAvoidance = FixMath.F64Vec3.Zero;
-            {
-#if false
-                // otherwise consider avoiding collisions with others
-                List<IVehicle> neighbors = new List<IVehicle>();
-                for (int i = 0; i < _neighbors.Count; ++i)
-                {
-                    var neighbor = _neighbors[i] as MovableEntity;
-                    if (null == neighbor || ID == neighbor.ID)
-                        continue;
-                    //if (neighbor.HasEntityState(eEntityState.Moving))
-                    //    continue;
-                    neighbors.Add(neighbor);
-                }
-
-                // collisionAvoidance = steerToAvoidNeighbors(timeCollisionWithNeighbor, neighbors);
-                collisionAvoidance = SteerToAvoidNeighbors(Template.AvoidNeighborAheadTime, neighbors, ref _avoidNeighborInfo);
-                collisionAvoidance = collisionAvoidance * Template.AvoidNeighborWeight;
-#else
-                _avoidNeghborIDs.Clear();
-                _avoidQuerySystem.Init(ID, Position.Cast2D(), Radius, Velocity.Cast2D(), template.AvoidNeighborAheadTime);
-                for (var i = 0; i < _neighbors.Count; ++i)
-                {
-                    var neighbor = _neighbors[i] as MovableEntity;
-                    if (null == neighbor || ID == neighbor.ID)
-                        continue;
-                    if (!ShouldAvoidNeighbor(neighbor))
-                        continue;
-
-                    var add = _avoidQuerySystem.AddCircle(neighbor.ID, neighbor.Position.Cast2D(), neighbor.Radius, neighbor.Velocity.Cast2D());
-                    if (add) _avoidNeghborIDs.Add(neighbor.ID);
-                }
-
-                var avoidDirection = _avoidQuerySystem.QueryAvoidDirection(this, EntityManager.FrameNo, ref _avoidNeighborInfo);
-                //// 防止方向突变，加个平滑插值逻辑
-                //var percent = FixMath.F64.Clamp01(elapsedTime / FixMath.F64.FromFloat(0.2f));
-                //if (avoidDirection == FixMath.F64Vec3.Zero)
-                //{
-                //    _avoidNeighborForceWeight = FixMath.F64.Lerp(_avoidNeighborForceWeight, FixMath.F64.Zero, percent);
-                //}
-                //else
-                //{
-                //    _avoidNeighborForceWeight = Template.AvoidNeighborWeight;
-                //    _avoidNeighborDirection = avoidDirection;
-                //}
-                var lateral = Vector3Helpers.PerpendicularComponent(avoidDirection, Forward);
-                collisionAvoidance = FixMath.F64Vec3.NormalizeFast(lateral) * MaxForce * template.AvoidNeighborWeight;
-#endif
-
-#if ENABLE_STEER_AGENT_DEBUG
-                info.avoidNeighborFoce = collisionAvoidance * forceScale;
-#endif
-                steeringForce += collisionAvoidance;
-            }
-            _debugVec3Items[(int)eDebugVec3Item.AvoidNeighborForce] = collisionAvoidance;
-
-            // 3.avoid obstacles
-            var obstacleAvoidance = FixMath.F64Vec3.Zero;
-            {
-                _boundaryObstacles.Clear();
-                // var obstacles = new List<IObstacle>();
-                for (var i = 0; i < _boundarySegmentNum; ++i)
-                {
-                    var boundary = _boundarySegements[i];
-                    var v = boundary.End - boundary.Start;
-                    v.Y = FixMath.F64.Zero;
-                    var s = v.Normalize();
-                    var f = Vector3Helpers.Up.Cross(s);
-                    var u = f.Cross(s);
-                    var p = (boundary.End + boundary.Start) * FixMath.F64.Half;
-
-                    var w = v.Length2D();
-                    var h = FixMath.F64.FromFloat(1.0f);
-                    var obstacle = new RectangleObstacle(w, h, s, u, f, p, seenFromState.outside);
-                    _boundaryObstacles.Add(obstacle);
-
-                }
-
-                if (_boundaryObstacles.Count > 0)
-                {
-                    obstacleAvoidance = SteerToAvoidObstacles(template.AvoidObstacleAheadTime, _boundaryObstacles, ref _avoidObstacleInfo) * template.AvoidObstacleWeight;
-
-#if ENABLE_STEER_AGENT_DEBUG
-                    info.obstacleForce = obstacleAvoidance * forceScale;
-#endif
-                }
-
-                steeringForce += obstacleAvoidance;
-            }
-            _debugVec3Items[(int)eDebugVec3Item.AvoidObstacleForce] = obstacleAvoidance;
-
-            // 
-            if (collisionAvoidance != FixMath.F64Vec3.Zero ||
-                obstacleAvoidance != FixMath.F64Vec3.Zero)
-            {
-                var forwardMoveForce = FixMath.F64Vec3.Zero;
-                {
-                    forwardMoveForce = Forward * MaxForce * template.ForwardMoveWeight;
-                    steeringForce += forwardMoveForce;
-                }
-                _debugVec3Items[(int)eDebugVec3Item.ForwardMoveForce] = forwardMoveForce;
+                var moveStrategy = _moveStrategies[_moveStrategyIndex];
+                return moveStrategy.OnUpdate(this, elapsedTime);
             }
 
-            // flock
-            if (obstacleAvoidance == FixMath.F64Vec3.Zero)
-            { 
-                var flockForce = steerToFlock(elapsedTime);
-
-                steeringForce += flockForce * forceScale;
-            }
-
-            var totalForce = steeringForce.SetYtoZero();
-#if ENABLE_STEER_AGENT_DEBUG
-	        info.steerForce = totalForce;
-#endif
-            _debugVec3Items[(int)eDebugVec3Item.TotalSteerForce] = totalForce;
-            return totalForce;
+            return FixMath.F64Vec3.Zero;
         }
 
-        FixMath.F64Vec3 steerToFlock(FixMath.F64 elapsedTime)
+        void updateMoveStrategy()
         {
-            var template = Template as TMovableEntityTemplate;
-            // determine each of the three component behaviors of flocking
-            var separation = SteerForSeparation(template.SeparationRadius,
-                                                template.SeparationAngle,
-                                                _neighbors);
-            var alignment = SteerForAlignment(template.AlignmentRadius,
-                                              template.AlignmentAngle,
-                                              _neighbors);
-            var cohesion = SteerForCohesion(template.CohesionRadius,
-                                            template.CohesionAngle,
-                                            _neighbors);
-
-            // apply weights to components (save in variables for annotation)
-            var separationForce = separation * template.SeparationWeight;
-            var alignmentForce = alignment * template.AlignmentWeight;
-            var cohesionForce = cohesion * template.CohesionWeight;
-
-            _debugVec3Items[(int)eDebugVec3Item.FlockSeparationForce] = separationForce;
-            _debugVec3Items[(int)eDebugVec3Item.FlockAligmentForce] = alignmentForce;
-            _debugVec3Items[(int)eDebugVec3Item.FlockCohesionForce] = cohesionForce;
-            return separationForce + alignmentForce + cohesionForce;
+            for (var i = 0; i < _moveStrategies.Length; ++i)
+            {
+                var strategy = _moveStrategies[i];
+                if (null != strategy && strategy.Condition(this))
+                {
+                    if (_moveStrategyIndex != i)
+                    {
+                        if (-1 != _moveStrategyIndex) _moveStrategies[_moveStrategyIndex].OnStop(this);
+                        _moveStrategies[i].OnStart(this);
+                        _moveStrategyIndex = i;
+                        break;
+                    }
+                }
+            }
         }
 
         public override FixMath.F64Vec3 GetAvoidObstacleDirection(IObstacle obstacle, ref PathIntersection pathIntersection, ref IVehicle.FAvoidObstacleInfo info) 
@@ -775,9 +564,9 @@ namespace Pathfinding.Crowds
             var side = IVehicle.eAvoidSide.Left;
             if (info.Side == IVehicle.eAvoidSide.None)
             { 
-                if (_avoidNeighborInfo.IsValid)
+                if (info.IsValid)
                 {
-                    side = _avoidNeighborInfo.Side;
+                    side = info.Side;
                 }
                 else
                 {
@@ -835,13 +624,13 @@ namespace Pathfinding.Crowds
                 if (info.Side == IVehicle.eAvoidSide.None)
                 {
                     // 选择和对方一致的避让方向
-                    if (entity.AvoidNeighborInfo.EntityId == ID)
+                    if (info.EntityId == ID)
                     {
-                        side = entity.AvoidNeighborInfo.Side;
+                        side = info.Side;
                     }
-                    else if (_avoidObstacleInfo.IsValid)
+                    else if (info.IsValid)
                     {
-                        side = _avoidObstacleInfo.Side;
+                        side = info.Side;
                     }
                     else
                     {
@@ -896,8 +685,8 @@ namespace Pathfinding.Crowds
             return FixMath.F64Vec3.Zero; 
         }
 
-        static FixMath.F64 IRECTION_ANGLE_THRESHOLD = FixMath.F64.DegToRad(FixMath.F64.FromFloat(45.0f));
-        static FixMath.F64 DIRECTION_ANGLE_THRESHOLD_COS = FixMath.F64.CosFast(IRECTION_ANGLE_THRESHOLD);
+        static FixMath.F64 DIRECTION_ANGLE_THRESHOLD = FixMath.F64.DegToRad(FixMath.F64.FromFloat(45.0f));
+        static FixMath.F64 DIRECTION_ANGLE_THRESHOLD_COS = FixMath.F64.CosFast(DIRECTION_ANGLE_THRESHOLD);
         public override bool ShouldAvoidNeighbor(IVehicle threat) 
         { 
             // 规则：
@@ -919,37 +708,6 @@ namespace Pathfinding.Crowds
                 }
             }
             return false; 
-        }
-
-        // 更新避让neighbor信息，并在合适的时机重置信息
-        void updateAvoidNeighborInfo()
-        {
-            if (!_avoidNeighborInfo.EntityId.IsValid())
-            {
-                _avoidNeighborInfo.Reset();
-                return;
-            }
-
-            // 超过一定帧数没有需要避让的单位，则重置避让信息
-            var deltaFrame = EntityManager.FrameNo - _avoidNeighborInfo.FrameNo;
-            if (deltaFrame > 5)
-            {
-                _avoidNeighborInfo.Reset();
-            }
-        }
-
-        void updateAvoidObstacleInfo()
-        {
-            if (null == _avoidObstacleInfo.Obstacle)
-            {
-                _avoidObstacleInfo.Reset();
-            }
-
-            var deltaFrame = EntityManager.FrameNo - _avoidObstacleInfo.FrameNo;
-            if (deltaFrame > 5)
-            {
-                _avoidObstacleInfo.Reset();
-            }
         }
 
         // 返回避让邻近单位位移量
