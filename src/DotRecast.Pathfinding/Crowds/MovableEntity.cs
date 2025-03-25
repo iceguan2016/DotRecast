@@ -126,11 +126,12 @@ namespace Pathfinding.Crowds
             }
         }
 
+        // Debug
         public MovableEntityDebuger Debuger { get; private set; }
         public IAnnotationService Annotation { get { return annotation; } }
 
         // route for path following (waypoints and legs)
-        private PolylinePathway Pathway = null;
+        public PolylinePathway Pathway { get; private set; }
         // True means walking forward along the path, false means walking backward along the path
         private bool _pathDirection = true;
         // history avoid info

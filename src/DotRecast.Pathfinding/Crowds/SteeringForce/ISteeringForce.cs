@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Pathfinding.Crowds;
+using SharpSteer2;
 
-namespace Pathfinding.Crowds.MoveStrategy.SteeringForce
+namespace Pathfinding.Crowds.SteeringForce
 {
     // 避让策略接口类，策略分几个等级，优先级由高到低：
     // 1.被同阵营优先级更高的单位推开（自己处于Idle状态，可以被推挤开，避让完毕后要回到原先位置）
@@ -12,6 +14,9 @@ namespace Pathfinding.Crowds.MoveStrategy.SteeringForce
 
     public interface ISteeringForce
     {
+        // force weight
+        FixMath.F64 Weight { get; set; }
+        // calculate final steering force
         FixMath.F64Vec3 GetSteeringForce(MovableEntity owner);
     }
 }
