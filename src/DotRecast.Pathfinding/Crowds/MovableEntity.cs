@@ -26,6 +26,8 @@ namespace Pathfinding.Crowds
     }
     public class TMovableEntityTemplate : TEntityTemplate
     {
+        // stop move radius
+        public FixMath.F64 StopMoveRadius = FixMath.F64.FromFloat(1.5f);
         // radius
         public FixMath.F64 Radius = FixMath.F64.FromFloat(0.5f);
         // maximum move speed
@@ -254,6 +256,8 @@ namespace Pathfinding.Crowds
 
         public virtual void OnDelete()
         {
+            ICrowdEntityActor.DestroyPhysicsBody(this, _physicsBody);
+
             Debuger = null;
         }
 
@@ -325,6 +329,16 @@ namespace Pathfinding.Crowds
         {
             if (!HasEntityState(eEntityState.Moving)) return;
             if (null == targetLocation) return;
+
+            var template = Template as TMovableEntityTemplate;
+
+            // check in stop radius
+            var distance = FixMath.F64Vec3.DistanceFast(Position, targetLocation.Value);
+            if (distance < template.StopMoveRadius)
+            {
+                SetEntityState(eEntityState.Idle);
+                return;
+            }
 
             // check if you are too far from the path
             if (null != Pathway)
