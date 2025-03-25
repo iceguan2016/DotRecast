@@ -104,7 +104,7 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             FollowPathWeight = FixMath.F64.FromFloat(1.0f),
 
             AvoidObstacleAheadTime = FixMath.F64.FromFloat(1.0f),
-            AvoidObstacleWeight = FixMath.F64.FromFloat(1.0f),
+            AvoidObstacleWeight = FixMath.F64.FromFloat(0.3f),
 
             AvoidNeighborAheadTime = FixMath.F64.FromFloat(1.0f),
             AvoidNeighborWeight = FixMath.F64.FromFloat(1.0f),
