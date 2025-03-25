@@ -20,6 +20,7 @@ using Pathfinding.Triangulation.AI;
 using Volatile;
 using FixMath.NET;
 using System.Security.Principal;
+using System.Reflection;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -524,8 +525,15 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             {
                 if (Debug.IsSimulationMode(eSimulationMode.Normal))
                 {
-                    var index = SelectEntities.FindIndex(Id => Id == entity.ID);
-                    entity.OnDraw(index != -1);
+                    if (IsDrawSelectionInfo)
+                    {
+                        var index = SelectEntities.FindIndex(Id => Id == entity.ID);
+                        entity.OnDraw(index != -1);
+                    }
+                    else
+                    {
+                        entity.OnDraw(false);
+                    }
                 }
                 else if (Debug.IsSimulationMode(eSimulationMode.Playback))
                 {
@@ -616,13 +624,17 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         }
     }
 
-    public bool IsDrawNavmeshGrpah = false;
+    public bool IsDrawNavmeshGrpah = true;
     public bool IsDrawPhysicsWorld = false;
+    public bool IsDrawContactInfo = false;
+    public bool IsDrawSelectionInfo = false;
 
     public void Layout()
     {
         ImGui.Checkbox("Draw Navmesh Graph", ref IsDrawNavmeshGrpah);
         ImGui.Checkbox("Draw Physics World", ref IsDrawPhysicsWorld);
+        ImGui.Checkbox("Draw Contact Info", ref IsDrawContactInfo);
+        ImGui.Checkbox("Draw Selection Info", ref IsDrawSelectionInfo);
 
         var propertyChanged = false;
 
@@ -988,6 +1000,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
 
         // draw contact pairs
+        if (_tool.IsDrawContactInfo)
         {
             _tool.EntityManager.ForEachContactPair((EntityIDA, EntityIDB)  => { 
                 var EntityA = _tool.EntityManager.GetEntityById(EntityIDA);
