@@ -18,5 +18,7 @@ namespace Pathfinding.Crowds.SteeringForce
         FixMath.F64 Weight { get; set; }
         // calculate final steering force
         FixMath.F64Vec3 GetSteeringForce(MovableEntity owner);
+        // draw debug gizmos
+        void DrawGizmos(MovableEntity owner);
     }
 }

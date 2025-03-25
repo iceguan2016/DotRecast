@@ -71,6 +71,7 @@ namespace Pathfinding.Crowds
         {
             Idle = 0,
 	        Moving,
+            Attack,
         };
 
         // a pointer to this boid's interface object for the proximity database
@@ -145,11 +146,13 @@ namespace Pathfinding.Crowds
         private BoundarySegement[]  _boundarySegements = null;
         private int                 _boundarySegmentNum = 0;
         private List<IObstacle>     _boundaryObstacles = new List<IObstacle>();
+        public List<IObstacle>      BoundaryObstacles { get { return _boundaryObstacles; } }
         private AvoidanceQuerySystem _avoidQuerySystem = new AvoidanceQuerySystem();
         private List<UniqueId>      _avoidNeghborIDs = new List<UniqueId>();
 
         // local neighbors
         private List<IVehicle>      _neighbors = new List<IVehicle>();
+        public List<IVehicle>       Neighbors { get { return _neighbors; } }
         // displacement for neighbor collision
         public FixMath.F64Vec3      Displacement { get; set; }
         // debug forces
@@ -370,6 +373,24 @@ namespace Pathfinding.Crowds
             if (null != LocalBoundaryQuerier)
             {
                 _boundarySegmentNum = LocalBoundaryQuerier.QueryBoundaryInCircle(this, QueryLocalBoundaryRadius, _boundarySegements);
+                // create boundary obstacles
+                _boundaryObstacles.Clear();
+                // var obstacles = new List<IObstacle>();
+                for (var i = 0; i < _boundarySegmentNum; ++i)
+                {
+                    var boundary = _boundarySegements[i];
+                    var v = boundary.End - boundary.Start;
+                    v.Y = FixMath.F64.Zero;
+                    var s = v.Normalize();
+                    var f = Vector3Helpers.Up.Cross(s);
+                    var u = f.Cross(s);
+                    var p = (boundary.End + boundary.Start) * FixMath.F64.Half;
+
+                    var w = v.Length2D();
+                    var h = FixMath.F64.FromFloat(1.0f);
+                    var obstacle = new RectangleObstacle(w, h, s, u, f, p, seenFromState.outside);
+                    _boundaryObstacles.Add(obstacle);
+                }
             }
 
             // determine steering force
@@ -1035,5 +1056,6 @@ namespace Pathfinding.Crowds
         public override void AnnotationAvoidNeighbor(IVehicle threat, SharpSteer2.Obstacles.PathIntersection intersection) 
         {
         }
+
     }
 }

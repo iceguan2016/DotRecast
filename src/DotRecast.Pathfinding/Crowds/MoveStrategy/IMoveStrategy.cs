@@ -1,4 +1,6 @@
 
+using SharpSteer2;
+
 namespace Pathfinding.Crowds.AvoidStrategy
 {
     // 移动策略，单位在不同阶段有不同的移动规则，比如Idle状态可以被别的单位推挤开，推挤完毕后回到之前位置，
@@ -17,5 +19,8 @@ namespace Pathfinding.Crowds.AvoidStrategy
         // 通知事件
         void OnOverlapBegin(MovableEntity owner, MovableEntity other);
         void OnOverlapEnd(MovableEntity owner, MovableEntity other);
+
+        // 调试
+        void DrawGizmos(MovableEntity owner);
     }
 }

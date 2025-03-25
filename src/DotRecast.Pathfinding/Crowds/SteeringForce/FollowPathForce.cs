@@ -38,5 +38,10 @@ namespace Pathfinding.Crowds.SteeringForce
             }
             return pathFollowForce;
         }
+
+        public override void Reset()
+        {
+            
+        }
     }
 }

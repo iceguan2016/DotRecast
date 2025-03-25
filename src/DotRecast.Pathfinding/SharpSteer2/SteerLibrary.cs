@@ -40,87 +40,87 @@ namespace SharpSteer2
         #region steering behaviours
 	    private FixMath.F64 _wanderSide;
 	    private FixMath.F64 _wanderUp;
-	    protected FixMath.F64Vec3 SteerForWander(FixMath.F64 dt)
+	    public FixMath.F64Vec3 SteerForWander(FixMath.F64 dt)
 	    {
 	        return this.SteerForWander(dt, ref _wanderSide, ref _wanderUp);
 	    }
 
-	    protected FixMath.F64Vec3 SteerForFlee(FixMath.F64Vec3 target)
+        public FixMath.F64Vec3 SteerForFlee(FixMath.F64Vec3 target)
 	    {
 	        return this.SteerForFlee(target, MaxSpeed);
 	    }
 
-	    protected FixMath.F64Vec3 SteerForSeek(FixMath.F64Vec3 target)
+        public FixMath.F64Vec3 SteerForSeek(FixMath.F64Vec3 target)
 	    {
 	        return this.SteerForSeek(target, MaxSpeed);
 		}
 
-        protected FixMath.F64Vec3 SteerForArrival(FixMath.F64Vec3 target, FixMath.F64 slowingDistance)
+        public FixMath.F64Vec3 SteerForArrival(FixMath.F64Vec3 target, FixMath.F64 slowingDistance)
 	    {
 	        return this.SteerForArrival(target, MaxSpeed, slowingDistance, annotation);
 	    }
 
-	    protected FixMath.F64Vec3 SteerToFollowFlowField(IFlowField field, FixMath.F64 predictionTime)
+        public FixMath.F64Vec3 SteerToFollowFlowField(IFlowField field, FixMath.F64 predictionTime)
 	    {
 	        return this.SteerToFollowFlowField(field, MaxSpeed, predictionTime, annotation);
 	    }
 
-        protected FixMath.F64Vec3 SteerToFollowPath(bool direction, FixMath.F64 predictionTime, IPathway path)
+        public FixMath.F64Vec3 SteerToFollowPath(bool direction, FixMath.F64 predictionTime, IPathway path)
 	    {
 	        return this.SteerToFollowPath(direction, predictionTime, path, MaxSpeed, annotation);
 	    }
 
-        protected FixMath.F64Vec3 SteerToStayOnPath(FixMath.F64 predictionTime, IPathway path)
+        public FixMath.F64Vec3 SteerToStayOnPath(FixMath.F64 predictionTime, IPathway path)
 	    {
 	        return this.SteerToStayOnPath(predictionTime, path, MaxSpeed, annotation);
 	    }
 
-        protected FixMath.F64Vec3 SteerToAvoidObstacle(FixMath.F64 minTimeToCollision, IObstacle obstacle)
+        public FixMath.F64Vec3 SteerToAvoidObstacle(FixMath.F64 minTimeToCollision, IObstacle obstacle)
         {
             return this.SteerToAvoidObstacle(minTimeToCollision, obstacle, annotation);
         }
 
-	    protected FixMath.F64Vec3 SteerToAvoidObstacles(FixMath.F64 minTimeToCollision, IEnumerable<IObstacle> obstacles, ref IVehicle.FAvoidObstacleInfo info)
+        public FixMath.F64Vec3 SteerToAvoidObstacles(FixMath.F64 minTimeToCollision, IEnumerable<IObstacle> obstacles, ref IVehicle.FAvoidObstacleInfo info)
 	    {
 	        return this.SteerToAvoidObstacles(minTimeToCollision, obstacles, ref info, annotation);
 	    }
 
-	    protected FixMath.F64Vec3 SteerToAvoidNeighbors(FixMath.F64 minTimeToCollision, IEnumerable<IVehicle> others, ref IVehicle.FAvoidNeighborInfo info)
+        public FixMath.F64Vec3 SteerToAvoidNeighbors(FixMath.F64 minTimeToCollision, IEnumerable<IVehicle> others, ref IVehicle.FAvoidNeighborInfo info)
 		{
 	        return this.SteerToAvoidNeighbors(minTimeToCollision, others, ref info, annotation);
 	    }
 
-	    protected FixMath.F64Vec3 SteerToAvoidCloseNeighbors<TVehicle>(FixMath.F64 minSeparationDistance, IEnumerable<TVehicle> others) where TVehicle : IVehicle
+        public FixMath.F64Vec3 SteerToAvoidCloseNeighbors<TVehicle>(FixMath.F64 minSeparationDistance, IEnumerable<TVehicle> others) where TVehicle : IVehicle
         {
             return this.SteerToAvoidCloseNeighbors<TVehicle>(minSeparationDistance, others, annotation);
         }
 
-	    protected FixMath.F64Vec3 SteerForSeparation(FixMath.F64 maxDistance, FixMath.F64 cosMaxAngle, IEnumerable<IVehicle> flock)
+        public FixMath.F64Vec3 SteerForSeparation(FixMath.F64 maxDistance, FixMath.F64 cosMaxAngle, IEnumerable<IVehicle> flock)
 	    {
 	        return this.SteerForSeparation(maxDistance, cosMaxAngle, flock, annotation);
 	    }
 
-	    protected FixMath.F64Vec3 SteerForAlignment(FixMath.F64 maxDistance, FixMath.F64 cosMaxAngle, IEnumerable<IVehicle> flock)
+        public FixMath.F64Vec3 SteerForAlignment(FixMath.F64 maxDistance, FixMath.F64 cosMaxAngle, IEnumerable<IVehicle> flock)
 	    {
 	        return this.SteerForAlignment(maxDistance, cosMaxAngle, flock, annotation);
 	    }
 
-	    protected FixMath.F64Vec3 SteerForCohesion(FixMath.F64 maxDistance, FixMath.F64 cosMaxAngle, IEnumerable<IVehicle> flock)
+        public FixMath.F64Vec3 SteerForCohesion(FixMath.F64 maxDistance, FixMath.F64 cosMaxAngle, IEnumerable<IVehicle> flock)
 	    {
 	        return this.SteerForCohesion(maxDistance, cosMaxAngle, flock, annotation);
 	    }
 
-	    protected FixMath.F64Vec3 SteerForPursuit(IVehicle quarry, FixMath.F64 maxPredictionTime /*= float.MaxValue*/)
+        public FixMath.F64Vec3 SteerForPursuit(IVehicle quarry, FixMath.F64 maxPredictionTime /*= float.MaxValue*/)
 	    {
 	        return this.SteerForPursuit(quarry, maxPredictionTime, MaxSpeed, annotation);
 	    }
 
-        protected FixMath.F64Vec3 SteerForEvasion(IVehicle menace, FixMath.F64 maxPredictionTime)
+        public FixMath.F64Vec3 SteerForEvasion(IVehicle menace, FixMath.F64 maxPredictionTime)
         {
             return this.SteerForEvasion(menace, maxPredictionTime, MaxSpeed, annotation);
         }
 
-	    protected FixMath.F64Vec3 SteerForTargetSpeed(FixMath.F64 targetSpeed)
+        public FixMath.F64Vec3 SteerForTargetSpeed(FixMath.F64 targetSpeed)
 	    {
 	        return this.SteerForTargetSpeed(targetSpeed, MaxForce, annotation);
 	    }
