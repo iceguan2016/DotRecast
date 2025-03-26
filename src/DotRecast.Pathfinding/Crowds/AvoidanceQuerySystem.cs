@@ -197,8 +197,6 @@ namespace Pathfinding.Crowds
                         }
                     }
                     if (addTempVO) voLists.Add(tmpVO);
-
-                    debugVOs.Add((neighborEntityId, new List<VO>(voLists)));
                     return true;
                 }
             }
