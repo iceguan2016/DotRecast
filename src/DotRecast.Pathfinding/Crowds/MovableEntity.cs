@@ -84,7 +84,6 @@ namespace Pathfinding.Crowds
             Side = rotation * Vector3Helpers.Right;
             Up = rotation * Vector3Helpers.Up;
         }
-
         public FixMath.F64Quat GetRotation() 
         {
             return FixMath.F64Quat.LookRotation(Forward, FixMath.F64Vec3.Up);

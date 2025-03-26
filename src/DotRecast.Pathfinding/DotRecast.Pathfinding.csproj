@@ -36,14 +36,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
     <DefineConstants>$(DefineConstants);ENABLE_STEER_AGENT_DEBUG</DefineConstants>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <Compile Remove="Navmesh\NavgationSystem.cs" />
-  </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Navmesh\Nodes\" />
-    <Folder Include="Navmesh\Shape\" />
     <Folder Include="Math\" />
   </ItemGroup>
 
