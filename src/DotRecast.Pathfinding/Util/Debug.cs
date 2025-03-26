@@ -75,6 +75,15 @@ namespace Pathfinding.Util
 
         }
 
+        // 测试单个neighbor
+        public static int _drawVOIndex = 10;
+        private static int _watchNeighborIndex = 0;
+        public static int WatchNeighborIndex { get { return _watchNeighborIndex; } set { _watchNeighborIndex = value; } }
+        public static bool IsWatchingNeighborIndex(int neiCount, int neiIndex)
+        {
+            return (WatchNeighborIndex % neiCount) == neiIndex;
+        }
+
         // 播放模式
         private static eSimulationMode _simulationMode = eSimulationMode.Normal;
         public static bool IsSimulationMode(eSimulationMode InMode) { return _simulationMode == InMode; }

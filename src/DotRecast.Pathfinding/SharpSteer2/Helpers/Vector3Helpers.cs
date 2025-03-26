@@ -352,6 +352,17 @@ namespace SharpSteer2.Helpers
             return a.X * b.Y - a.Y * b.X;
         }
 
+        // 判断b是否在a的左边
+        public static bool LeftSide(this FixMath.F64Vec2 a, FixMath.F64Vec2 b)
+        {
+            return a.Det(b) >= 0;
+        }
+        // 判断b是否在a的右边
+        public static bool RightSide(this FixMath.F64Vec2 a, FixMath.F64Vec2 b)
+        {
+            return a.Det(b) <= 0;
+        }
+
         public static FixMath.F64 Length(this FixMath.F64Vec3 a) { return FixMath.F64Vec3.LengthFast(a); }
         public static FixMath.F64 Length2D(this FixMath.F64Vec3 a) { var b = new FixMath.F64Vec3(a.X, FixMath.F64.Zero, a.Z); return FixMath.F64Vec3.LengthFast(b); }
         public static FixMath.F64 Distance(this FixMath.F64Vec3 a, FixMath.F64Vec3 b) { return FixMath.F64Vec3.DistanceFast(a, b); }

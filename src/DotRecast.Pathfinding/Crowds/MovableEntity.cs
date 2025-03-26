@@ -720,11 +720,17 @@ namespace Pathfinding.Crowds
 
         // 返回避让邻近单位位移量
         static FixMath.F64 COLLISION_RESOLVE_FACTOR = FixMath.F64.FromFloat(0.7f);
+        static FixMath.F64 COLLISION_RADIUS_SCALE = FixMath.F64.FromDouble(1.2f);
         static FixMath.F64 DISTANCE_EPLISION = FixMath.F64.FromFloat(0.001f);
         public FixMath.F64Vec3 ResolveCollisionWithNeighbors()
         {
+            var isIdle = !HasEntityState(eEntityState.Moving);
+            if (isIdle) return FixMath.F64Vec3.Zero;
+
+            // 碰撞半径比单位半径稍微大一点，尽量防止2个单位穿插
             var Disp = FixMath.F64Vec3.Zero;
             var w = FixMath.F64.Zero;
+            var R = Radius * COLLISION_RADIUS_SCALE;
 
             for (int i = 0; i < _neighbors.Count; ++i)
             {
@@ -732,11 +738,19 @@ namespace Pathfinding.Crowds
                 if (null == nei || ID == nei.ID)
                     continue;
 
+                // Idle的单位只和Idle单位处理碰撞
+                //if (isIdle && nei.HasEntityState(eEntityState.Moving))
+                //{
+                //    continue;
+                //}
+
+                var neiR = nei.Radius * COLLISION_RADIUS_SCALE;
+
                 // 检查距离
                 var Diff = Position - nei.Position;
                 Diff.Y = FixMath.F64.Zero;
                 var DistSq = Diff.LengthSquared();
-                var Radii = Radius + nei.Radius;
+                var Radii = R + neiR;
 
                 if (DistSq > Radii * Radii)
                     continue;

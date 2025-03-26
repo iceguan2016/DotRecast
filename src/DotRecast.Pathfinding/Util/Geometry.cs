@@ -13,7 +13,7 @@ namespace Pathfinding.Util
                 out FixMath.F64 tmin, /*out param*/
                 out FixMath.F64 tmax /*out param*/)
         {
-            // P = tV and (P - (c1-c0)*(c1-c0))^2 = (r1+r0)^2 intersect point
+            // P = tV and |P - (c1-c0)| = r1+r0 intersect point
             tmin = FixMath.F64.Zero;
             tmax = FixMath.F64.Zero;
             var s = c1 - c0;

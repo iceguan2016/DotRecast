@@ -81,7 +81,7 @@ namespace Pathfinding.Crowds.SteeringForce
                 }
             }
 
-            // 6. draw avoid neighbor detail info
+            // draw avoid neighbor detail info
             {
                 _avoidQuerySystem.DebugDrawGizmos(owner, annotation);
 
@@ -92,6 +92,17 @@ namespace Pathfinding.Crowds.SteeringForce
                     if (neighbor == null)
                         continue;
                     Draw.drawBoxOutline(annotation, neighbor.Position, FixMath.F64Quat.Identity, boxSize, Colors.Red, FixMath.F64.One);
+                }
+            }
+
+            // draw watch neighbor
+            var neighbors = owner.Neighbors;
+            for (var i = 0; i < neighbors.Count; ++i)
+            {
+                if (Debug.IsWatchingNeighborIndex(neighbors.Count, i))
+                {
+                    var boxSize = FixMath.F64Vec3.FromFloat(0.1f, 2.0f, 0.1f);
+                    Draw.drawBoxOutline(annotation, neighbors[i].Position, FixMath.F64Quat.Identity, boxSize, Colors.Green, FixMath.F64.One);
                 }
             }
         }

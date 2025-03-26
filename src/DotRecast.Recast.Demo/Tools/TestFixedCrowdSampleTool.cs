@@ -624,8 +624,8 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         }
     }
 
-    public bool IsDrawNavmeshGrpah = true;
-    public bool IsDrawPhysicsWorld = false;
+    public bool IsDrawNavmeshGrpah = false;
+    public bool IsDrawPhysicsWorld = true;
     public bool IsDrawContactInfo = false;
     public bool IsDrawSelectionInfo = false;
 
@@ -663,6 +663,14 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             }
         }
 
+        var neiIndex = Debug.WatchNeighborIndex;
+        if (ImGui.SliderInt($"Watch neighbor {neiIndex}", ref neiIndex, 0, 15))
+        {
+            Debug.WatchNeighborIndex = neiIndex;
+        }
+
+        ImGui.SliderInt($"Draw vo step {Debug._drawVOIndex}", ref Debug._drawVOIndex, 0, 15);
+
         ImGui.Text($"Movable Entity Templates");
         ImGui.Separator();
 
@@ -686,6 +694,10 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             var type = (eDebugVec3Item)i;
             propertyChanged |= ImGui.Checkbox(type.ToString(), ref currTemplate.DebugVec3Toggles[i]);
         }
+
+        var stopRadius = currTemplate.StopMoveRadius.Float;
+        propertyChanged |= ImGui.SliderFloat("StopMoveRadius", ref stopRadius, 1.0f, 10.0f);
+        currTemplate.StopMoveRadius = FixMath.F64.FromFloat(stopRadius);
 
         var radius = currTemplate.Radius.Float;
         propertyChanged |= ImGui.SliderFloat("Radius", ref radius, 0.1f, 5.0f);

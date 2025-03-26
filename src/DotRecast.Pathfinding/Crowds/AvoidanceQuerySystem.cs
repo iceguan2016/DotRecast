@@ -25,6 +25,8 @@ namespace Pathfinding.Crowds
                 public UniqueId Owner { get; private set; }
                 // Edge方向
                 public FixMath.F64Vec2 Direction { get; private set; }
+                // 角度[-Pi~Pi)
+                public FixMath.F64 Angle { get; private set; }
                 //
                 public FixMath.F64 DistanceSquared { get; private set; }
 
@@ -32,6 +34,16 @@ namespace Pathfinding.Crowds
                 {
                     Owner = id;
                     Direction = dir;
+                    if (dir != FixMath.F64Vec2.Zero)
+                    {
+                        Angle = FixMath.F64.Atan2Fastest(dir.Y, dir.X); // (-PI, PI)
+                        // while (Angle < 0) Angle += FixMath.F64.Pi2;
+                        // while (Angle > FixMath.F64.Pi2) Angle -= FixMath.F64.Pi2;
+                    }
+                    else
+                    {
+                        Angle = FixMath.F64.Zero;
+                    }
                     DistanceSquared = distSq;
                 }
 
@@ -39,6 +51,24 @@ namespace Pathfinding.Crowds
                 {
                     Owner = id;
                     Direction = dir;
+                    if (dir != FixMath.F64Vec2.Zero)
+                    {
+                        Angle = FixMath.F64.Atan2Fastest(dir.Y, dir.X); // (-PI, PI)
+                        // while (Angle < 0) Angle += FixMath.F64.Pi2;
+                        // while (Angle > FixMath.F64.Pi2) Angle -= FixMath.F64.Pi2;
+                    }
+                    else
+                    {
+                        Angle = FixMath.F64.Zero;
+                    }
+                    DistanceSquared = distSq;
+                }
+
+                public void SetEdge(UniqueId id, FixMath.F64Vec2 dir, FixMath.F64 angle, FixMath.F64 distSq)
+                {
+                    Owner = id;
+                    Direction = dir;
+                    Angle = angle;
                     DistanceSquared = distSq;
                 }
             }
@@ -49,10 +79,13 @@ namespace Pathfinding.Crowds
                 new VOEdge(UniqueId.InvalidID, FixMath.F64Vec2.Zero, FixMath.F64.Zero)
             };
 
-            public bool Contains(FixMath.F64Vec2 v)
+            public bool Contains(FixMath.F64 angle)
             {
-                // left在v的左边，right在v的右边
-                return v.Det(Edges[EdgeLeftIndex].Direction) >= 0 && v.Det(Edges[EdgeRightIndex].Direction) <= 0;
+                var left = Edges[EdgeLeftIndex].Angle;
+                var right = Edges[EdgeRightIndex].Angle;
+                // 注意：这里left - right的范围表示从left顺时针转到right所扫过的范围
+                // 比如当left为-170度(-2.96弧度)，right为-20度(-0.34弧度)就会出现left < right情况，需要分开处理
+                return left >= right? (left >= angle && angle >= right) : (angle <= left || angle >= right);
             }
 
             public bool TryMergeWith(VO other)
@@ -62,8 +95,8 @@ namespace Pathfinding.Crowds
                 ref var otherLeft = ref other.Edges[EdgeLeftIndex];
                 ref var otherRight = ref other.Edges[EdgeRightIndex];
 
-                bool leftContain = Contains(otherLeft.Direction);
-                bool rightContain = Contains(otherRight.Direction); /* attention */
+                bool leftContain = Contains(otherLeft.Angle);
+                bool rightContain = Contains(otherRight.Angle); /* attention */
 
                 if (leftContain && rightContain)
                 {
@@ -72,12 +105,12 @@ namespace Pathfinding.Crowds
 
                 if (leftContain)
                 {
-                    right.SetEdge(otherRight.Owner, otherRight.Direction, otherRight.DistanceSquared);
+                    right.SetEdge(otherRight.Owner, otherRight.Direction, otherRight.Angle, otherRight.DistanceSquared);
                 }
 
                 if (rightContain)
                 {
-                    left.SetEdge(otherLeft.Owner, otherLeft.Direction, otherLeft.DistanceSquared);
+                    left.SetEdge(otherLeft.Owner, otherLeft.Direction, otherLeft.Angle, otherLeft.DistanceSquared);
                 }
 
                 return leftContain || rightContain;
@@ -128,13 +161,13 @@ namespace Pathfinding.Crowds
             FixMath.F64Vec2 u = FixMath.F64Vec2.Zero;
             FixMath.F64Vec2 left, right;
 
-            if (distSq > combinedRadiusSq)
+            // if (distSq > combinedRadiusSq)
             {
                 FixMath.F64 tmin, tmax;
                 bool collision = Geometry.TimeToCollisionWithCircle2D(
                     ownerPosition2D, ownerRadius, relativeVelocity,
                     otherPosition2D, otherRadius, out tmin, out tmax);
-                if (collision && tmin > 0 && tmin < this.timeHorizon)
+                if (collision && tmin < this.timeHorizon)
                 // if (FixMath.F64Vec2.Dot(Velocity, relativePosition) > 0)  // in front
                 {
                     /* will collision */
@@ -149,6 +182,7 @@ namespace Pathfinding.Crowds
                     VO tmpVO = new VO();
                     tmpVO.Edges[VO.EdgeLeftIndex].SetEdge(neighborEntityId, left, distSq);
                     tmpVO.Edges[VO.EdgeRightIndex].SetEdge(neighborEntityId, right, distSq);
+                    var addTempVO = true;
                     for (int i = voLists.Count - 1; i >= 0; --i)
                     {
                         VO vo = voLists[i];
@@ -156,8 +190,15 @@ namespace Pathfinding.Crowds
                         {
                             voLists.RemoveAt(i);
                         }
+                        else if (vo.TryMergeWith(tmpVO))
+                        {
+                            addTempVO = false;
+                            break;
+                        }
                     }
-                    voLists.Add(tmpVO);
+                    if (addTempVO) voLists.Add(tmpVO);
+
+                    debugVOs.Add((neighborEntityId, new List<VO>(voLists)));
                     return true;
                 }
             }
