@@ -319,7 +319,7 @@ namespace Pathfinding.Crowds
                 {
                     if (FixMath.F64Quat.ToEulerAnglesDegree(rotation, out var Eluer))
                     {
-                        _physicsBody.Set(position.ToVoltVec2(), Eluer.Y.ToF64());
+                        _physicsBody.Set(position.ToVoltVec2(), FixMath.F64.DegToRad(Eluer.Y).ToF64());
                     }
                     else
                     {
@@ -335,16 +335,20 @@ namespace Pathfinding.Crowds
         {
             if (null != _physicsBody)
             {
-                var NewPosition = _physicsBody.Position.ToVec3(Position.Y);
-                // var NewRotation = FixMath.F64Quat.FromYawPitchRoll(
-                //    FixMath.F64.DegToRad(PhysicsBody.Angle.ToF64()),
-                //    FixMath.F64.Zero,
-                //    FixMath.F64.Zero);
-                // var NewVelocity = PhysicsBody.LinearVelocity.ToVec3(FixMath.F32.Zero);
+                // Idle和Attack状态的单位不允许被挤开
+                if (HasEntityState(eEntityState.Moving))
+                {
+                    var NewPosition = _physicsBody.Position.ToVec3(Position.Y);
+                    // var NewRotation = FixMath.F64Quat.FromYawPitchRoll(
+                    //    FixMath.F64.DegToRad(PhysicsBody.Angle.ToF64()),
+                    //    FixMath.F64.Zero,
+                    //    FixMath.F64.Zero);
+                    // var NewVelocity = PhysicsBody.LinearVelocity.ToVec3(FixMath.F32.Zero);
 
-                SetPosition(NewPosition);
-                // SetRotation(NewRotation);
-                // SetVelocity(NewVelocity);
+                    SetPosition(NewPosition);
+                    // SetRotation(NewRotation);
+                    // SetVelocity(NewVelocity);
+                }
             }
         }
 
