@@ -13,39 +13,27 @@ namespace Pathfinding.Crowds
         public FixMath.F64Vec2 HalfExtent = FixMath.F64Vec2.One;
     }
 
-    public class UnMovableEntity : ICrowdEntityActor
+    public class UnMovableEntity : AbstractCrowdEntity
     {
-        public TEntityTemplate Template { get; set; }
-        public IMovableEntityManager EntityManager { get; set; }
-        public UniqueId ID { get; set; }
-
-        public Volatile.VoltBody PhysicsBody { get { return _physicsBody; } }
-
         private FixMath.F64Vec3 _poistion;
         private FixMath.F64Quat _rotation;
-        private Volatile.VoltBody _physicsBody;
 
         public UnMovableEntity(IMovableEntityManager entityManager)
         {
             EntityManager = entityManager;
         }
 
-        public F64Vec3 GetPosition()
-        {
-            return _poistion;
-        }
+        public override F64Vec3 GetPosition() { return _poistion; }
+        public override F64Quat GetRotation() { return _rotation; }
+        public override void SetPosition(F64Vec3 position) { _poistion = position; }
+        public override void SetRotation(F64Quat rotation) { _rotation = rotation; }
 
-        public F64Quat GetRotation()
-        {
-            return _rotation;
-        }
-
-        public void OnCreate()
+        public override void OnCreate()
         {
             
         }
 
-        public void OnCreatePhysicsState()
+        public override void OnCreatePhysicsState()
         {
             var PhysicsWorld = EntityManager.PhysicsWorld;
             if (null == PhysicsWorld)
@@ -65,40 +53,30 @@ namespace Pathfinding.Crowds
                     Vertices[j] = OutPoints[i].ToVoltVec2();
                 var PhysicsShape = PhysicsWorld.CreatePolygonWorldSpace(Vertices, template.Density.ToF64());
 
-                _physicsBody = ICrowdEntityActor.CreatePhysicsBody(this, new Volatile.VoltShape[] { PhysicsShape });
+                PhysicsBody = ICrowdEntityActor.CreatePhysicsBody(this, new Volatile.VoltShape[] { PhysicsShape });
             }
         }
 
-        public void OnDelete()
+        public override void OnDelete()
         {
             
         }
 
-        public void OnDestroyPhysicsState()
+        public override void OnDestroyPhysicsState()
         {
-            ICrowdEntityActor.DestroyPhysicsBody(this, _physicsBody);
+            ICrowdEntityActor.DestroyPhysicsBody(this, PhysicsBody);
         }
 
-        public void OnPostPhysics()
-        {
-        }
-
-        public void OnPrePhysics()
+        public override void OnPostPhysics()
         {
         }
 
-        public void OnUpdate(F64 inDeltaTime)
+        public override void OnPrePhysics()
         {
         }
 
-        public void SetPosition(F64Vec3 position)
+        public override void OnUpdate(F64 inDeltaTime)
         {
-            _poistion = position;
-        }
-
-        public void SetRotation(F64Quat rotation)
-        {
-            _rotation = rotation;
         }
 
         bool GetBoundarySegements(FixMath.F64 InNavgationRadius, out List<FixMath.F64Vec2> OutPoints, out List<Tuple<int, int>> OutSegments)

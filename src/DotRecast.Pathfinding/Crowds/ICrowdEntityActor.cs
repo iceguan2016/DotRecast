@@ -11,11 +11,13 @@ namespace Pathfinding.Crowds
 
     public interface ICrowdEntityActor
     {
-        public TEntityTemplate Template { get; set; }
+        TEntityTemplate Template { get; set; }
 
-        public IMovableEntityManager EntityManager { get; set; }
-        public UniqueId ID { get; set; }
-        public Volatile.VoltBody PhysicsBody { get; }
+        IMovableEntityManager EntityManager { get; set; }
+        UniqueId ID { get; set; }
+        Volatile.VoltBody PhysicsBody { get; set; }
+        int GroupMask { get; set; }
+        int GroupsToAvoid { get; set; }
 
         void SetPosition(FixMath.F64Vec3 position);
         FixMath.F64Vec3 GetPosition();

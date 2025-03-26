@@ -68,6 +68,29 @@ namespace Pathfinding.Crowds
 
     public class MovableEntity : SimpleVehicle, ICrowdEntityActor
     {
+        // ICrowdEntityActor interface
+        public TEntityTemplate Template { get; set; }
+        public IMovableEntityManager EntityManager { get; set; }
+        // Entity unique id
+        public UniqueId ID { get; set; }
+        public Volatile.VoltBody PhysicsBody { get; set; }
+        public int GroupMask { get; set; }
+        public int GroupsToAvoid { get; set; }
+        public void SetPosition(FixMath.F64Vec3 position) { Position = position; }
+        public FixMath.F64Vec3 GetPosition() { return Position; }
+        public void SetRotation(FixMath.F64Quat rotation)
+        {
+            Forward = rotation * Vector3Helpers.Forward;
+            Side = rotation * Vector3Helpers.Right;
+            Up = rotation * Vector3Helpers.Up;
+        }
+
+        public FixMath.F64Quat GetRotation() 
+        {
+            return FixMath.F64Quat.LookRotation(Forward, FixMath.F64Vec3.Up);
+        }
+        // End
+
         // 单位状态
         public enum  eEntityState
         {
@@ -95,18 +118,9 @@ namespace Pathfinding.Crowds
             } 
         }
 
-        public TEntityTemplate Template { get; set; }
-
-        public IMovableEntityManager EntityManager { get; set; }
-
         public ILocalBoundaryQuerier LocalBoundaryQuerier { get; private set; }
 
         public IPathwayQuerier PathwayQuerier { get; private set; }
-        
-        // Entity unique id
-        public UniqueId ID { get; set; }
-
-        public Volatile.VoltBody PhysicsBody { get { return _physicsBody; } }
 
         // Move destination
         protected bool isTargetDirty { get; private set; }
@@ -154,14 +168,12 @@ namespace Pathfinding.Crowds
         public List<IVehicle>       Neighbors { get { return _neighbors; } }
         // displacement for neighbor collision
         public FixMath.F64Vec3      Displacement { get; set; }
+
         // debug forces
         private FixMath.F64Vec3[]   _debugVec3Items = null;
 
         // state bits
         private uint                _stateBitsValue = 0;
-
-        // physics body
-        private Volatile.VoltBody   _physicsBody = null;
 
         // move strategies
         private int                 _moveStrategyIndex = -1;
@@ -170,25 +182,6 @@ namespace Pathfinding.Crowds
         public void SetEntityState(eEntityState inState) { _stateBitsValue |= (uint)(1 << (int)inState); }
         public void ClearEntityState(eEntityState inState) { _stateBitsValue &= ~(uint)(1 << (int)inState); }
         public bool HasEntityState(eEntityState inState) { return (_stateBitsValue & (uint)(1 << (int)inState)) > 0; }
-
-        public void SetPosition(FixMath.F64Vec3 position)
-        {
-            Position = position;
-        }
-        public FixMath.F64Vec3 GetPosition()
-        {
-            return Position;
-        }
-        public void SetRotation(FixMath.F64Quat rotation)
-        {
-            Forward = rotation * Vector3Helpers.Forward;
-            Side = rotation * Vector3Helpers.Right;
-            Up = rotation * Vector3Helpers.Up;
-        }
-        public FixMath.F64Quat GetRotation()
-        {
-            return FixMath.F64Quat.LookRotation(Forward, Up);
-        }
 
         // constructor
         public MovableEntity(IMovableEntityManager manager, 
@@ -279,8 +272,8 @@ namespace Pathfinding.Crowds
         public virtual void OnDelete()
         {
             _moveStrategies = null;
-            ICrowdEntityActor.DestroyPhysicsBody(this, _physicsBody);
-
+            ICrowdEntityActor.DestroyPhysicsBody(this, PhysicsBody);
+            PhysicsBody = null;
             Debuger = null;
         }
 
@@ -290,14 +283,14 @@ namespace Pathfinding.Crowds
             // 创建Shape
             var shape = physicsWorld.CreateCircleWorldSpace(Position.ToVoltVec2(), Radius.ToF64());
             // 创建Body
-            _physicsBody = ICrowdEntityActor.CreatePhysicsBody(this, new Volatile.VoltShape[] { shape });
+            PhysicsBody = ICrowdEntityActor.CreatePhysicsBody(this, new Volatile.VoltShape[] { shape });
         }
 
         public void OnDestroyPhysicsState()
         {
             // 销毁物理体
-            ICrowdEntityActor.DestroyPhysicsBody(this, _physicsBody);
-            _physicsBody = null;
+            ICrowdEntityActor.DestroyPhysicsBody(this, PhysicsBody);
+            PhysicsBody = null;
         }
 
         // 是否是物理驱动模式
@@ -305,7 +298,7 @@ namespace Pathfinding.Crowds
         public virtual void OnPrePhysics()
         {
             // 设置逻辑层位置到物理层
-            if (null != _physicsBody)
+            if (null != PhysicsBody)
             {
                 var position = GetPosition();
                 var rotation = GetRotation();
@@ -313,32 +306,32 @@ namespace Pathfinding.Crowds
 
                 if (_phyiscsDrivenMode)
                 {
-                    _physicsBody.LinearVelocity = Velocity.ToVoltVec2();
+                    PhysicsBody.LinearVelocity = Velocity.ToVoltVec2();
                 }
                 else
                 {
                     if (FixMath.F64Quat.ToEulerAnglesDegree(rotation, out var Eluer))
                     {
-                        _physicsBody.Set(position.ToVoltVec2(), FixMath.F64.DegToRad(Eluer.Y).ToF64());
+                        PhysicsBody.Set(position.ToVoltVec2(), FixMath.F64.DegToRad(Eluer.Y).ToF64());
                     }
                     else
                     {
-                        _physicsBody.Set(position.ToVoltVec2(), FixMath.NET.Fix64.Zero);
+                        PhysicsBody.Set(position.ToVoltVec2(), FixMath.NET.Fix64.Zero);
                     }
 
-                    _physicsBody.LinearVelocity = Volatile.VoltVector2.zero;
+                    PhysicsBody.LinearVelocity = Volatile.VoltVector2.zero;
                 }
             }
         }
 
         public virtual void OnPostPhysics() 
         {
-            if (null != _physicsBody)
+            if (null != PhysicsBody)
             {
                 // Idle和Attack状态的单位不允许被挤开
                 if (HasEntityState(eEntityState.Moving))
                 {
-                    var NewPosition = _physicsBody.Position.ToVec3(Position.Y);
+                    var NewPosition = PhysicsBody.Position.ToVec3(Position.Y);
                     // var NewRotation = FixMath.F64Quat.FromYawPitchRoll(
                     //    FixMath.F64.DegToRad(PhysicsBody.Angle.ToF64()),
                     //    FixMath.F64.Zero,
