@@ -24,9 +24,6 @@ namespace Pathfinding.Triangulation.Math
         {
             return new Intersection_EFace(face);
         }
-
-
-        public static readonly global::hxDaedalus.data.math.Intersection ENull = new global::hxDaedalus.data.math.Intersection_ENull();
     }
 
     public sealed class Intersection_EVertex : Intersection

@@ -11,11 +11,6 @@ namespace Pathfinding.Triangulation.Data
             Vertex.INC = 0;
         }
 
-        public Vertex(global::haxe.lang.EmptyObject empty)
-        {
-        }
-
-
         public Vertex()
         {
             colorDebug = -1;

@@ -7,11 +7,6 @@ namespace Pathfinding.Triangulation.AI
 {
     public class PathFinder
     {
-        public PathFinder(global::haxe.lang.EmptyObject empty)
-        {
-        }
-
-
         public PathFinder()
         {
             this.astar = new AStar();

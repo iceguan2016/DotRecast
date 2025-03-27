@@ -1,3 +1,4 @@
+using Pathfinding.Triangulation.Data;
 using SharpSteer2.Obstacles;
 
 namespace Pathfinding.Crowds.Flowfield
@@ -8,7 +9,7 @@ namespace Pathfinding.Crowds.Flowfield
         public FixMath.F64Vec3 BoundsMin { get; private set; }
         public FixMath.F64Vec3 BoundsMax { get; private set; }
 
-        public void SetNavMesh(hxDaedalus.data.Mesh mesh)
+        public void SetNavMesh(Mesh mesh)
         {
                 
         }
