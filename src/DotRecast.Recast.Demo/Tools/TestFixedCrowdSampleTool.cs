@@ -21,6 +21,7 @@ using Volatile;
 using FixMath.NET;
 using System.Security.Principal;
 using System.Reflection;
+using Pathfinding.Main;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -160,6 +161,8 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
 
     public void Start()
     {
+        PathfindingMoudle.StartupModule();
+
         if (null != _entityManager)
         {
             _entityManager.Initialize();
@@ -172,6 +175,8 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         {
             _entityManager.UnInitialize();
         }
+
+        PathfindingMoudle.ShutdownModule();
     }
 
     public void Update(double inDeltaTime)

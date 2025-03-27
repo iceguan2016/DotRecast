@@ -5,7 +5,7 @@ namespace Pathfinding.Main
 {
     public class PathfindingMoudle
     {
-        public void StartupModule()
+        public static void StartupModule()
         {
             // Triangulation
             Vertex.INC = 0;
@@ -18,7 +18,7 @@ namespace Pathfinding.Main
             // 
         }
 
-	    public void ShutdownModule()
+	    public static void ShutdownModule()
         {
             
         }
