@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using FixMath;
+using hxDaedalus.data;
 using Pathfinding.Crowds;
 using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;
 using SharpSteer2.Helpers;
+using SharpSteer2.Pathway;
 using Volatile;
 
 namespace Pathfinding.Crowds
