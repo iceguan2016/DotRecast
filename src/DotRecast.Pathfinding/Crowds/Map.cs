@@ -44,7 +44,7 @@ namespace Pathfinding.Crowds
             return true;
         }
 
-        public Object AddObstacle(FixMath.F64Vec3 pos, FixMath.F64Quat rot, FixMath.F64Vec3 extent)
+        public Object AddObstacle(UniqueId entityId, FixMath.F64Vec3 pos, FixMath.F64Quat rot, FixMath.F64Vec3 extent)
         {
             if (null == _navmesh)
                 return null;
