@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FixMath;
 using Pathfinding.Triangulation.AI;
 using Pathfinding.Triangulation.Data;
+using Pathfinding.Triangulation.Factories;
 using Pathfinding.Triangulation.Iterators;
 using Pathfinding.Triangulation.Math;
 using Pathfinding.Util;
@@ -27,15 +28,20 @@ namespace Pathfinding.Crowds
         // obstacles
         private List<Object> _obstacles = new List<Object>();
 
-        public Map()
+        // Map默认中心在(0,0,0)坐标,所以只需要传入width和height
+        public bool SetMapInfo(FixMath.F64 mapWidth, FixMath.F64 mapHeight)
         {
-            _pathfinder = new PathFinder();
-        }
+            // build a rectangular 2 polygons mesh of mapWidth x mapHeight
+            var mesh = RectMesh.buildRectangle(mapWidth, mapHeight);
+            if (null == mesh)
+            {
+                return false;
+            }
 
-        public void SetNavmesh(Mesh navmesh)
-        {
-            _navmesh = navmesh;
-            _pathfinder.set_mesh(navmesh);
+            _navmesh = mesh;
+            _pathfinder = new PathFinder();
+            _pathfinder.set_mesh(mesh);
+            return true;
         }
 
         public Object AddObstacle(FixMath.F64Vec3 pos, FixMath.F64Quat rot, FixMath.F64Vec3 extent)
