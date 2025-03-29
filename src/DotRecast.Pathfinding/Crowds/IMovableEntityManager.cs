@@ -26,7 +26,9 @@ namespace Pathfinding.Crowds
         // initialize and uninitialized function
         public struct FInitializeParams
         {
-            // 地图中心强制在原点，所以只需要传入Width和Height
+            // 地图rect范围：(x, y) - (x+width, y+height)
+            public FixMath.F64 MapX; 
+            public FixMath.F64 MapY;
             public FixMath.F64 MapWidth;
             public FixMath.F64 MapHeight;
         }

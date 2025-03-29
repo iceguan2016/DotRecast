@@ -205,7 +205,7 @@ namespace Pathfinding.Crowds
 
             // initialize logic map
             _map = new Map();
-            _map.SetMap(inParams.MapWidth, inParams.MapHeight);
+            _map.SetMap(inParams.MapX, inParams.MapY, inParams.MapWidth, inParams.MapHeight);
 
             return true;
         }

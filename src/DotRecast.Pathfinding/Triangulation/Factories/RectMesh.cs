@@ -6,7 +6,7 @@ namespace Pathfinding.Triangulation.Factories
 {
     public class RectMesh
     {
-        public static Mesh buildRectangle(FixMath.F64 width, FixMath.F64 height)
+        public static Mesh buildRectangle(FixMath.F64 x, FixMath.F64 y, FixMath.F64 width, FixMath.F64 height)
         {
             /*
                TL
@@ -55,10 +55,10 @@ namespace Pathfinding.Triangulation.Factories
             //
 
             var offset = Constants.EPSILON * 1000;
-            vTL._pos = new FixMath.F64Vec2(0 - offset, 0 - offset);
-            vTR._pos = new FixMath.F64Vec2(width + offset, 0 - offset);
-            vBR._pos = new FixMath.F64Vec2(width + offset, height + offset);
-            vBL._pos = new FixMath.F64Vec2(0 - offset, height + offset);
+            vTL._pos = new FixMath.F64Vec2(x - offset, y - offset);
+            vTR._pos = new FixMath.F64Vec2(x + width + offset, y - offset);
+            vBR._pos = new FixMath.F64Vec2(x + width + offset, y + height + offset);
+            vBL._pos = new FixMath.F64Vec2(x - offset, y + height + offset);
 
             vTL.setDatas(eTL_TR);
             vTR.setDatas(eTR_BR);

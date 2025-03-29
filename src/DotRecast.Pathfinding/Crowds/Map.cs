@@ -29,11 +29,11 @@ namespace Pathfinding.Crowds
         // obstacles
         private Dictionary<Obstacle, UniqueId> _obstacles = new Dictionary<Obstacle, UniqueId>();
 
-        // Map默认中心在(0,0,0)坐标,所以只需要传入width和height
-        public bool SetMap(FixMath.F64 mapWidth, FixMath.F64 mapHeight)
+        // 地图rect范围：(x, y) - (x+width, y+height)
+        public bool SetMap(FixMath.F64 x, FixMath.F64 y, FixMath.F64 mapWidth, FixMath.F64 mapHeight)
         {
             // build a rectangular 2 polygons mesh of mapWidth x mapHeight
-            var mesh = RectMesh.buildRectangle(mapWidth, mapHeight);
+            var mesh = RectMesh.buildRectangle(x, y, mapWidth, mapHeight);
             if (null == mesh)
             {
                 return false;

@@ -161,7 +161,7 @@ public class TestFixedCrowdTool : IRcToolable
         return "Test FixedCrowd Tool";
     }
 
-    public void Start(double mapWidth, double mapHeight)
+    public void Start(double x, double y, double mapWidth, double mapHeight)
     {
         PathfindingMoudle.StartupModule();
 
@@ -169,6 +169,8 @@ public class TestFixedCrowdTool : IRcToolable
         {
             var param = new IMovableEntityManager.FInitializeParams()
             {
+                MapX = FixMath.F64.FromDouble(x),
+                MapY = FixMath.F64.FromDouble(y),
                 MapWidth = FixMath.F64.FromDouble(mapWidth),
                 MapHeight = FixMath.F64.FromDouble(mapHeight),
             };
@@ -1044,7 +1046,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         if (null != _tool) _tool.Destroy();
 
         _tool = new TestFixedCrowdTool();
-        if (null != _tool) _tool.Start(mapWidth, mapHeight);
+        if (null != _tool) _tool.Start(5.0, 5.0, mapWidth, mapHeight);
 
         Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
     }
