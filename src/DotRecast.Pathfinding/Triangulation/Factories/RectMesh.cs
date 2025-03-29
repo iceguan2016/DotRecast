@@ -50,15 +50,19 @@ namespace Pathfinding.Triangulation.Factories
             var segBot = new ConstraintSegment();
             var segLeft = new ConstraintSegment();
 
-            var mesh = new Mesh(width, height);
+            var mesh = new Mesh(x, y, width, height);
 
             //
+            var xmin = x;
+            var ymin = y;
+            var xmax = x + width;
+            var ymax = y + height;
 
             var offset = Constants.EPSILON * 1000;
-            vTL._pos = new FixMath.F64Vec2(x - offset, y - offset);
-            vTR._pos = new FixMath.F64Vec2(x + width + offset, y - offset);
-            vBR._pos = new FixMath.F64Vec2(x + width + offset, y + height + offset);
-            vBL._pos = new FixMath.F64Vec2(x - offset, y + height + offset);
+            vTL._pos = new FixMath.F64Vec2(xmin - offset, ymin - offset);
+            vTR._pos = new FixMath.F64Vec2(xmax + offset, ymin - offset);
+            vBR._pos = new FixMath.F64Vec2(xmax + offset, ymax + offset);
+            vBL._pos = new FixMath.F64Vec2(xmin - offset, ymax + offset);
 
             vTL.setDatas(eTL_TR);
             vTR.setDatas(eTR_BR);
@@ -114,10 +118,10 @@ namespace Pathfinding.Triangulation.Factories
 
             mesh._constraintShapes.Add(boundShape);
             var securityRect = new List<FixMath.F64>();
-            securityRect.AddRange(new FixMath.F64[] { FixMath.F64.Zero, FixMath.F64.Zero, width, FixMath.F64.Zero });
-            securityRect.AddRange(new FixMath.F64[] { width, FixMath.F64.Zero, width, height });
-            securityRect.AddRange(new FixMath.F64[] { width, height, FixMath.F64.Zero, height });
-            securityRect.AddRange(new FixMath.F64[] { FixMath.F64.Zero, height, FixMath.F64.Zero, FixMath.F64.Zero });
+            securityRect.AddRange(new FixMath.F64[] { xmin, ymin, xmax, ymin });
+            securityRect.AddRange(new FixMath.F64[] { xmax, ymin, xmax, ymax });
+            securityRect.AddRange(new FixMath.F64[] { xmax, ymax, xmin, ymax });
+            securityRect.AddRange(new FixMath.F64[] { xmin, ymax, xmin, ymin });
 
 
             mesh.set_clipping(false);

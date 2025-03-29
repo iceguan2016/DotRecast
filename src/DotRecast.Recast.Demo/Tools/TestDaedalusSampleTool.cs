@@ -372,7 +372,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         // populate mesh with many square objects
         hxDaedalus.data.Object hxObject = null;
         HxArray<double> shapeCoords = null;
-        for (int i=0; i<30; ++i)
+        for (int i=0; i<0; ++i)
         {
             hxObject = new hxDaedalus.data.Object();
             shapeCoords = new HxArray<double>(new double[] {

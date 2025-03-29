@@ -14,11 +14,13 @@ namespace Pathfinding.Triangulation.Data
             Mesh.INC = 0;
         }
 
-        public Mesh(FixMath.F64 width, FixMath.F64 height)
+        public Mesh(FixMath.F64 xoffset, FixMath.F64 yoffset, FixMath.F64 width, FixMath.F64 height)
         {
             _id = INC;
             INC++;
 
+            _xoffset = xoffset;
+            _yoffset = yoffset;
             _width = width;
             _height = height;
             _clipping = true;
@@ -36,9 +38,11 @@ namespace Pathfinding.Triangulation.Data
         public static int INC;
 
         public int _id;
-
+        
+        // mesh rect: (xoffset, yoffset) - (xoffset+width, yoffset+height)
+        public FixMath.F64 _xoffset;
+        public FixMath.F64 _yoffset;
         public FixMath.F64 _width;
-
         public FixMath.F64 _height;
 
         public bool _clipping;
@@ -282,6 +286,11 @@ namespace Pathfinding.Triangulation.Data
         {
             //Debug.trace("insertConstraintSegment");
 
+            var xmin = _xoffset;
+            var ymin = _yoffset;
+            var xmax = _xoffset + _width;
+            var ymax = _yoffset + _height;
+
             /* point positions relative to bounds
             1 | 2 | 3
             ------------
@@ -305,7 +314,7 @@ namespace Pathfinding.Triangulation.Data
                 if (p1pos != 0 && p2pos != 0)
                 {
                     // if both end points are on same side
-                    if ((x1 <= 0 && x2 <= 0) || (x1 >= _width && x2 >= _width) || (y1 <= 0 && y2 <= 0) || (y1 >= _height && y2 >= _height))
+                    if ((x1 <= xmin && x2 <= xmin) || (x1 >= xmax && x2 >= xmax) || (y1 <= ymin && y2 <= ymin) || (y1 >= ymax && y2 >= ymax))
                         return null;  // if end points are in separated left and right areas  ;
 
 
@@ -313,11 +322,11 @@ namespace Pathfinding.Triangulation.Data
                     if ((p1pos == 8 && p2pos == 4) || (p1pos == 4 && p2pos == 8))
                     {
                         // intersection with left bound
-                        Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, FixMath.F64.Zero, _height, out intersectPoint);
+                        Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmin, ymax, out intersectPoint);
                         newX1 = intersectPoint.X;
                         newY1 = intersectPoint.Y;
                         // intersection with right bound
-                        Geom2D.intersections2segments(x1, y1, x2, y2, _width, FixMath.F64.Zero, _width, _height, out intersectPoint);
+                        Geom2D.intersections2segments(x1, y1, x2, y2, xmax, ymin, xmax, ymax, out intersectPoint);
                         newX2 = intersectPoint.X;
                         newY2 = intersectPoint.Y;
                     }
@@ -325,11 +334,11 @@ namespace Pathfinding.Triangulation.Data
                     else if ((p1pos == 2 && p2pos == 6) || (p1pos == 6 && p2pos == 2))
                     {
                         // intersection with top bound
-                        Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, _width, FixMath.F64.Zero, out intersectPoint);
+                        Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmax, ymin, out intersectPoint);
                         newX1 = intersectPoint.X;
                         newY1 = intersectPoint.Y;
                         // intersection with bottom bound
-                        Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, _height, _width, _height, out intersectPoint);
+                        Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymax, xmax, ymax, out intersectPoint);
                         newX2 = intersectPoint.X;
                         newY2 = intersectPoint.Y;
                     }
@@ -337,13 +346,13 @@ namespace Pathfinding.Triangulation.Data
                     else if ((p1pos == 2 && p2pos == 8) || (p1pos == 8 && p2pos == 2))
                     {
                         // check if intersection with top bound
-                        if (Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, _width, FixMath.F64.Zero, out intersectPoint))
+                        if (Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmax, ymin, out intersectPoint))
                         {
                             newX1 = intersectPoint.X;
                             newY1 = intersectPoint.Y;
 
                             // must have intersection with left bound
-                            Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, FixMath.F64.Zero, _height, out intersectPoint);
+                            Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmin, ymax, out intersectPoint);
                             newX2 = intersectPoint.X;
                             newY2 = intersectPoint.Y;
                         }
@@ -354,13 +363,13 @@ namespace Pathfinding.Triangulation.Data
                     else if ((p1pos == 2 && p2pos == 4) || (p1pos == 4 && p2pos == 2))
                     {
                         // check if intersection with top bound
-                        if (Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, _width, FixMath.F64.Zero, out intersectPoint))
+                        if (Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmax, ymin, out intersectPoint))
                         {
                             newX1 = intersectPoint.X;
                             newY1 = intersectPoint.Y;
 
                             // must have intersection with right bound
-                            Geom2D.intersections2segments(x1, y1, x2, y2, _width, FixMath.F64.Zero, _width, _height, out intersectPoint);
+                            Geom2D.intersections2segments(x1, y1, x2, y2, xmax, ymin, xmax, ymax, out intersectPoint);
                             newX2 = intersectPoint.X;
                             newY2 = intersectPoint.Y;
                         }
@@ -371,13 +380,13 @@ namespace Pathfinding.Triangulation.Data
                     else if ((p1pos == 6 && p2pos == 4) || (p1pos == 4 && p2pos == 6))
                     {
                         // check if intersection with bottom bound
-                        if (Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, _height, _width, _height, out intersectPoint))
+                        if (Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymax, xmax, ymax, out intersectPoint))
                         {
                             newX1 = intersectPoint.X;
                             newY1 = intersectPoint.Y;
 
                             // must have intersection with right bound
-                            Geom2D.intersections2segments(x1, y1, x2, y2, _width, FixMath.F64.Zero, _width, _height, out intersectPoint);
+                            Geom2D.intersections2segments(x1, y1, x2, y2, xmax, ymin, xmax, ymax, out intersectPoint);
                             newX2 = intersectPoint.X;
                             newY2 = intersectPoint.Y;
                         }
@@ -388,13 +397,13 @@ namespace Pathfinding.Triangulation.Data
                     else if ((p1pos == 8 && p2pos == 6) || (p1pos == 6 && p2pos == 8))
                     {
                         // check if intersection with bottom bound
-                        if (Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, _height, _width, _height, out intersectPoint))
+                        if (Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymax, xmax, ymax, out intersectPoint))
                         {
                             newX1 = intersectPoint.X;
                             newY1 = intersectPoint.Y;
 
                             // must have intersection with left bound
-                            Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, FixMath.F64.Zero, _height, out intersectPoint);
+                            Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmin, ymax, out intersectPoint);
                             newX2 = intersectPoint.X;
                             newY2 = intersectPoint.Y;
                         }
@@ -407,14 +416,14 @@ namespace Pathfinding.Triangulation.Data
                         var firstDone = false;
                         var secondDone = false;
                         // check top bound
-                        if (Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, _width, FixMath.F64.Zero, out intersectPoint))
+                        if (Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmax, ymin, out intersectPoint))
                         {
                             newX1 = intersectPoint.X;
                             newY1 = intersectPoint.Y;
                             firstDone = true;
                         }  // check right bound  
 
-                        if (Geom2D.intersections2segments(x1, y1, x2, y2, _width, FixMath.F64.Zero, _width, _height, out intersectPoint))
+                        if (Geom2D.intersections2segments(x1, y1, x2, y2, xmax, ymin, xmax, ymax, out intersectPoint))
                         {
                             if (!firstDone)
                             {
@@ -430,7 +439,7 @@ namespace Pathfinding.Triangulation.Data
                             }
                         }  // check bottom bound  
 
-                        if (!secondDone && Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, _height, _width, _height, out intersectPoint))
+                        if (!secondDone && Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymax, xmax, ymax, out intersectPoint))
                         {
                             if (!firstDone)
                             {
@@ -446,7 +455,7 @@ namespace Pathfinding.Triangulation.Data
                             }
                         }  // check left bound  
 
-                        if (!secondDone && Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, FixMath.F64.Zero, _height, out intersectPoint))
+                        if (!secondDone && Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmin, ymax, out intersectPoint))
                         {
                             newX2 = intersectPoint.X;
                             newY2 = intersectPoint.Y;
@@ -463,40 +472,40 @@ namespace Pathfinding.Triangulation.Data
                     if (p1pos == 2 || p2pos == 2)
                     {
                         // intersection with top bound
-                        Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, _width, FixMath.F64.Zero, out intersectPoint);
+                        Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmax, ymin, out intersectPoint);
                     }
                     // if one point is outside right
                     else if (p1pos == 4 || p2pos == 4)
                     {
                         // intersection with right bound
-                        Geom2D.intersections2segments(x1, y1, x2, y2, _width, FixMath.F64.Zero, _width, _height, out intersectPoint);
+                        Geom2D.intersections2segments(x1, y1, x2, y2, xmax, ymin, xmax, ymax, out intersectPoint);
                     }
                     // if one point is outside bottom
                     else if (p1pos == 6 || p2pos == 6)
                     {
                         // intersection with bottom bound
-                        Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, _height, _width, _height, out intersectPoint);
+                        Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymax, xmax, ymax, out intersectPoint);
                     }
                     // if one point is outside left
                     else if (p1pos == 8 || p2pos == 8)
                     {
                         // intersection with left bound
-                        Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, FixMath.F64.Zero, _height, out intersectPoint);
+                        Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmin, ymax, out intersectPoint);
                     }
                     // other cases (could be optimized)
                     else
                     {
                         // check top bound
-                        if (!Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, _width, FixMath.F64.Zero, out intersectPoint))
+                        if (!Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmax, ymin, out intersectPoint))
                         {
                             // check right bound
-                            if (!Geom2D.intersections2segments(x1, y1, x2, y2, _width, FixMath.F64.Zero, _width, _height, out intersectPoint))
+                            if (!Geom2D.intersections2segments(x1, y1, x2, y2, xmax, ymin, xmax, ymax, out intersectPoint))
                             {
                                 // check bottom bound
-                                if (!Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, _height, _width, _height, out intersectPoint))
+                                if (!Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymax, xmax, ymax, out intersectPoint))
                                 {
                                     // check left bound
-                                    Geom2D.intersections2segments(x1, y1, x2, y2, FixMath.F64.Zero, FixMath.F64.Zero, FixMath.F64.Zero, _height, out intersectPoint);
+                                    Geom2D.intersections2segments(x1, y1, x2, y2, xmin, ymin, xmin, ymax, out intersectPoint);
                                 }
                             }
                         }
@@ -865,7 +874,12 @@ namespace Pathfinding.Triangulation.Data
 
         public Vertex insertVertex(FixMath.F64 x, FixMath.F64 y)
         {
-            if (x < 0 || y < 0 || x > this._width || y > this._height)
+            var xmin = _xoffset;
+            var ymin = _yoffset;
+            var xmax = _xoffset + _width;
+            var ymax = _yoffset + _height;
+
+            if (x < xmin || y < ymin || x > xmax || y > ymax)
             {
                 return null;
             }
@@ -1606,13 +1620,17 @@ namespace Pathfinding.Triangulation.Data
 
         public int findPositionFromBounds(FixMath.F64 x, FixMath.F64 y)
         {
-            if ((x <= 0))
+            var xmin = _xoffset;
+            var ymin = _yoffset;
+            var xmax = _xoffset + _width;
+            var ymax = _yoffset + _height;
+            if ((x <= xmin))
             {
-                if ((y <= 0))
+                if ((y <= ymin))
                 {
                     return 1;
                 }
-                else if ((y >= this._height))
+                else if ((y >= ymax))
                 {
                     return 7;
                 }
@@ -1622,13 +1640,13 @@ namespace Pathfinding.Triangulation.Data
                 }
 
             }
-            else if ((x >= this._width))
+            else if ((x >= xmax))
             {
-                if ((y <= 0))
+                if ((y <= ymin))
                 {
                     return 3;
                 }
-                else if ((y >= this._height))
+                else if ((y >= ymax))
                 {
                     return 5;
                 }
@@ -1638,11 +1656,11 @@ namespace Pathfinding.Triangulation.Data
                 }
 
             }
-            else if ((y <= 0))
+            else if ((y <= ymin))
             {
                 return 2;
             }
-            else if ((y >= this._height))
+            else if ((y >= ymax))
             {
                 return 6;
             }
@@ -1710,7 +1728,11 @@ namespace Pathfinding.Triangulation.Data
 
         public bool vertexIsInsideAABB(Vertex vertex, Mesh mesh)
         {
-            return !(vertex._pos.X < 0 || vertex._pos.X > mesh._width || vertex._pos.Y < 0 || vertex._pos.Y > mesh._height);
+            var xmin = _xoffset;
+            var ymin = _yoffset;
+            var xmax = _xoffset + _width;
+            var ymax = _yoffset + _height;
+            return !(vertex._pos.X < xmin || vertex._pos.X > xmax || vertex._pos.Y < ymin || vertex._pos.Y > ymax);
         }
     }
 }
