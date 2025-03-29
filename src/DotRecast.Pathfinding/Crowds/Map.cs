@@ -10,13 +10,14 @@ using Pathfinding.Triangulation.Math;
 using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Pathway;
-using Object = Pathfinding.Triangulation.Data.Object;
 
 namespace Pathfinding.Crowds
 {
     public class Map : ILocalBoundaryQuerier, IPathwayQuerier
     {
+        // navmesh
         private Mesh _navmesh = null;
+        public Mesh NavMesh { get { return _navmesh; } }
 
         // map height
         public FixMath.F64 MapHeight { get; set; }
@@ -26,10 +27,10 @@ namespace Pathfinding.Crowds
         public PathFinder Pathfinder { get { return _pathfinder; } }
 
         // obstacles
-        private List<Object> _obstacles = new List<Object>();
+        private Dictionary<Obstacle, UniqueId> _obstacles = new Dictionary<Obstacle, UniqueId>();
 
         // Map默认中心在(0,0,0)坐标,所以只需要传入width和height
-        public bool SetMapInfo(FixMath.F64 mapWidth, FixMath.F64 mapHeight)
+        public bool SetMap(FixMath.F64 mapWidth, FixMath.F64 mapHeight)
         {
             // build a rectangular 2 polygons mesh of mapWidth x mapHeight
             var mesh = RectMesh.buildRectangle(mapWidth, mapHeight);
@@ -44,42 +45,70 @@ namespace Pathfinding.Crowds
             return true;
         }
 
-        public Object AddObstacle(UniqueId entityId, FixMath.F64Vec3 pos, FixMath.F64Quat rot, FixMath.F64Vec3 extent)
+        public Obstacle AddObstacle(UniqueId entityId, FixMath.F64Vec3 pos, FixMath.F64Quat rot, FixMath.F64Vec3 extent)
         {
             if (null == _navmesh)
                 return null;
-            var hxObject = new Object();
+            var Obstacle = new Obstacle();
             var shapeCoords = new List<FixMath.F64> {
                             -FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One,
                              FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One, FixMath.F64.One,
                              FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One,
                             -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, -FixMath.F64.One };
 
-            hxObject._coordinates = shapeCoords;
-            hxObject._scaleX = extent.X;
-            hxObject._scaleY = extent.Z;
+            Obstacle._coordinates = shapeCoords;
+            Obstacle._scaleX = extent.X;
+            Obstacle._scaleY = extent.Z;
             if (FixMath.F64Quat.ToEulerAnglesRad(rot, out var eulerAngle))
             {
-                hxObject._rotation = eulerAngle.Y;
+                // 这里角度要反转一下？
+                Obstacle._rotation = -eulerAngle.Y;
             }
             else
             {
-                hxObject._rotation = FixMath.F64.Zero;
+                Obstacle._rotation = FixMath.F64.Zero;
             }
-            hxObject._x = pos.X;
-            hxObject._y = pos.Z;
+            Obstacle._x = pos.X;
+            Obstacle._y = pos.Z;
 
-            _navmesh.insertObject(hxObject);
-            _obstacles.Add(hxObject);
-            return hxObject;
+            _navmesh.insertObject(Obstacle);
+            _obstacles.Add(Obstacle, entityId);
+            return Obstacle;
         }
 
-        public void RemoveObstacle(Object obstacle)
+        public void RemoveObstacle(Obstacle obstacle)
         {
             if (null == _navmesh)
                 return;
             _navmesh.deleteObject(obstacle);
             _obstacles.Remove(obstacle);
+        }
+
+        public Obstacle HitObstacle(FixMath.F64 x, FixMath.F64 y)
+        {
+            var p = new FixMath.F64Vec2(x, y);
+
+            foreach (var (obstacle, entityId) in _obstacles)
+            {
+                var edges = obstacle.get_edges();
+                if (edges.Count == 0)
+                    continue;
+
+                // 
+                var matrix = new Matrix2D();
+                matrix.identity();
+                matrix.translate(-obstacle._x, -obstacle._y);
+                matrix.rotate(-obstacle.get_rotation());
+
+                var local_p = p;
+                matrix.tranform(local_p);
+
+                if (FixMath.F64.Abs(local_p.X) < obstacle._scaleX && FixMath.F64.Abs(local_p.Y) < obstacle._scaleY)
+                {
+                    return obstacle;
+                }
+            }
+            return null;
         }
 
         #region ILocalBoundaryQuerier

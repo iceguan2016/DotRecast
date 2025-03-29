@@ -268,11 +268,16 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         return "Test Daedalus Tool";
     }
 
-    public void Start()
+    public void Start(double mapWidth, double mapHeight)
     {
         if (null != _entityManager)
         {
-            _entityManager.Initialize();
+            var param = new IMovableEntityManager.FInitializeParams()
+            {
+                MapWidth = FixMath.F64.FromDouble(mapWidth),
+                MapHeight = FixMath.F64.FromDouble(mapHeight),
+            };
+            _entityManager.Initialize(param);
         }
     }
 
@@ -1333,7 +1338,7 @@ public class TestDaedalusSampleTool : ISampleTool
         if (null != _tool) _tool.Destroy();
 
         _tool = new TestDaedalusTool();
-        if (null != _tool) _tool.Start();
+        if (null != _tool) _tool.Start(mapWidth, mapHeight);
 
         _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
 

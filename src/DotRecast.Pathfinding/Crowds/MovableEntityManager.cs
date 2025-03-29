@@ -8,6 +8,7 @@ using SharpSteer2.Database;
 using SharpSteer2.Helpers;
 using SharpSteer2.Pathway;
 using Volatile;
+using static Pathfinding.Crowds.IMovableEntityManager;
 
 namespace Pathfinding.Crowds
 {
@@ -79,9 +80,14 @@ namespace Pathfinding.Crowds
         // physics world
         private Volatile.VoltWorld _physicsWorld = null;
 
+        // logic map
+        private Map _map = null;
+
         public int FrameNo { get; set; }
 
         public Volatile.VoltWorld PhysicsWorld { get { return _physicsWorld; } }
+
+        public Map Map { get { return _map; } }
 
         public UniqueId CreateEntity(CreateEntityParams inParams)
         {
@@ -182,7 +188,7 @@ namespace Pathfinding.Crowds
             return entities.ToArray();
         }
 
-        public bool Initialize()
+        public bool Initialize(FInitializeParams inParams)
         {
             if (_initialized) return true;
 
@@ -197,6 +203,10 @@ namespace Pathfinding.Crowds
             _physicsWorld.IterationCount = 5;
 
             _physicsWorld.SetContactListener(this);
+
+            // initialize logic map
+            _map = new Map();
+            _map.SetMap(inParams.MapWidth, inParams.MapHeight);
 
             return true;
         }

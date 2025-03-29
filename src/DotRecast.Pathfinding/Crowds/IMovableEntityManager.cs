@@ -21,8 +21,16 @@ namespace Pathfinding.Crowds
 
         Volatile.VoltWorld PhysicsWorld { get; }
 
-        // init and uninit function
-        bool Initialize();
+        Map Map { get; }
+
+        // initialize and uninitialized function
+        public struct FInitializeParams
+        {
+            // 地图中心强制在原点，所以只需要传入Width和Height
+            public FixMath.F64 MapWidth;
+            public FixMath.F64 MapHeight;
+        }
+        bool Initialize(FInitializeParams inParams);
         bool UnInitialize();
 
         // create new entity

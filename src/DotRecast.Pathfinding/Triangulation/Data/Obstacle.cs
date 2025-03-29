@@ -4,14 +4,14 @@ using Pathfinding.Triangulation.Math;
 
 namespace Pathfinding.Triangulation.Data
 {
-    public class Object
+    public class Obstacle
     {
-        static Object()
+        static Obstacle()
         {
-            Object.INC = 0;
+            Obstacle.INC = 0;
         }
 
-        public Object()
+        public Obstacle()
         {
             _id = INC;
             INC++;

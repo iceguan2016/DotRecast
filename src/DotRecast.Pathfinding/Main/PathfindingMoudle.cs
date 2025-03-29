@@ -13,7 +13,7 @@ namespace Pathfinding.Main
             Edge.INC = 0;
             ConstraintSegment.INC = 0;
             ConstraintShape.INC = 0;
-            Object.INC = 0;
+            Obstacle.INC = 0;
 
             // 
         }

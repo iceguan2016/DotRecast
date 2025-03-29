@@ -14,13 +14,10 @@ using Pathfinding.Triangulation.Iterators;
 using Pathfinding.Triangulation.Data;
 using Pathfinding.Triangulation.View;
 using Pathfinding.Triangulation.Math;
-using Object = Pathfinding.Triangulation.Data.Object;
 using Pathfinding.Triangulation.Factories;
 using Pathfinding.Triangulation.AI;
 using Volatile;
 using FixMath.NET;
-using System.Security.Principal;
-using System.Reflection;
 using Pathfinding.Main;
 
 namespace DotRecast.Recast.Demo.Tools;
@@ -68,13 +65,10 @@ public class PhysicsWorldGizmosDrawer : IGizmosDrawer
     }
 }
 
-public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuerier
+public class TestFixedCrowdTool : IRcToolable
 {
     // pseudo random generator
     Random rand = new Random((int)DateTime.Now.Ticks);
-
-    // Graph mesh
-    public Mesh Mesh { get; private set; }
 
     public UnityEngine.Vector3? StartPoint { get; set; }
     public UnityEngine.Vector3? EndPoint { get; set; }
@@ -88,7 +82,7 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     public PathFinder Pathfinder { get; private set; }
 
     // obstacles
-    private List<Object> _obstacles = new List<Object>();
+    private List<Obstacle> _obstacles = new List<Obstacle>();
 
     // crowd entity templates
     public TMovableEntityTemplate[] MovableEntityTemplates = new TMovableEntityTemplate[] {
@@ -139,6 +133,14 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     private List<UniqueId> _selectEntities = new List<UniqueId>();
     public List<UniqueId> SelectEntities { get { return _selectEntities; } }
 
+    public Mesh Mesh 
+    { 
+        get 
+        {
+            return EntityManager.Map.NavMesh;
+        } 
+    }
+
     // annotation
     private EntityAnnotationServerice _annotationServerice = null;
     public DrawInterface DrawInterface 
@@ -159,14 +161,35 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         return "Test FixedCrowd Tool";
     }
 
-    public void Start()
+    public void Start(double mapWidth, double mapHeight)
     {
         PathfindingMoudle.StartupModule();
 
         if (null != _entityManager)
         {
-            _entityManager.Initialize();
+            var param = new IMovableEntityManager.FInitializeParams()
+            {
+                MapWidth = FixMath.F64.FromDouble(mapWidth),
+                MapHeight = FixMath.F64.FromDouble(mapHeight),
+            };
+
+            if (_entityManager.Initialize(param))
+            {
+                // AddRandomObstacle(30, mapWidth, mapHeight);
+            }
         }
+    }
+
+    void AddRandomObstacle(int totalCount, double mapWidth, double mapHeight)
+    {
+        // populate mesh with many square objects
+        for (int i = 0; i < totalCount; ++i)
+        {
+            var x = RandomRange(50, 600) / 600.0f * mapWidth;
+            var y = RandomRange(50, 600) / 600.0f * mapHeight;
+
+            AddObstacle(x, y);
+        }  // show result mesh on screen
     }
 
     public void Destroy()
@@ -190,55 +213,35 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
     {
         if (null == Mesh)
             return;
-        var hxObject = new Object();
-        var shapeCoords = new List<FixMath.F64> {
-                            -FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One,
-                             FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One, FixMath.F64.One,
-                             FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, FixMath.F64.One,
-                            -FixMath.F64.One, FixMath.F64.One, -FixMath.F64.One, -FixMath.F64.One };
+        
+        var scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * Mesh._width.Float);
+        var scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * Mesh._height.Float);
+        var angle = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
+        var posx = FixMath.F64.FromDouble(x);
+        var posy = FixMath.F64.FromDouble(y);
 
-        hxObject._coordinates = shapeCoords;
-        hxObject._scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * Mesh._width.Float);
-        hxObject._scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * Mesh._height.Float);
-        //hxObject._scaleX = infos[i * 5 + 2];
-        //hxObject._scaleY = infos[i * 5 + 3];
-        hxObject._rotation = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
-        //hxObject._rotation = infos[i * 5 + 4];
-        hxObject._x = FixMath.F64.FromDouble(x);
-        hxObject._y = FixMath.F64.FromDouble(y);
-        //hxObject._x = infos[i * 5 + 0];
-        //hxObject._y = infos[i * 5 + 1];
-
-        // Debug.LogToFile($"BuildFixedGraphMesh pos:({hxObject._x}, {hxObject._y}), scale:({hxObject._scaleX}, {hxObject._scaleY}), rotation:{hxObject._rotation}");
-
-        Mesh.insertObject(hxObject);
-
-        // 添加到物理层
-        var angle = hxObject._rotation;
-        var cos = FixMath.F64.CosFast(angle);
-        var sin = FixMath.F64.SinFast(angle);
-        var xHalfSize = hxObject._scaleX;
-        var yHalfSize = hxObject._scaleY;
+        // 创建阻挡物实体对向
+        var rotation = FixMath.F64Quat.FromYawPitchRoll(angle, FixMath.F64.Zero, FixMath.F64.Zero);
+        //var cos = FixMath.F64.CosFast(angle);
+        //var sin = FixMath.F64.SinFast(angle);
+        var xHalfSize = scaleX;
+        var yHalfSize = scaleY;
         var template = new TUnMovableEntityTemplate() 
         { 
-            DirU = new FixMath.F64Vec2(cos, sin),
-            DirV = new FixMath.F64Vec2(-sin, cos),
             HalfExtent = new FixMath.F64Vec2(xHalfSize, yHalfSize),
         };
 
         var param = new CreateEntityParams() 
         {
-            SpawnPosition = new FixMath.F64Vec3(hxObject._x, MapHeight, hxObject._y),
-            SpawnRotation = FixMath.F64Quat.Identity,
+            SpawnPosition = new FixMath.F64Vec3(posx, MapHeight, posy),
+            SpawnRotation = rotation,
 
             Template = template,
         };
-        _entityManager.CreateEntity(param);
-
-        _obstacles.Add(hxObject);
+        var obstacleId = _entityManager.CreateEntity(param);
     }
 
-    public void RemoveObstacle(Object obstacle)
+    public void RemoveObstacle(Obstacle obstacle)
     {
         if (null == Mesh)
             return;
@@ -246,220 +249,10 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
         _obstacles.Remove(obstacle);
     }
 
-    public Object HitObstacle(double x, double y)
+    public Obstacle HitObstacle(double x, double y)
     {
-        var p = FixMath.F64Vec2.FromDouble(x, y);
-
-        for (var i = 0; i < _obstacles.Count; ++i)
-        {
-            var o = _obstacles[i];
-            var edges = _obstacles[i].get_edges();
-            if (edges.Count == 0)
-                continue;
-
-            // 
-            var matrix = new Matrix2D();
-            matrix.identity();
-            matrix.translate(-o._x, -o._y);
-            matrix.rotate(-o.get_rotation());
-
-            var local_p = p;
-            matrix.tranform(local_p);
-
-            if (FixMath.F64.Abs(local_p.X) < o._scaleX && FixMath.F64.Abs(local_p.Y) < o._scaleY)
-            {
-                return o;
-            }
-        }
-        return null;
+        return EntityManager.Map.HitObstacle(FixMath.F64.FromDouble(x), FixMath.F64.FromDouble(y));
     }
-
-    public bool BuildGraphMesh(FixMath.F64 mapWidth, FixMath.F64 mapHeight)
-    {
-        // build a rectangular 2 polygons mesh of mapWidth x mapHeight
-        Mesh = RectMesh.buildRectangle(mapWidth, mapHeight);
-        if (null == Mesh)
-        {
-            return false;
-        }
-
-        // populate mesh with many square objects
-        for (int i = 0; i < 30; ++i)
-        {
-            var x = RandomRange(50, 600) / 600.0f * mapWidth.Float;
-            var y = RandomRange(50, 600) / 600.0f * mapHeight.Float;
-            
-            AddObstacle(x, y);
-        }  // show result mesh on screen
-
-        // pathfinder
-        Pathfinder = new PathFinder();
-        Pathfinder.set_mesh(Mesh);
-
-        return true;
-    }
-
-    // IPathwayQuerier interface
-    public virtual SharpSteer2.Pathway.PolylinePathway FindPath(SharpSteer2.IVehicle vehicle, FixMath.F64Vec3 target)
-    {
-        var pathfinder = Pathfinder;
-        if (null == pathfinder)
-            return null;
-
-        var start = vehicle.PredictFuturePosition(FixMath.F64.Zero);
-        var radius = vehicle.Radius;
-
-        // 1.Create template entity
-
-        // 2.Set pathfinder params
-        var resultPath = new List<FixMath.F64>();
-        pathfinder.findPath(start.X, start.Z, target.X, target.Z, radius, resultPath);
-
-        // 3.Convert to PolylinePathway 
-        if (resultPath.Count > 0)
-        {
-            var points = new List<FixMath.F64Vec3>();
-            for (var i = 0; i < resultPath.Count; i += 2)
-            {
-                var v = new FixMath.F64Vec3(resultPath[i], MapHeight, resultPath[i + 1]);
-                points.Add(v);
-            }
-            return new SharpSteer2.Pathway.PolylinePathway(points, FixMath.F64.Zero, false);
-        }
-        return null;
-    }
-    // End
-
-    // ILocalBoundaryQuerier interface
-    public virtual int QueryBoundaryInCircle(SharpSteer2.IVehicle vehicle, FixMath.F64 inRadius, BoundarySegement[] outResults)
-    {
-        if (null == outResults) return 0;
-        var center = vehicle.PredictFuturePosition(FixMath.F64.Zero);
-        var loc = Geom2D.locatePosition(center.X, center.Z, Mesh);
-        Face refFace = null;
-        if (loc is Intersection_EVertex v)
-        { 
-        }
-        else if (loc is Intersection_EEdge e)
-        {
-            
-        }
-        else if (loc is Intersection_EFace f)
-        {
-            refFace = f.face;
-        }
-
-        var radiusSqured = inRadius * inRadius;
-
-        System.Func<hxDaedalus.data.Vertex, FixMath.F64Vec3> VertextToF64Vec3 = (vertex) => {
-            var pos = vertex.get_pos();
-            return FixMath.F64Vec3.FromDouble(pos.x, MapHeight.Double, pos.y);
-        };
-
-        System.Func<Face, bool> CheckIntersectionFaceAndCircle = (face) => {
-            // 这里改成Face的AABB盒是否和Circle相交判定，比只判定3个顶点更准确一些
-            FromFaceToInnerEdges iterEdge = new FromFaceToInnerEdges();
-            iterEdge.set_fromFace(face);
-            var min = new FixMath.F64Vec3(FixMath.F64.MaxValue, FixMath.F64.MaxValue, FixMath.F64.MaxValue);
-            var max = new FixMath.F64Vec3(FixMath.F64.MinValue, FixMath.F64.MinValue, FixMath.F64.MinValue);
-            while (true)
-            {
-                var innerEdge = iterEdge.next();
-                if (innerEdge == null)
-                {
-                    break;
-                }
-
-                var pos = innerEdge.get_originVertex();
-                min.X = FixMath.F64.Min(min.X, pos._pos.X);
-                min.Z = FixMath.F64.Min(min.Z, pos._pos.Y);
-
-                max.X = FixMath.F64.Max(max.X, pos._pos.X);
-                max.Z = FixMath.F64.Max(max.Z, pos._pos.Y);
-            }
-
-            if (min.X <= max.X && min.Z <= max.Z)
-            {
-                var radius_v3 = new FixMath.F64Vec3(inRadius, inRadius, inRadius);
-                var circle_min = center - radius_v3;
-                var circle_max = center + radius_v3;
-
-                // 逐维度比较，如果有一个维度不相交，则返回 false
-                if (max.X < circle_min.X || min.X > circle_max.X)
-                {
-                    return false;
-                }
-                //if (max.Y < circle_min.Y || min.Y > circle_max.Y)
-                //{
-                //    return false;
-                //}
-                if (max.Z < circle_min.Z || min.Z > circle_max.Z)
-                {
-                    return false;
-                }
-
-                return true;
-            }
-            return false;
-        };
-
-        if (null != refFace)
-        {
-            // Boundary edges
-            var boundaryEdges = new List<Edge>();
-            // Visit adjacent triangles
-            var pendingVisitFaces = new Queue<Face>();
-            var visiedFaces = new HashSet<Face>();
-
-            pendingVisitFaces.Enqueue(refFace);
-            var innerEdges = new FromFaceToInnerEdges();
-            while (pendingVisitFaces.Count > 0)
-            {
-                var face = pendingVisitFaces.Dequeue();
-                visiedFaces.Add(face);
-                // 遍历相邻的face
-                innerEdges.set_fromFace(face);
-                while (true)
-                {
-                    var innerEdge = innerEdges.next();
-                    if (innerEdge == null) break;
-                    // 判断是否是Boundary
-                    if (innerEdge.get_isConstrained())
-                    {
-                        boundaryEdges.Add(innerEdge);
-                    }
-                    else
-                    {
-                        //  获取邻接face
-                        var outterEdge = innerEdge.get_oppositeEdge();
-                        if (outterEdge == null) continue;
-                        var adjacentFace = outterEdge.get_leftFace();
-                        if (adjacentFace == null) continue;
-                        // 检查是否已经访问过
-                        if (visiedFaces.Contains(adjacentFace)) continue;
-                        // 检查是否在范围内
-                        if (!CheckIntersectionFaceAndCircle(adjacentFace)) continue;
-                        pendingVisitFaces.Enqueue(adjacentFace);
-                    }
-                }
-            }
-
-            // 输出boundary
-            if (boundaryEdges.Count > 0)
-            {
-                var count = Math.Min(boundaryEdges.Count, outResults.Length);
-                for (int i = 0; i < count; ++i)
-                {
-                    outResults[i].Start = boundaryEdges[i].get_originVertex()._pos.Cast(MapHeight);
-                    outResults[i].End = boundaryEdges[i].get_destinationVertex()._pos.Cast(MapHeight);
-                }
-                return count;
-            }
-        }
-
-        return 0;
-    }
-    // End
 
     // Crowd entity interface
     public UniqueId AddCrowdEntity(double x, double y)
@@ -471,8 +264,8 @@ public class TestFixedCrowdTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQu
             SpawnRotation = FixMath.F64Quat.Identity,
 
             Template = MovableEntityTemplates[_templateIndex],
-            PathwayQuerier = this,
-            LocalBoundaryQuerier = this,
+            PathwayQuerier = _entityManager.Map,
+            LocalBoundaryQuerier = _entityManager.Map,
             AnnotationService = _annotationServerice,
         };
 
@@ -799,11 +592,13 @@ public class TestFixedCrowdSampleTool : ISampleTool
     {
         // 平面 y = _draw.MapHeight
         outHitPos = new RcVec3f();
+        
+        var Mesh = _tool.EntityManager.Map.NavMesh;
 
         var src = start;
         var dst = start + direction * 100.0f;
         var bmin = new RcVec3f(0.0f, _draw.MapHeight, 0.0f);
-        var bmax = new RcVec3f(_tool.Mesh._width.Float, _draw.MapHeight, _tool.Mesh._height.Float);
+        var bmax = new RcVec3f(Mesh._width.Float, _draw.MapHeight, Mesh._height.Float);
         if (!RcIntersections.IsectSegAABB(src, dst, bmin, bmax, out var btmin, out var btmax))
         {
             return false;
@@ -816,7 +611,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
     public void HandleClickRay(RcVec3f start, RcVec3f direction, bool shift)
     {
         if (null == _draw) return;
-        if (null == _tool.Mesh) return;
+        var Mesh = _tool.EntityManager.Map.NavMesh;
+        if (null == Mesh) return;
 
         if (!GetRaycastHitPos(start, direction, out var hitPos))
         {
@@ -1248,9 +1044,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         if (null != _tool) _tool.Destroy();
 
         _tool = new TestFixedCrowdTool();
-        if (null != _tool) _tool.Start();
-
-        _tool.BuildGraphMesh(FixMath.F64.FromDouble(mapWidth), FixMath.F64.FromDouble((int)mapHeight));
+        if (null != _tool) _tool.Start(mapWidth, mapHeight);
 
         Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
     }

@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System;
 using FixMath;
 using Pathfinding.Util;
+using Pathfinding.Triangulation.Data;
 
 namespace Pathfinding.Crowds
 {
     public class TUnMovableEntityTemplate : TEntityTemplate
     {
-        public FixMath.F64Vec2 DirU = FixMath.F64Vec2.FromInt(1, 0);
-        public FixMath.F64Vec2 DirV = FixMath.F64Vec2.FromInt(0, 1);
         public FixMath.F64Vec2 HalfExtent = FixMath.F64Vec2.One;
     }
 
@@ -17,6 +16,7 @@ namespace Pathfinding.Crowds
     {
         private FixMath.F64Vec3 _poistion;
         private FixMath.F64Quat _rotation;
+        private Obstacle        _obstacle;
 
         public UnMovableEntity(IMovableEntityManager entityManager)
         {
@@ -30,7 +30,10 @@ namespace Pathfinding.Crowds
 
         public override void OnCreate()
         {
-            
+            var template = Template as TUnMovableEntityTemplate;
+            // 添加到Map
+            var map = EntityManager.Map;
+            _obstacle = map.AddObstacle(ID, _poistion, _rotation, template.HalfExtent.Cast(FixMath.F64.Zero));
         }
 
         public override void OnCreatePhysicsState()
@@ -59,7 +62,11 @@ namespace Pathfinding.Crowds
 
         public override void OnDelete()
         {
-            
+            if (null != _obstacle)
+            {
+                var map = EntityManager.Map;
+                map.RemoveObstacle(_obstacle);
+            }
         }
 
         public override void OnDestroyPhysicsState()
@@ -82,8 +89,10 @@ namespace Pathfinding.Crowds
         bool GetBoundarySegements(FixMath.F64 InNavgationRadius, out List<FixMath.F64Vec2> OutPoints, out List<Tuple<int, int>> OutSegments)
         {
             var template = Template as TUnMovableEntityTemplate;
-            var DirU = template.DirU;
-            var DirV = template.DirV;
+            var xAxis = _rotation * FixMath.F64Vec3.AxisX;
+            var zAxis = _rotation * FixMath.F64Vec3.AxisZ;
+            var DirU = xAxis.Cast2D();
+            var DirV = zAxis.Cast2D();
             var HalfExtent = template.HalfExtent;
 
             OutPoints = new List<FixMath.F64Vec2>();

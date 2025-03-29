@@ -27,7 +27,7 @@ namespace Pathfinding.Triangulation.Data
             _edges = new List<Edge>();
             _faces = new List<Face>();
             _constraintShapes = new List<ConstraintShape>();
-            _objects = new List<Object>();
+            _objects = new List<Obstacle>();
 
             __centerVertex = null;
             __edgesToCheck = new List<Edge>();
@@ -51,7 +51,7 @@ namespace Pathfinding.Triangulation.Data
 
         public List<ConstraintShape> _constraintShapes;
 
-        public List<Object> _objects;
+        public List<Obstacle> _objects;
 
         // keep references of center vertex and bounding edges when split, useful to restore edges as Delaunay
         public Vertex __centerVertex;
@@ -154,7 +154,7 @@ namespace Pathfinding.Triangulation.Data
         }
 
 
-        public void insertObject(Object object_)
+        public void insertObject(Obstacle object_)
         {
             if (object_._constraintShape != null)
                 deleteObject(object_);
@@ -206,7 +206,7 @@ namespace Pathfinding.Triangulation.Data
         }
 
 
-        public void deleteObject(Object object_)
+        public void deleteObject(Obstacle object_)
         {
             if (object_._constraintShape == null)
                 return;
