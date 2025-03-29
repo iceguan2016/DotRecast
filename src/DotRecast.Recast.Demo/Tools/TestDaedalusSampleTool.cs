@@ -270,15 +270,15 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
     public void Start(double mapWidth, double mapHeight)
     {
-        if (null != _entityManager)
-        {
-            var param = new IMovableEntityManager.FInitializeParams()
-            {
-                MapWidth = FixMath.F64.FromDouble(mapWidth),
-                MapHeight = FixMath.F64.FromDouble(mapHeight),
-            };
-            _entityManager.Initialize(param);
-        }
+        //if (null != _entityManager)
+        //{
+        //    var param = new IMovableEntityManager.FInitializeParams()
+        //    {
+        //        MapWidth = FixMath.F64.FromDouble(mapWidth),
+        //        MapHeight = FixMath.F64.FromDouble(mapHeight),
+        //    };
+        //    _entityManager.Initialize(param);
+        //}
     }
 
     public void Destroy()
@@ -1338,10 +1338,14 @@ public class TestDaedalusSampleTool : ISampleTool
         if (null != _tool) _tool.Destroy();
 
         _tool = new TestDaedalusTool();
-        if (null != _tool) _tool.Start(mapWidth, mapHeight);
+        if (mapWidth > 199 && mapHeight > 199)
+        {
+            if (null != _tool)
+                _tool.Start(mapWidth, mapHeight);
 
-        _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
+            _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
 
-        Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
+            Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
+        }
     }
 }

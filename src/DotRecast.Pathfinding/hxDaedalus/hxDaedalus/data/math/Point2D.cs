@@ -72,6 +72,11 @@ namespace hxDaedalus.data.math {
 			double diffY = ( this.y - p.y );
 			return global::System.Math.Sqrt(((double) (( ( diffX * diffX ) + ( diffY * diffY ) )) ));
 		}
+
+        public string toString()
+        {
+            return "("+x+","+y+")";
+        }
 		
 		
 		public override double __hx_setField_f(string field, int hash, double @value, bool handleProperties) {

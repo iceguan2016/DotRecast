@@ -408,7 +408,7 @@ public class RecastDemo : IRecastDemoChannel
             new CrowdAgentProfilingSampleTool(),
             new JumpLinkBuilderSampleTool(),
             new DynamicUpdateSampleTool(),
-            new TestDaedalusSampleTool(),
+            //new TestDaedalusSampleTool()
             new TestFixedCrowdSampleTool()
         );
         _toolsetView.SetEnabled(true);

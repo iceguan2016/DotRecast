@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using Pathfinding.Triangulation.Data;
+using Pathfinding.Util;
 
 namespace Pathfinding.Triangulation.Factories
 {
@@ -127,6 +128,16 @@ namespace Pathfinding.Triangulation.Factories
             mesh.set_clipping(false);
             mesh.insertConstraintShape(securityRect);
             mesh.set_clipping(true);
+
+            for (int i = 0; i < mesh._vertices.Count; ++i)
+            {
+                Debug.LogToFile($"mesh vertex:{mesh._vertices[i].toString()}");
+            }
+
+            for (int i = 0; i < mesh._edges.Count; ++i)
+            {
+                Debug.LogToFile($"mesh edge:{mesh._edges[i].toString()}");
+            }
 
             return mesh;
         }
