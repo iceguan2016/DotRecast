@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using FixMath;
-using hxDaedalus.data;
 using Pathfinding.Crowds;
 using Pathfinding.Util;
 using SharpSteer2;

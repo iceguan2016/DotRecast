@@ -133,12 +133,6 @@ namespace Pathfinding.Crowds
 
             var radiusSqured = inRadius * inRadius;
 
-            System.Func<hxDaedalus.data.Vertex, FixMath.F64Vec3> VertextToF64Vec3 = (vertex) =>
-            {
-                var pos = vertex.get_pos();
-                return FixMath.F64Vec3.FromDouble(pos.x, MapHeight.Double, pos.y);
-            };
-
             System.Func<Face, bool> CheckIntersectionFaceAndCircle = (face) =>
             {
                 // 这里改成Face的AABB盒是否和Circle相交判定，比只判定3个顶点更准确一些
