@@ -874,7 +874,8 @@ namespace hxDaedalus.data {
 		
 		
 		public virtual global::hxDaedalus.data.Edge flipEdge(global::hxDaedalus.data.Edge edge) {
-			unchecked {
+            Debug.LogToFile($"flipEdge, edge:{edge._id}");
+            unchecked {
 				global::hxDaedalus.data.Edge eBot_Top = edge;
 				global::hxDaedalus.data.Edge eTop_Bot = edge.get_oppositeEdge();
 				global::hxDaedalus.data.Edge eLeft_Right = new global::hxDaedalus.data.Edge();
@@ -1124,10 +1125,12 @@ namespace hxDaedalus.data {
 		
 		
 		public virtual void restoreAsDelaunay() {
+            Debug.LogToFile($"restoreAsDelaunay, __edgesToCheck:{__edgesToCheck.length}");
 			global::hxDaedalus.data.Edge edge = null;
 			while (( this.__edgesToCheck.length > 0 )) {
 				edge = ((global::hxDaedalus.data.Edge) ((this.__edgesToCheck.shift()).@value) );
-				if (( ( edge.get_isReal() &&  ! (edge.get_isConstrained())  ) &&  ! (global::hxDaedalus.data.math.Geom2D.isDelaunay(edge))  )) {
+                Debug.LogToFile($"restoreAsDelaunay, visit edge {edge.toString()}, _isReal:{edge._isReal}, edge._isConstrained:{edge._isConstrained}, isDelaunay:{hxDaedalus.data.math.Geom2D.isDelaunay(edge)}");
+                if (( ( edge.get_isReal() &&  ! (edge.get_isConstrained())  ) &&  ! (global::hxDaedalus.data.math.Geom2D.isDelaunay(edge))  )) {
 					if (( edge.get_nextLeftEdge().get_destinationVertex() == this.__centerVertex )) {
 						this.__edgesToCheck.push(edge.get_nextRightEdge());
 						this.__edgesToCheck.push(edge.get_prevRightEdge());
@@ -1372,7 +1375,11 @@ namespace hxDaedalus.data {
 					return;
 				}
 				else if (( bound.length == 3 )) {
-					global::hxDaedalus.data.Face f = new global::hxDaedalus.data.Face();
+                    Debug.LogToFile("the hole is a 3 edges polygon");
+                    Debug.LogToFile("  - edge0: " + ((global::hxDaedalus.data.Edge) (bound[0]) ).get_originVertex()._id + " -> " + ((global::hxDaedalus.data.Edge) (bound[0]) ).get_destinationVertex()._id);
+                    Debug.LogToFile("  - edge1: " + ((global::hxDaedalus.data.Edge) (bound[1]) ).get_originVertex()._id + " -> " + ((global::hxDaedalus.data.Edge) (bound[1]) ).get_destinationVertex()._id);
+                    Debug.LogToFile("  - edge2: " + ((global::hxDaedalus.data.Edge) (bound[2]) ).get_originVertex()._id + " -> " + ((global::hxDaedalus.data.Edge) (bound[2]) ).get_destinationVertex()._id);
+                    global::hxDaedalus.data.Face f = new global::hxDaedalus.data.Face();
 					f.setDatas(((global::hxDaedalus.data.Edge) (bound[0]) ), new global::haxe.lang.Null<bool>(isReal, true));
 					this._faces.push(f);
 					((global::hxDaedalus.data.Edge) (bound[0]) ).set_leftFace(f);
@@ -1383,7 +1390,13 @@ namespace hxDaedalus.data {
 					((global::hxDaedalus.data.Edge) (bound[2]) ).set_nextLeftEdge(((global::hxDaedalus.data.Edge) (bound[0]) ));
 				}
 				else {
-					global::hxDaedalus.data.Edge baseEdge = ((global::hxDaedalus.data.Edge) (bound[0]) );
+                    Debug.LogToFile("the hole has " + bound.length + " edges");
+                    for (int k = 0; k < bound.length; ++k)
+                    {
+                        Debug.LogToFile("  - edge " + k + ": " + ((global::hxDaedalus.data.Edge)(bound[k])).get_originVertex()._id + " -> " + ((global::hxDaedalus.data.Edge)(bound[k])).get_destinationVertex()._id);
+                    }
+
+                    global::hxDaedalus.data.Edge baseEdge = ((global::hxDaedalus.data.Edge) (bound[0]) );
 					global::hxDaedalus.data.Vertex vertexA = baseEdge.get_originVertex();
 					global::hxDaedalus.data.Vertex vertexB = baseEdge.get_destinationVertex();
 					global::hxDaedalus.data.Vertex vertexC = null;

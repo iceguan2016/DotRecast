@@ -243,20 +243,44 @@ namespace hxDaedalus.data.math {
 		public static global::hxDaedalus.data.math.RandGenerator _randGen;
 		
 		public static global::HxArray<object> __samples;
-		
-		public static global::hxDaedalus.data.math.Intersection locatePosition(double x, double y, global::hxDaedalus.data.Mesh mesh) {
+
+        public static Pathfinding.Triangulation.Math.RandGenerator _randGen2;
+        public static global::hxDaedalus.data.math.Intersection locatePosition(double x, double y, global::hxDaedalus.data.Mesh mesh) {
 			unchecked {
-				if (( global::hxDaedalus.data.math.Geom2D._randGen == null )) {
-					global::hxDaedalus.data.math.Geom2D._randGen = new global::hxDaedalus.data.math.RandGenerator(default(global::haxe.lang.Null<int>), default(global::haxe.lang.Null<int>), default(global::haxe.lang.Null<int>));
-				}
-				
-				global::hxDaedalus.data.math.Geom2D._randGen.set_seed(((int) (( ( x * 10 ) + ( 4 * y ) )) ));
+
+#if true
+                if (_randGen2 == null)
+                    _randGen2 = new Pathfinding.Triangulation.Math.RandGenerator();
+                _randGen2.set_seed((int)(x * 10 + 4 * y));
+
+                global::hxDaedalus.data.math.Geom2D.__samples.spliceVoid(0, global::hxDaedalus.data.math.Geom2D.__samples.length);
+                int numSamples = ((int)(global::System.Math.Pow(((double)(mesh._vertices.length)), ((double)(0.33333333333333331)))));
+
+                _randGen2._rangeMin = 0;
+                _randGen2._rangeMax = mesh._vertices.length - 1;
+                Debug.LogToFile($"locatePosition ({x}, {y}) numSamples:{numSamples} _vertices.Count:{mesh._vertices.length}");
+                for (var i = 0; i < numSamples; ++i)
+                {
+                    var _rnd = _randGen2.next();
+
+                    // Debug.assertFalse(_rnd< 0 || _rnd> mesh._vertices.length - 1, '_rnd: $_rnd');
+                    // Debug.assertFalse(mesh._vertices == null, 'vertices: ${mesh._vertices.length}');
+                    Debug.LogToFile($"locatePosition _rand:{_rnd}, _vertext:{mesh._vertices[_rnd]}");
+                    global::hxDaedalus.data.math.Geom2D.__samples.push(((global::hxDaedalus.data.Vertex)(mesh._vertices[_rnd])));
+                }
+#else
+                if ((global::hxDaedalus.data.math.Geom2D._randGen == null))
+                {
+                    global::hxDaedalus.data.math.Geom2D._randGen = new global::hxDaedalus.data.math.RandGenerator(default(global::haxe.lang.Null<int>), default(global::haxe.lang.Null<int>), default(global::haxe.lang.Null<int>));
+                }
+
+                global::hxDaedalus.data.math.Geom2D._randGen.set_seed(((int) (( ( x * 10 ) + ( 4 * y ) )) ));
 				int i = default(int);
 				global::hxDaedalus.data.math.Geom2D.__samples.spliceVoid(0, global::hxDaedalus.data.math.Geom2D.__samples.length);
 				int numSamples = ((int) (global::System.Math.Pow(((double) (mesh._vertices.length) ), ((double) (0.33333333333333331) ))) );
 				global::hxDaedalus.data.math.Geom2D._randGen.rangeMin = 0;
 				global::hxDaedalus.data.math.Geom2D._randGen.rangeMax = ( mesh._vertices.length - 1 );
-                // Debug.LogToFile($"locatePosition ({x}, {y}) numSamples:{numSamples} _vertices.Count:{mesh._vertices.length}");
+                Debug.LogToFile($"locatePosition ({x}, {y}) numSamples:{numSamples} _vertices.Count:{mesh._vertices.length}");
                 {
                     int _g = 0;
 					int _g1 = numSamples;
@@ -267,6 +291,7 @@ namespace hxDaedalus.data.math {
 					}
 					
 				}
+#endif
 				
 				global::hxDaedalus.data.Vertex currVertex = null;
 				global::hxDaedalus.data.math.Point2D currVertexPos = null;
@@ -282,7 +307,8 @@ namespace hxDaedalus.data.math {
 						currVertexPos = currVertex.get_pos();
 						distSquared = ( ( (( currVertexPos.x - x )) * (( currVertexPos.x - x )) ) + ( (( currVertexPos.y - y )) * (( currVertexPos.y - y )) ) );
 						if (( distSquared < minDistSquared )) {
-							minDistSquared = distSquared;
+                            Debug.LogToFile($"locatePosition get closedVertex, vertex:{currVertex.toString()}, distSquared:{distSquared}, minDistSquared:{minDistSquared}");
+                            minDistSquared = distSquared;
 							closedVertex = currVertex;
 						}
 						
@@ -300,7 +326,7 @@ namespace hxDaedalus.data.math {
 				int relativPos = default(int);
 				int numIter = 0;
 				while (true) {
-                    // Debug.LogToFile($"locatePosition LOOP currFace:{currFace._id}");
+                    Debug.LogToFile($"locatePosition LOOP currFace:{currFace._id}");
                     if (currFace._id == 26)
                     {
                         int stop = 0;
@@ -329,7 +355,7 @@ namespace hxDaedalus.data.math {
 							return global::hxDaedalus.data.math.Intersection.ENull;
 						}
 
-                        // Debug.LogToFile($"locatePosition LOOP currFace:{currFace._id} currEdge:{currEdge._id}");
+                        Debug.LogToFile($"locatePosition LOOP currFace:{currFace._id} currEdge:{currEdge._id}");
                         relativPos = global::hxDaedalus.data.math.Geom2D.getRelativePosition(x, y, currEdge);
 					}
 					while (( ( relativPos == 1 ) || ( relativPos == 0 ) ));
@@ -506,11 +532,11 @@ namespace hxDaedalus.data.math {
 			global::hxDaedalus.data.Edge e1_2 = polygon.get_edge();
 			global::hxDaedalus.data.Edge e2_3 = e1_2.get_nextLeftEdge();
 			global::hxDaedalus.data.Edge e3_1 = e2_3.get_nextLeftEdge();
-            // Debug.LogToFile($"pos: ({x}, {y})");
-            // Debug.LogToFile($"e1_2:{e1_2._id} s:{e1_2.get_originVertex().get_pos().toString()}, e:{e1_2.get_destinationVertex().get_pos().toString()}");
-            // Debug.LogToFile($"e2_3:{e2_3._id} s:{e2_3.get_originVertex().get_pos().toString()}, e:{e2_3.get_destinationVertex().get_pos().toString()}");
-            // Debug.LogToFile($"e3_1:{e3_1._id} s:{e3_1.get_originVertex().get_pos().toString()}, e:{e3_1.get_destinationVertex().get_pos().toString()}");
-            // Debug.LogToFile($"isInFace, e1_2:{getRelativePosition(x, y, e1_2)}, e2_3:{getRelativePosition(x, y, e2_3)}, e3_1:{getRelativePosition(x, y, e3_1)}");
+            Debug.LogToFile($"pos: ({x}, {y})");
+            Debug.LogToFile($"e1_2:{e1_2._id} s:{e1_2.get_originVertex().get_pos().toString()}, e:{e1_2.get_destinationVertex().get_pos().toString()}");
+            Debug.LogToFile($"e2_3:{e2_3._id} s:{e2_3.get_originVertex().get_pos().toString()}, e:{e2_3.get_destinationVertex().get_pos().toString()}");
+            Debug.LogToFile($"e3_1:{e3_1._id} s:{e3_1.get_originVertex().get_pos().toString()}, e:{e3_1.get_destinationVertex().get_pos().toString()}");
+            Debug.LogToFile($"isInFace, e1_2:{getRelativePosition(x, y, e1_2)}, e2_3:{getRelativePosition(x, y, e2_3)}, e3_1:{getRelativePosition(x, y, e3_1)}");
             if (( ( ( global::hxDaedalus.data.math.Geom2D.getRelativePosition(x, y, e1_2) >= 0 ) && ( global::hxDaedalus.data.math.Geom2D.getRelativePosition(x, y, e2_3) >= 0 ) ) && ( global::hxDaedalus.data.math.Geom2D.getRelativePosition(x, y, e3_1) >= 0 ) )) {
 				global::hxDaedalus.data.Vertex v1 = e1_2.get_originVertex();
 				global::hxDaedalus.data.Vertex v2 = e2_3.get_originVertex();
@@ -730,7 +756,8 @@ namespace hxDaedalus.data.math {
 			global::hxDaedalus.data.math.Geom2D.getCircumcenter(vCorner.get_pos().x, vCorner.get_pos().y, vLeft.get_pos().x, vLeft.get_pos().y, vRight.get_pos().x, vRight.get_pos().y, global::hxDaedalus.data.math.Geom2D.__circumcenter);
 			double squaredRadius = ( ( (( vCorner.get_pos().x - global::hxDaedalus.data.math.Geom2D.__circumcenter.x )) * (( vCorner.get_pos().x - global::hxDaedalus.data.math.Geom2D.__circumcenter.x )) ) + ( (( vCorner.get_pos().y - global::hxDaedalus.data.math.Geom2D.__circumcenter.y )) * (( vCorner.get_pos().y - global::hxDaedalus.data.math.Geom2D.__circumcenter.y )) ) );
 			double squaredDistance = ( ( (( vOpposite.get_pos().x - global::hxDaedalus.data.math.Geom2D.__circumcenter.x )) * (( vOpposite.get_pos().x - global::hxDaedalus.data.math.Geom2D.__circumcenter.x )) ) + ( (( vOpposite.get_pos().y - global::hxDaedalus.data.math.Geom2D.__circumcenter.y )) * (( vOpposite.get_pos().y - global::hxDaedalus.data.math.Geom2D.__circumcenter.y )) ) );
-			return ( squaredDistance >= squaredRadius );
+            Debug.LogToFile($"edge:{edge.toString()}, __circumcenter:{__circumcenter.toString()}, squaredRadius:{squaredRadius}, squaredDistance:{squaredDistance}");
+            return ( squaredDistance >= squaredRadius );
 		}
 		
 		

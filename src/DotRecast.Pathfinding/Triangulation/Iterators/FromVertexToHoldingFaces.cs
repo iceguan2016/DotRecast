@@ -1,5 +1,6 @@
 
 using Pathfinding.Triangulation.Data;
+using Pathfinding.Util;
 
 namespace Pathfinding.Triangulation.Iterators
 {
@@ -28,6 +29,7 @@ namespace Pathfinding.Triangulation.Iterators
         {
             this._fromVertex = @value;
             this._nextEdge = this._fromVertex.get_edge();
+            Debug.LogToFile($"FromVertexToHoldingFaces.set_fromVertex() _fromVertex:{_fromVertex.toString()}, _nextEdge:{_nextEdge.toString()}");
             return @value;
         }
 
@@ -40,6 +42,7 @@ namespace Pathfinding.Triangulation.Iterators
                 {
                     this._resultFace = this._nextEdge.get_leftFace();
                     this._nextEdge = this._nextEdge.get_rotLeftEdge();
+                    Debug.LogToFile($"FromVertexToHoldingFaces.next() visist _resultFace:{_resultFace.toString()}, _nextEdge:{_nextEdge.toString()}");
                     if ((this._nextEdge == this._fromVertex.get_edge()))
                     {
                         this._nextEdge = null;

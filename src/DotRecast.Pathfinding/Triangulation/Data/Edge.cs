@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using Pathfinding.Util;
 
 namespace Pathfinding.Triangulation.Data
 {
@@ -98,6 +99,12 @@ namespace Pathfinding.Triangulation.Data
             this._oppositeEdge = oppositeEdge;
             this._nextLeftEdge = nextLeftEdge;
             this._leftFace = leftFace;
+
+            var nextLeftEdgeId = _nextLeftEdge != null ? _nextLeftEdge._id : -1;
+            var leftFaceId = _leftFace != null ? _leftFace._id : -1;
+            Debug.LogToFile($"Edge.setDatas id:{_id}, _isConstrained:{_isConstrained}, _isReal:{_isReal}, " +
+                $"_originVertex:{_originVertex.toString()}, _oppositeEdge:{_oppositeEdge._id}" +
+                $"_nextLeftEdge:{nextLeftEdgeId}, _leftFace:{leftFaceId}");
         }
 
 
