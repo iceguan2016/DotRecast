@@ -23,6 +23,10 @@ namespace Pathfinding.Triangulation.Data
             _yoffset = yoffset;
             _width = width;
             _height = height;
+            _xmin = _xoffset;
+            _ymin = _yoffset;
+            _xmax = _xoffset + _width;
+            _ymax = _yoffset + _height;
             _clipping = true;
 
             _vertices = new List<Vertex>();
@@ -44,6 +48,11 @@ namespace Pathfinding.Triangulation.Data
         public FixMath.F64 _yoffset;
         public FixMath.F64 _width;
         public FixMath.F64 _height;
+
+        public FixMath.F64 _xmin;
+        public FixMath.F64 _ymin;
+        public FixMath.F64 _xmax;
+        public FixMath.F64 _ymax;
 
         public bool _clipping;
 

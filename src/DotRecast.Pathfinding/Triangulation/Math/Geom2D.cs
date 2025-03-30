@@ -287,7 +287,7 @@ namespace Pathfinding.Triangulation.Math
 
         public static bool isCircleIntersectingAnyConstraint(FixMath.F64 x, FixMath.F64 y, FixMath.F64 radius, Mesh mesh)
         {
-            if (x <= 0 || x >= mesh._width || y <= 0 || y >= mesh._height)
+            if (x <= mesh._xmin || x >= mesh._xmax || y <= mesh._ymin || y >= mesh._ymax)
                 return true;
 
             var loc = Geom2D.locatePosition(x, y, mesh);
@@ -386,7 +386,7 @@ namespace Pathfinding.Triangulation.Math
             var dot = (x3 - x1) * (y2 - y1) + (y3 - y1) * (-x2 + x1);
 
             // check sign
-            return (FixMath.F64.Abs(dot) <= FixMath.F64.Epsilon) ? 0 : (dot > 0 ? 1 : -1);
+            return (FixMath.F64.Abs(dot) <= Constants.EPSILON) ? 0 : (dot > 0 ? 1 : -1);
         }
 
         // second version of getDirection. More accurate and safer version
@@ -401,7 +401,7 @@ namespace Pathfinding.Triangulation.Math
             var dot = (x3 - x1) * (y2 - y1) + (y3 - y1) * (-x2 + x1);
 
             // check sign
-            if (FixMath.F64.Abs(dot) <= FixMath.F64.Epsilon)
+            if (FixMath.F64.Abs(dot) <= Constants.EPSILON)
             {
                 return 0;
             }
@@ -1022,7 +1022,7 @@ namespace Pathfinding.Triangulation.Math
             Geom2D.getCircumcenter(vCorner.get_pos().X, vCorner.get_pos().Y, vLeft.get_pos().X, vLeft.get_pos().Y, vRight.get_pos().X, vRight.get_pos().Y, out __circumcenter);
             var squaredRadius = ((((vCorner.get_pos().X - Geom2D.__circumcenter.X)) * ((vCorner.get_pos().X - Geom2D.__circumcenter.X))) + (((vCorner.get_pos().Y - Geom2D.__circumcenter.Y)) * ((vCorner.get_pos().Y - Geom2D.__circumcenter.Y))));
             var squaredDistance = ((((vOpposite.get_pos().X - Geom2D.__circumcenter.X)) * ((vOpposite.get_pos().X - Geom2D.__circumcenter.X))) + (((vOpposite.get_pos().Y - Geom2D.__circumcenter.Y)) * ((vOpposite.get_pos().Y - Geom2D.__circumcenter.Y))));
-            return (squaredDistance >= squaredRadius);
+            return (squaredDistance >= (squaredRadius + Constants.EPSILON_SQUARED));
         }
 
         public static FixMath.F64Vec2 getCircumcenter(
