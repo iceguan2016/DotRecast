@@ -928,7 +928,6 @@ namespace Pathfinding.Triangulation.Data
 
         public Edge flipEdge(Edge edge)
         {
-            Debug.LogToFile($"flipEdge, edge:{edge._id}");
             var eBot_Top = edge;
             var eTop_Bot = edge.get_oppositeEdge();
             var eLeft_Right = new Edge();
@@ -1241,14 +1240,11 @@ namespace Pathfinding.Triangulation.Data
 
         public void restoreAsDelaunay()
         {
-            Debug.LogToFile($"restoreAsDelaunay, __edgesToCheck:{__edgesToCheck.Count}");
             Edge edge = null;
             while (__edgesToCheck.Count > 0)
             {
                 edge = __edgesToCheck[0];
                 __edgesToCheck.RemoveAt(0);
-
-                Debug.LogToFile($"restoreAsDelaunay, visit edge {edge.toString()}, _isReal:{edge._isReal}, edge._isConstrained:{edge._isConstrained}, isDelaunay:{Geom2D.isDelaunay(edge)}");
                 if (edge._isReal && !edge._isConstrained && !Geom2D.isDelaunay(edge))
                 {
                     if (edge._nextLeftEdge.get_destinationVertex() == __centerVertex)
@@ -1515,10 +1511,10 @@ namespace Pathfinding.Triangulation.Data
             // if the hole is a 3 edges polygon:
             else if (bound.Count == 3)
             {
-                Debug.LogToFile("the hole is a 3 edges polygon");
-                Debug.LogToFile("  - edge0: " + bound[0].get_originVertex()._id + " -> " + bound[0].get_destinationVertex()._id);
-                Debug.LogToFile("  - edge1: " + bound[1].get_originVertex()._id + " -> " + bound[1].get_destinationVertex()._id);
-                Debug.LogToFile("  - edge2: " + bound[2].get_originVertex()._id + " -> " + bound[2].get_destinationVertex()._id);
+                /*Debug.trace("the hole is a 3 edges polygon");
+                Debug.trace("  - edge0: " + bound[0].originVertex.id + " -> " + bound[0].destinationVertex.id);
+                Debug.trace("  - edge1: " + bound[1].originVertex.id + " -> " + bound[1].destinationVertex.id);
+                Debug.trace("  - edge2: " + bound[2].originVertex.id + " -> " + bound[2].destinationVertex.id);*/
                 var f = new Face();
                 f.setDatas(bound[0], isReal);
                 _faces.Add(f);
@@ -1532,10 +1528,11 @@ namespace Pathfinding.Triangulation.Data
             // if more than 3 edges, we process recursively:
             else
             {
-                Debug.LogToFile("the hole has " + bound.Count + " edges");
-                for (int k = 0; k < bound.Count; ++k){
-                    Debug.LogToFile("  - edge " + k + ": " + bound[k].get_originVertex()._id + " -> " + bound[k].get_destinationVertex()._id);
-                }
+                //Debug.trace("the hole has " + bound.length + " edges");
+                /*for (i in 0...bound.length){
+                    //Debug.trace("  - edge " + i + ": " + bound[i].originVertex.id + " -> " + bound[i].destinationVertex.id);
+
+                }*/
 
                 var baseEdge = bound[0];
                 var vertexA = baseEdge.get_originVertex();

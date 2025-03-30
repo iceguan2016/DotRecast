@@ -201,14 +201,13 @@ namespace Pathfinding.Triangulation.Math
             var numSamples = FixMath.F64.FloorToInt(FixMath.F64.PowFast(FixMath.F64.FromInt(mesh._vertices.Count), FixMath.F64.One / FixMath.F64.FromInt(3)));
             _randGen._rangeMin = 0;
             _randGen._rangeMax = mesh._vertices.Count - 1;
-            Debug.LogToFile($"locatePosition ({x}, {y}) numSamples:{numSamples} _vertices.Count:{mesh._vertices.Count}");
+            // Debug.LogToFile($"locatePosition ({x}, {y}) numSamples:{numSamples} _vertices.Count:{mesh._vertices.Count}");
             for (i = 0; i < numSamples; ++i)
             {
                 var _rnd = _randGen.next();
 
                 // Debug.assertFalse(_rnd< 0 || _rnd> mesh._vertices.length - 1, '_rnd: $_rnd');
                 // Debug.assertFalse(mesh._vertices == null, 'vertices: ${mesh._vertices.length}');
-                Debug.LogToFile($"locatePosition _rand:{_rnd}, _vertext:{mesh._vertices[_rnd].toString()}");
                 __samples.Add(mesh._vertices[_rnd]);
             }
 
@@ -224,8 +223,6 @@ namespace Pathfinding.Triangulation.Math
                 distSquared = (currVertexPos.X - x) * (currVertexPos.X - x) + (currVertexPos.Y - y) * (currVertexPos.Y - y);
                 if (distSquared < minDistSquared)
                 {
-                if (distSquared < minDistSquared)
-                    Debug.LogToFile($"locatePosition get closedVertex, vertex:{currVertex.toString()}, distSquared:{distSquared}, minDistSquared:{minDistSquared}");
                     minDistSquared = distSquared;
                     closedVertex = currVertex;
                 }
@@ -510,11 +507,11 @@ namespace Pathfinding.Triangulation.Math
             var e1_2 = polygon._edge;
             var e2_3 = e1_2._nextLeftEdge;
             var e3_1 = e2_3._nextLeftEdge;
-            Debug.LogToFile($"pos: ({x}, {y})");
-            Debug.LogToFile($"e1_2:{e1_2._id} s:{e1_2.get_originVertex().get_pos()}, e:{e1_2.get_destinationVertex().get_pos()}");
-            Debug.LogToFile($"e2_3:{e2_3._id} s:{e2_3.get_originVertex().get_pos()}, e:{e2_3.get_destinationVertex().get_pos()}");
-            Debug.LogToFile($"e3_1:{e3_1._id} s:{e3_1.get_originVertex().get_pos()}, e:{e3_1.get_destinationVertex().get_pos()}");
-            Debug.LogToFile($"isInFace, e1_2:{getRelativePosition(x, y, e1_2)}, e2_3:{getRelativePosition(x, y, e2_3)}, e3_1:{getRelativePosition(x, y, e3_1)}");
+            // Debug.LogToFile($"pos: ({x}, {y})");
+            // Debug.LogToFile($"e1_2:{e1_2._id} s:{e1_2.get_originVertex().get_pos()}, e:{e1_2.get_destinationVertex().get_pos()}");
+            // Debug.LogToFile($"e2_3:{e2_3._id} s:{e2_3.get_originVertex().get_pos()}, e:{e2_3.get_destinationVertex().get_pos()}");
+            // Debug.LogToFile($"e3_1:{e3_1._id} s:{e3_1.get_originVertex().get_pos()}, e:{e3_1.get_destinationVertex().get_pos()}");
+            // Debug.LogToFile($"isInFace, e1_2:{getRelativePosition(x, y, e1_2)}, e2_3:{getRelativePosition(x, y, e2_3)}, e3_1:{getRelativePosition(x, y, e3_1)}");
             if (getRelativePosition(x, y, e1_2) >= 0 && getRelativePosition(x, y, e2_3) >= 0 && getRelativePosition(x, y, e3_1) >= 0)
             {
                 var v1 = e1_2._originVertex;
@@ -1038,8 +1035,7 @@ namespace Pathfinding.Triangulation.Math
             Geom2D.getCircumcenter(vCorner.get_pos().X, vCorner.get_pos().Y, vLeft.get_pos().X, vLeft.get_pos().Y, vRight.get_pos().X, vRight.get_pos().Y, out __circumcenter);
             var squaredRadius = ((((vCorner.get_pos().X - Geom2D.__circumcenter.X)) * ((vCorner.get_pos().X - Geom2D.__circumcenter.X))) + (((vCorner.get_pos().Y - Geom2D.__circumcenter.Y)) * ((vCorner.get_pos().Y - Geom2D.__circumcenter.Y))));
             var squaredDistance = ((((vOpposite.get_pos().X - Geom2D.__circumcenter.X)) * ((vOpposite.get_pos().X - Geom2D.__circumcenter.X))) + (((vOpposite.get_pos().Y - Geom2D.__circumcenter.Y)) * ((vOpposite.get_pos().Y - Geom2D.__circumcenter.Y))));
-            Debug.LogToFile($"edge:{edge.toString()}, __circumcenter:{__circumcenter.ToString()}, squaredRadius:{squaredRadius}, squaredDistance:{squaredDistance}");
-            return (squaredDistance >= (squaredRadius + Constants.EPSILON_SQUARED));
+            return (squaredDistance >= squaredRadius);
         }
 
         public static FixMath.F64Vec2 getCircumcenter(
