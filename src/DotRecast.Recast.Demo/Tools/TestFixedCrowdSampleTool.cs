@@ -1046,13 +1046,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
         if (null != _tool) _tool.Destroy();
 
         _tool = new TestFixedCrowdTool();
+        if (null != _tool) _tool.Start(0.0, 0.0, mapWidth, mapHeight);
 
-        if (mapWidth > 199 && mapHeight > 199)
-        {
-            if (null != _tool)
-                _tool.Start(0.0, 0.0, mapWidth, mapHeight);
-
-            Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
-        }
+        Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
     }
 }

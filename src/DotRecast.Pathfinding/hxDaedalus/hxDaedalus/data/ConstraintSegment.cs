@@ -47,7 +47,6 @@ namespace hxDaedalus.data {
 		public virtual void addEdge(global::hxDaedalus.data.Edge edge) {
 			unchecked {
 				if (( ( this._edges.indexOf(edge, default(global::haxe.lang.Null<int>)) == -1 ) && ( this._edges.indexOf(edge.get_oppositeEdge(), default(global::haxe.lang.Null<int>)) == -1 ) )) {
-                    Debug.LogToFile($"ConstraintSegment addEdge id:{_id}, edge_id:{edge._id}");
                     this._edges.push(edge);
 				}
 				
@@ -63,7 +62,6 @@ namespace hxDaedalus.data {
 				}
 				
 				if (( index != -1 )) {
-                    Debug.LogToFile($"ConstraintSegment removeEdge id:{_id}, edge_id:{edge._id}, index:{index}");
                     this._edges.spliceVoid(index, 1);
 				}
 				

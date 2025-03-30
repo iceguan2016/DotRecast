@@ -201,7 +201,6 @@ namespace Pathfinding.Triangulation.Math
             var numSamples = FixMath.F64.FloorToInt(FixMath.F64.PowFast(FixMath.F64.FromInt(mesh._vertices.Count), FixMath.F64.One / FixMath.F64.FromInt(3)));
             _randGen._rangeMin = 0;
             _randGen._rangeMax = mesh._vertices.Count - 1;
-            // Debug.LogToFile($"locatePosition ({x}, {y}) numSamples:{numSamples} _vertices.Count:{mesh._vertices.Count}");
             for (i = 0; i < numSamples; ++i)
             {
                 var _rnd = _randGen.next();
@@ -242,11 +241,6 @@ namespace Pathfinding.Triangulation.Math
             //while ( faceVisited[ currFace ] || !(objectContainer = isInFace(x, y, currFace)) )
             while (true)
             {
-                Debug.LogToFile($"locatePosition LOOP currFace:{currFace._id}");
-                if (currFace._id == 26)
-                {
-                    int stop = 0;
-                }
                 bool tmp = false;
                 if (!faceVisited.Contains(currFace))
                 {
@@ -260,7 +254,6 @@ namespace Pathfinding.Triangulation.Math
 
                 if (!tmp)
                 {
-                    Debug.LogToFile($"locatePosition LOOP SUCESS");
                     break;
                 }
 
@@ -283,7 +276,6 @@ namespace Pathfinding.Triangulation.Math
                         Debug.LogError("KILL PATH");
                         return null;
                     }
-                    Debug.LogToFile($"locatePosition LOOP currFace:{currFace._id} currEdge:{currEdge._id}");
                     relativPos = getRelativePosition(x, y, currEdge);
                 } while ((relativPos == 1 || relativPos == 0));
 
@@ -295,7 +287,7 @@ namespace Pathfinding.Triangulation.Math
 
         public static bool isCircleIntersectingAnyConstraint(FixMath.F64 x, FixMath.F64 y, FixMath.F64 radius, Mesh mesh)
         {
-            if (x <= mesh._xmin || x >= mesh._xmax || y <= mesh._ymin || y >= mesh._ymax)
+            if (x <= 0 || x >= mesh._width || y <= 0 || y >= mesh._height)
                 return true;
 
             var loc = Geom2D.locatePosition(x, y, mesh);
@@ -394,7 +386,7 @@ namespace Pathfinding.Triangulation.Math
             var dot = (x3 - x1) * (y2 - y1) + (y3 - y1) * (-x2 + x1);
 
             // check sign
-            return (FixMath.F64.Abs(dot) <= Constants.EPSILON) ? 0 : (dot > 0 ? 1 : -1);
+            return (FixMath.F64.Abs(dot) <= FixMath.F64.Epsilon) ? 0 : (dot > 0 ? 1 : -1);
         }
 
         // second version of getDirection. More accurate and safer version
@@ -409,7 +401,7 @@ namespace Pathfinding.Triangulation.Math
             var dot = (x3 - x1) * (y2 - y1) + (y3 - y1) * (-x2 + x1);
 
             // check sign
-            if (FixMath.F64.Abs(dot) <= Constants.EPSILON)
+            if (FixMath.F64.Abs(dot) <= FixMath.F64.Epsilon)
             {
                 return 0;
             }
@@ -507,11 +499,6 @@ namespace Pathfinding.Triangulation.Math
             var e1_2 = polygon._edge;
             var e2_3 = e1_2._nextLeftEdge;
             var e3_1 = e2_3._nextLeftEdge;
-            // Debug.LogToFile($"pos: ({x}, {y})");
-            // Debug.LogToFile($"e1_2:{e1_2._id} s:{e1_2.get_originVertex().get_pos()}, e:{e1_2.get_destinationVertex().get_pos()}");
-            // Debug.LogToFile($"e2_3:{e2_3._id} s:{e2_3.get_originVertex().get_pos()}, e:{e2_3.get_destinationVertex().get_pos()}");
-            // Debug.LogToFile($"e3_1:{e3_1._id} s:{e3_1.get_originVertex().get_pos()}, e:{e3_1.get_destinationVertex().get_pos()}");
-            // Debug.LogToFile($"isInFace, e1_2:{getRelativePosition(x, y, e1_2)}, e2_3:{getRelativePosition(x, y, e2_3)}, e3_1:{getRelativePosition(x, y, e3_1)}");
             if (getRelativePosition(x, y, e1_2) >= 0 && getRelativePosition(x, y, e2_3) >= 0 && getRelativePosition(x, y, e3_1) >= 0)
             {
                 var v1 = e1_2._originVertex;
