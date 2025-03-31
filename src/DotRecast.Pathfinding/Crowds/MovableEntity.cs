@@ -124,6 +124,8 @@ namespace Pathfinding.Crowds
         // Move destination
         protected bool isTargetDirty { get; private set; }
         protected FixMath.F64Vec3? targetLocation = null;
+
+        static FixMath.F64 DEFAULT_INITIAL_MOVE_SPEED = FixMath.F64.FromFloat(0.1f);
         public FixMath.F64Vec3? TargetLocation { 
             get
             {
@@ -138,10 +140,14 @@ namespace Pathfinding.Crowds
                     targetLocation = value;
                     if (null != targetLocation)
                     {
+                        // Give a little initial speed to prevent the position from being unchanged due to the speed being 0 in the PredictFuturePosition function,
+                        // causing some division by 0 exceptions
+                        Speed = DEFAULT_INITIAL_MOVE_SPEED;
                         SetEntityState(eEntityState.Moving);
                     }
                     else
                     {
+                        Speed = FixMath.F64.Zero;
                         ClearEntityState(eEntityState.Moving);
                     }
                 }

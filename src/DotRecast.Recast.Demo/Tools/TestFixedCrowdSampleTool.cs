@@ -177,7 +177,7 @@ public class TestFixedCrowdTool : IRcToolable
 
             if (_entityManager.Initialize(param))
             {
-                // AddRandomObstacle(30, mapWidth, mapHeight);
+                AddRandomObstacle(30, mapWidth, mapHeight);
             }
         }
     }
