@@ -26,11 +26,12 @@ namespace Pathfinding.Crowds
         // initialize and uninitialized function
         public struct FInitializeParams
         {
-            // 地图rect范围：(x, y) - (x+width, y+height)
-            public FixMath.F64 MapX; 
-            public FixMath.F64 MapY;
-            public FixMath.F64 MapWidth;
-            public FixMath.F64 MapHeight;
+            // 地图rect范围：(min.x, min.y) - (max.x, max.y)
+            public FixMath.F64Vec3 MapBoundsMin;
+            public FixMath.F64Vec3 MapBoundsMax;
+
+            // MapCellDivs变量在构建map cell使用，表示把rect区域(min.x, min.y) - (max.x, max.y)，分割成多少等分
+            public int MapCellDivs;
         }
         bool Initialize(FInitializeParams inParams);
         bool UnInitialize();

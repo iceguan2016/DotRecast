@@ -167,12 +167,12 @@ public class TestFixedCrowdTool : IRcToolable
 
         if (null != _entityManager)
         {
+            var mapYExtent = FixMath.F64.FromDouble(5.0f);
             var param = new IMovableEntityManager.FInitializeParams()
             {
-                MapX = FixMath.F64.FromDouble(x),
-                MapY = FixMath.F64.FromDouble(y),
-                MapWidth = FixMath.F64.FromDouble(mapWidth),
-                MapHeight = FixMath.F64.FromDouble(mapHeight),
+                MapBoundsMin = new FixMath.F64Vec3(FixMath.F64.FromDouble(x), MapHeight - mapYExtent / 2, FixMath.F64.FromDouble(y)),
+                MapBoundsMax = new FixMath.F64Vec3(FixMath.F64.FromDouble(x + mapWidth), MapHeight + mapYExtent / 2, FixMath.F64.FromDouble(y + mapHeight)),
+                MapCellDivs = 10,
             };
 
             if (_entityManager.Initialize(param))

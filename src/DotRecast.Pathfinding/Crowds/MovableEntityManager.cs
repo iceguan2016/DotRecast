@@ -62,11 +62,11 @@ namespace Pathfinding.Crowds
         // for purposes of demonstration, allow cycling through various
         // types of proximity databases.  this routine is called when the
         // Demo user pushes a function key.
-        private void AllocPD()
+        // rect area: (center - extent * 0.5) - (center + extent * 0.5)
+        private void AllocPD(FixMath.F64Vec3 center, FixMath.F64Vec3 extent, int div)
         {
             // allocate new PD
-            var center = FixMath.F64Vec3.Zero;
-            var DIV = FixMath.F64.FromFloat(10.0f);
+            var DIV = FixMath.F64.FromFloat(div);
             var divisions = new FixMath.F64Vec3(DIV, DIV, DIV);
             var DIAMETER = FixMath.F64.FromFloat(WORLD_RADIUS * 1.1f * 2);
             var dimensions = new FixMath.F64Vec3(DIAMETER, DIAMETER, DIAMETER);
@@ -193,7 +193,10 @@ namespace Pathfinding.Crowds
 
             FrameNo = 1;
 
-            AllocPD();
+            var center = (inParams.MapBoundsMin + inParams.MapBoundsMax) * FixMath.F64.Half;
+            var size = inParams.MapBoundsMax - inParams.MapBoundsMin;
+            var div = inParams.MapCellDivs;
+            AllocPD(center, size, div);
 
             // initialize physics world
             var Damping = FixMath.F64.FromFloat(1.0f).ToF64();
@@ -205,7 +208,7 @@ namespace Pathfinding.Crowds
 
             // initialize logic map
             _map = new Map();
-            _map.SetMap(inParams.MapX, inParams.MapY, inParams.MapWidth, inParams.MapHeight);
+            _map.SetMap(inParams.MapBoundsMin.X, inParams.MapBoundsMin.Z, size.X, size.Z);
 
             return true;
         }

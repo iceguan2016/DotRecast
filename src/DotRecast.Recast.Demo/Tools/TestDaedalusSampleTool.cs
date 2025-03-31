@@ -272,10 +272,12 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     {
         if (null != _entityManager)
         {
+            var mapYExtent = FixMath.F64.FromDouble(5.0);
             var param = new IMovableEntityManager.FInitializeParams()
             {
-                MapWidth = FixMath.F64.FromDouble(mapWidth),
-                MapHeight = FixMath.F64.FromDouble(mapHeight),
+                MapBoundsMin = new FixMath.F64Vec3(FixMath.F64.Zero, FixMath.F64.Zero - mapYExtent / 2, FixMath.F64.Zero),
+                MapBoundsMax = new FixMath.F64Vec3(FixMath.F64.FromDouble(mapWidth), FixMath.F64.Zero + mapYExtent / 2, FixMath.F64.FromDouble(mapHeight)),
+                MapCellDivs = 10,
             };
             _entityManager.Initialize(param);
         }
