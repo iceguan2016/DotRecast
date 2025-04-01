@@ -26,7 +26,7 @@ namespace Pathfinding.Crowds
 
         Count,
     }
-    public class TMovableEntityTemplate : TEntityTemplate
+    public class TMovableEntityTemplate : TEntityTemplate, ICloneable
     {
         // stop move radius
         public FixMath.F64 StopMoveRadius = FixMath.F64.FromFloat(1.5f);
@@ -64,6 +64,41 @@ namespace Pathfinding.Crowds
 
         // debug toggles
         public bool[] DebugVec3Toggles = new bool[(int)eDebugVec3Item.Count];
+
+        public object Clone()
+        {
+            var template = new TMovableEntityTemplate() {
+                StopMoveRadius  = this.StopMoveRadius,
+                Radius          = this.Radius,
+                MaxSpeed        = this.MaxSpeed,
+                MaxForce        = this.MaxForce,
+
+
+                ForwardMoveWeight       = this.ForwardMoveWeight,
+                FollowPathAheadTime     = this.FollowPathAheadTime,
+                FollowPathWeight        = this.FollowPathWeight,
+                AvoidObstacleAheadTime  = this.AvoidObstacleAheadTime,
+                AvoidObstacleWeight     = this.AvoidObstacleWeight,
+                AvoidNeighborAheadTime  = this.AvoidNeighborAheadTime,
+                AvoidNeighborWeight     = this.AvoidNeighborWeight,
+
+                SeparationRadius    = this.SeparationRadius,
+                SeparationAngle     = this.SeparationAngle,
+                SeparationWeight    = this.SeparationWeight,
+
+                AlignmentRadius     = this.AlignmentRadius,
+                AlignmentAngle      = this.AlignmentAngle,
+                AlignmentWeight     = this.AlignmentWeight,
+                
+                CohesionRadius      = this.CohesionRadius,
+                CohesionAngle       = this.CohesionAngle,
+                CohesionWeight      = this.CohesionWeight,
+            };
+
+            Array.Copy(this.DebugVec3Toggles, template.DebugVec3Toggles, this.DebugVec3Toggles.Length);
+
+            return template;
+        }
     }
 
     public class MovableEntity : SimpleVehicle, ICrowdEntityActor
