@@ -25,12 +25,12 @@ namespace Pathfinding.Crowds.MoveStrategy
 
             _avoidIdleNeighborForce = new AvoidIdleNeighborForce();
             _avoidIdleNeighborForce.AvoidNeighborAheadTime = template.AvoidNeighborAheadTime;
-            _avoidIdleNeighborForce.CheckResetAvoidInfoDistance = template.Radius * 2;
+            _avoidIdleNeighborForce.CheckResetAvoidInfoDistance = template.Radius * 6;
             _avoidIdleNeighborForce.Weight = template.AvoidNeighborWeight;
 
             _avoidObstacleForce = new AvoidObstacleForce();
             _avoidObstacleForce.AvoidObstacleAheadTime = template.AvoidObstacleAheadTime;
-            _avoidObstacleForce.CheckResetAvoidInfoDistance = template.Radius * 2;
+            _avoidObstacleForce.CheckResetAvoidInfoDistance = template.Radius * 6;
             _avoidObstacleForce.Weight = template.AvoidObstacleWeight;
 
             _forwadMoveForce = new ForwardMoveForce();
