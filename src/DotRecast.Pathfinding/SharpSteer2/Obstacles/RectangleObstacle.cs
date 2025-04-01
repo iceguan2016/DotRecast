@@ -1,5 +1,6 @@
 
 using Pathfinding.Util;
+using SharpSteer2.Helpers;
 
 namespace SharpSteer2.Obstacles
 {
@@ -32,6 +33,18 @@ namespace SharpSteer2.Obstacles
             height = h;
 
             setSeenFrom(sf);
+        }
+
+        public override FixMath.F64 pointToObstacleDistance(FixMath.F64Vec3 p)
+        {
+            var lp = this.LocalizePosition(p);
+            var projectPoint = new FixMath.F64Vec3(lp.X, lp.Y, FixMath.F64.Zero);
+            if (!xyPointInsideShape(projectPoint, FixMath.F64.Zero))
+            {
+                var d = FixMath.F64.Abs(lp.X) - width / 2;
+                return FixMath.F64.Sqrt(d * d + lp.Z * lp.Z);
+            }
+            return lp.Z;
         }
 
         public override void draw(IAnnotationService annotation, bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)

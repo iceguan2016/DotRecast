@@ -97,6 +97,10 @@ namespace SharpSteer2.Obstacles
         // (this must be specialized for each new obstacle shape class)
         void findIntersectionWithVehiclePath(BaseVehicle vehicle, ref PathIntersection pi);
 
+        FixMath.F64 pointToObstacleDistance(FixMath.F64Vec3 p);
+
+        //void findIntersectionWithDirection(BaseVehicle vehicle, FixMath.F64Vec3 direction, ref PathIntersection pi);
+
         // virtual function for drawing -- normally does nothing, can be
         // specialized by derived types to provide graphics for obstacles
         void draw(IAnnotationService annotation, bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint);

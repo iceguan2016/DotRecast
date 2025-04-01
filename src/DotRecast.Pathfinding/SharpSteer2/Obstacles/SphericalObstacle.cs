@@ -112,6 +112,11 @@ namespace SharpSteer2.Obstacles
             }
         }
 
+        public override FixMath.F64 pointToObstacleDistance(FixMath.F64Vec3 p)
+        { 
+            return FixMath.F64Vec3.DistanceFast(p, Center);
+        }
+
         public override void draw(IAnnotationService annotation, bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)
         {
         }

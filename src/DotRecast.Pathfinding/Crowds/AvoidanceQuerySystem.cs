@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using SharpSteer2.Helpers;
 using Pathfinding.Util;
 using SharpSteer2;
+using Pathfinding.Crowds.SteeringForce;
+using System.Drawing;
+using System;
 
 namespace Pathfinding.Crowds
 {
@@ -14,6 +17,10 @@ namespace Pathfinding.Crowds
 
         protected FixMath.F64 timeHorizon = FixMath.F64.Half;
         protected FixMath.F64 invTimeHorizon = FixMath.F64.One;
+        protected FixMath.F64 checkHitObstacleTime = FixMath.F64.Half;
+
+        static FixMath.F64 CHECK_HIT_OBSTACLE_RADIUS_SCALE = FixMath.F64.FromDouble(2.0);
+        protected FixMath.F64 checkHitObstacleDistance = FixMath.F64.One;
 
         public class VO
         {
@@ -125,14 +132,16 @@ namespace Pathfinding.Crowds
 
         public void Init(
             UniqueId ownerEntityId,
-            FixMath.F64Vec2 position, FixMath.F64 radius,
-            FixMath.F64Vec2 velocity, FixMath.F64 timeHorizon)
+            FixMath.F64Vec2 position, FixMath.F64 radius, FixMath.F64Vec2 velocity, 
+            FixMath.F64 timeHorizon, FixMath.F64 checkHitObstacleTime)
         {
             this.Position = position;
             this.Radius = radius;
             this.Velocity = velocity;
             this.timeHorizon = timeHorizon;
             this.invTimeHorizon = FixMath.F64.One / timeHorizon;
+            this.checkHitObstacleTime = checkHitObstacleTime;
+            this.checkHitObstacleDistance = radius * CHECK_HIT_OBSTACLE_RADIUS_SCALE;
 
             this.voLists.Clear();
         }
@@ -161,14 +170,13 @@ namespace Pathfinding.Crowds
             FixMath.F64Vec2 u = FixMath.F64Vec2.Zero;
             FixMath.F64Vec2 left, right;
 
-            // if (distSq > combinedRadiusSq)
+            if (FixMath.F64Vec2.Dot(relativeVelocity, relativePosition) > 0) // Two entities are approaching
             {
                 FixMath.F64 tmin, tmax;
                 bool collision = Geometry.TimeToCollisionWithCircle2D(
                     ownerPosition2D, ownerRadius, relativeVelocity,
                     otherPosition2D, otherRadius, out tmin, out tmax);
                 if (collision && tmin < this.timeHorizon)
-                // if (FixMath.F64Vec2.Dot(Velocity, relativePosition) > 0)  // in front
                 {
                     /* will collision */
                     FixMath.F64 leg = FixMath.F64.Sqrt(FixMath.F64.Max(distSq - combinedRadiusSq, FixMath.F64.Zero));
@@ -219,44 +227,63 @@ namespace Pathfinding.Crowds
             /* selected nearest velocity */
             var velDir = FixMath.F64Vec2.NormalizeFast(vehicle.Velocity.Cast2D());
             var entity = UniqueId.InvalidID;
-            var minDistSq = FixMath.F64.MaxValue;
-            var bestDir = FixMath.F64Vec2.Zero;
-            var side = IVehicle.eAvoidSide.None;
+
+            // update hit obstacle info
+            var checkHitObstacles = new bool[voLists.Count * 2];
             for (int i = 0; i < voLists.Count; ++i)
-            {
-                ref var left = ref voLists[i].Edges[VO.EdgeLeftIndex];
-                ref var right = ref voLists[i].Edges[VO.EdgeRightIndex];             
-                
-                if (info.Side != IVehicle.eAvoidSide.Right)
+            { 
+                var vo = voLists[i];
+                for(var s = VO.EdgeLeftIndex; s <= VO.EdgeRightIndex; ++s)
                 {
-                    var diffLeft = left.Direction - velDir;
-                    var diffLeftSq = FixMath.F64Vec2.LengthSqr(diffLeft);
-                    if (diffLeftSq < minDistSq)
-                    {
-                        entity = left.Owner;
-                        bestDir = left.Direction;
-                        minDistSq = diffLeftSq;
-                        side = IVehicle.eAvoidSide.Left;
-                    }
+                    var dir = vo.Edges[s].Direction.Cast(FixMath.F64.Zero);
+                    var hit = AbstractSteeringForce.CheckHitObstacle(vehicle as MovableEntity, dir);
+                    checkHitObstacles[i * 2 + s] = hit.intersect && hit.distance <= checkHitObstacleDistance;
                 }
-                // 
-                if (info.Side != IVehicle.eAvoidSide.Left)
+            }
+
+            // choose best direction
+            var bestDirs = new FixMath.F64Vec2[VO.EdgeRightIndex + 1];
+            Array.Fill(bestDirs, FixMath.F64Vec2.Zero);
+            for (var s = VO.EdgeLeftIndex; s <= VO.EdgeRightIndex; ++s)
+            {
+                var minDistSq = FixMath.F64.MaxValue;
+                for (int i = 0; i < voLists.Count; ++i)
                 {
-                    var diffRight = right.Direction - velDir;
-                    var diffRightSq = FixMath.F64Vec2.LengthSqr(diffRight);
-                    if (diffRightSq < minDistSq)
+                    ref var edge = ref voLists[i].Edges[s];
+
+                    // 1.检查是否碰撞obstacle
+                    if (checkHitObstacles[i * 2 + s])
+                        continue;
+                    // 2.考虑方向最接近的
+                    var diff = edge.Direction - velDir;
+                    var diffSq = FixMath.F64Vec2.LengthSqr(diff);
+                    if (diffSq < minDistSq)
                     {
-                        entity = right.Owner;
-                        bestDir = right.Direction;
-                        minDistSq = diffRightSq;
-                        side = IVehicle.eAvoidSide.Right;
+                        entity = edge.Owner;
+                        bestDirs[s] = edge.Direction;
+                        minDistSq = diffSq;
                     }
                 }
             }
-            
-            if (side != IVehicle.eAvoidSide.None)
+
+            var bestSide = IVehicle.eAvoidSide.None;
+            var bestDir = FixMath.F64Vec2.Zero;
+            var startIndex = info.Side != IVehicle.eAvoidSide.Right? VO.EdgeLeftIndex : VO.EdgeRightIndex;
+            var indexCount = VO.EdgeRightIndex + 1;
+            for (var index = 0; index < indexCount; ++index)
             {
-                info.SetAvoidInfo(frameNo, entity, side);
+                var side = (startIndex + index) % indexCount;
+                if (bestDirs[side] != FixMath.F64Vec2.Zero)
+                {
+                    bestSide = side == VO.EdgeLeftIndex? IVehicle.eAvoidSide.Left : IVehicle.eAvoidSide.Right;
+                    bestDir = bestDirs[side];
+                    break;
+                }
+            }
+            
+            if (bestSide != IVehicle.eAvoidSide.None)
+            {
+                info.SetAvoidInfo(frameNo, entity, bestSide);
                 return bestDir.Cast(FixMath.F64.Zero);
             }
             return FixMath.F64Vec3.Zero;
@@ -266,10 +293,25 @@ namespace Pathfinding.Crowds
         {
             var pos = vehicle.Position;
 
+            // update hit obstacle info
+            var checkHitObstacles = new bool[voLists.Count * 2];
+            for (int i = 0; i < voLists.Count; ++i)
+            {
+                var vo = voLists[i];
+                for (var s = VO.EdgeLeftIndex; s <= VO.EdgeRightIndex; ++s)
+                {
+                    var dir = vo.Edges[s].Direction.Cast(FixMath.F64.Zero);
+                    var hit = AbstractSteeringForce.CheckHitObstacle(vehicle as MovableEntity, dir);
+                    checkHitObstacles[i * 2 + s] = hit.intersect && hit.distance <= checkHitObstacleDistance;
+                }
+            }
+
             // draw all vos
             var minLen = FixMath.F64.FromFloat(5.0f);
             var maxLen = FixMath.F64.FromFloat(20.0f);
             var stepLen = FixMath.F64.FromFloat(2.0f);
+            var arrowSize = FixMath.F64Vec2.FromFloat(0.0f, 0.5f);
+            var arrowLineWidth = FixMath.F64.FromFloat(2.0f);
             for (var i = 0; i < voLists.Count; ++i)
             {
                 var len = FixMath.F64.Max(maxLen - stepLen * i, minLen);
@@ -280,11 +322,26 @@ namespace Pathfinding.Crowds
                 // left
                 var start0 = Position;
                 var end0 = Position + left.Direction * len;
-                Draw.drawLine(annotation, start0.Cast(pos.Y), end0.Cast(pos.Y), Colors.Red);
+                if (checkHitObstacles[i * 2 + VO.EdgeLeftIndex])
+                {
+                    Draw.drawArrow(annotation, start0.Cast(pos.Y), end0.Cast(pos.Y), arrowSize, arrowLineWidth, Colors.Red);
+                }
+                else
+                {
+                    Draw.drawLine(annotation, start0.Cast(pos.Y), end0.Cast(pos.Y), Colors.Red);
+                }
                 // right
                 var start1 = Position;
                 var end1 = Position + right.Direction * len;
-                Draw.drawLine(annotation, start1.Cast(pos.Y), end1.Cast(pos.Y), Colors.Green);
+
+                if (checkHitObstacles[i * 2 + VO.EdgeRightIndex])
+                {
+                    Draw.drawArrow(annotation, start1.Cast(pos.Y), end1.Cast(pos.Y), arrowSize, arrowLineWidth, Colors.Green);
+                }
+                else
+                {
+                    Draw.drawLine(annotation, start1.Cast(pos.Y), end1.Cast(pos.Y), Colors.Green);
+                }
 
                 Draw.drawLine(annotation, end0.Cast(pos.Y), end1.Cast(pos.Y), Colors.Blue);
             }

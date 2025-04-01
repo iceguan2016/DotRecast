@@ -443,6 +443,7 @@ namespace Pathfinding.Crowds
 #endif
 
             var steerForce = determineCombinedSteering(inDeltaTime);
+            steerForce = steerForce.SetYtoZero();
             if (steerForce != FixMath.F64Vec3.Zero)
             {
                 ApplySteeringForce(steerForce, inDeltaTime);

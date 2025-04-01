@@ -9,6 +9,7 @@ namespace SharpSteer2.Obstacles
     public abstract class LocalSpaceObstacle : LocalSpace, IObstacle
     {
         public abstract void findIntersectionWithVehiclePath(BaseVehicle vehicle, ref PathIntersection pi);
+        public abstract F64 pointToObstacleDistance(F64Vec3 p);
 
         // compute steering for a vehicle to avoid this obstacle, if needed 
         public FixMath.F64Vec3 steerToAvoid(BaseVehicle vehicle, FixMath.F64 minTimeToCollision, ref IVehicle.FAvoidObstacleInfo info)

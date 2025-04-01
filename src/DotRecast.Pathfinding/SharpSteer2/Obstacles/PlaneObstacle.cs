@@ -61,6 +61,12 @@ namespace SharpSteer2.Obstacles
             pi.vehicleOutside = lp.Z > FixMath.F64.Zero;
         }
 
+        public override FixMath.F64 pointToObstacleDistance(FixMath.F64Vec3 p)
+        {
+            var lp = this.LocalizePosition(p);
+            return lp.Z;
+        }
+
         public override ObstacleType getObstacleType()
         {
             return ObstacleType.Plane;

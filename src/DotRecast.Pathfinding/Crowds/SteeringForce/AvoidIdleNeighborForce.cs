@@ -12,6 +12,8 @@ namespace Pathfinding.Crowds.SteeringForce
     {
         // Avoid neighbor look-ahead time
         public FixMath.F64 AvoidNeighborAheadTime = FixMath.F64.FromDouble(1.0f);
+        public FixMath.F64 CheckHitObstacleTime = FixMath.F64.FromDouble(1.5f);
+        public FixMath.F64 CheckResetAvoidInfoDistance = FixMath.F64.One;
 
         private AvoidanceQuerySystem _avoidQuerySystem = new AvoidanceQuerySystem();
         private List<UniqueId> _avoidNeghborIDs = new List<UniqueId>();
@@ -37,7 +39,7 @@ namespace Pathfinding.Crowds.SteeringForce
             var collisionAvoidance = FixMath.F64Vec3.Zero;
             {
                 _avoidNeghborIDs.Clear();
-                _avoidQuerySystem.Init(owner.ID, owner.Position.Cast2D(), owner.Radius, owner.Velocity.Cast2D(), AvoidNeighborAheadTime);
+                _avoidQuerySystem.Init(owner.ID, owner.Position.Cast2D(), owner.Radius, owner.Velocity.Cast2D(), AvoidNeighborAheadTime, CheckHitObstacleTime);
                 for (var i = 0; i < neighbors.Count; ++i)
                 {
                     var neighbor = neighbors[i] as MovableEntity;
@@ -120,9 +122,16 @@ namespace Pathfinding.Crowds.SteeringForce
                 return;
             }
 
-            // 超过一定帧数没有需要避让的单位，则重置避让信息
-            var deltaFrame = entityManager.FrameNo - _avoidNeighborInfo.FrameNo;
-            if (deltaFrame > 5)
+            // 远离避让单位一定距离了才考虑清除避让信息
+            var other = entityManager.GetEntityById(_avoidNeighborInfo.EntityId);
+            if (null == other)
+            {
+                _avoidNeighborInfo.Reset();
+                return;
+            }
+
+            var distance = FixMath.F64Vec3.DistanceFast(owner.Position, other.GetPosition());
+            if (distance > CheckResetAvoidInfoDistance)
             {
                 _avoidNeighborInfo.Reset();
             }

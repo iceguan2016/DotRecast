@@ -8,6 +8,7 @@ namespace Pathfinding.Crowds.SteeringForce
     {
         // Avoid obstacle look-ahead time
         public FixMath.F64 AvoidObstacleAheadTime = FixMath.F64.FromDouble(1.0f);
+        public FixMath.F64 CheckResetAvoidInfoDistance = FixMath.F64.One;
 
         private IVehicle.FAvoidObstacleInfo _avoidObstacleInfo = new IVehicle.FAvoidObstacleInfo();
 
@@ -38,12 +39,14 @@ namespace Pathfinding.Crowds.SteeringForce
             if (null == _avoidObstacleInfo.Obstacle)
             {
                 _avoidObstacleInfo.Reset();
+                return;
             }
 
-            var deltaFrame = entityManager.FrameNo - _avoidObstacleInfo.FrameNo;
-            if (deltaFrame > 5)
+            var distance = _avoidObstacleInfo.Obstacle.pointToObstacleDistance(owner.Position);
+            if (distance >= CheckResetAvoidInfoDistance)
             {
                 _avoidObstacleInfo.Reset();
+                return;
             }
         }
     }

@@ -22,6 +22,15 @@ namespace SharpSteer2.Obstacles
             depth = d;
         }
 
+        public override FixMath.F64 pointToObstacleDistance(FixMath.F64Vec3 p)
+        {
+            var lp = this.LocalizePosition(p);
+            var dx = FixMath.F64.Abs(lp.X) - width;
+            var dy = FixMath.F64.Abs(lp.Y) - height;
+            var dz = FixMath.F64.Abs(lp.Z) - depth;
+            return FixMath.F64.SqrtFast(dx*dx + dy*dy + dz*dz);
+        }
+
         public override void draw(IAnnotationService annotation, bool filled, FixMath.F64Vec3 color, FixMath.F64Vec3 viewpoint)
         {
         }

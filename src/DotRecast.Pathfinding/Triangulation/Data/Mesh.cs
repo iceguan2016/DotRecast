@@ -569,8 +569,15 @@ namespace Pathfinding.Triangulation.Data
             var done = false;
             currVertex = vertexDown;
             currObjet = Intersection.EVertex(currVertex);
+            var loopTimes = 0;
             while (true)
             {
+                if (++loopTimes > 200)
+                {
+                    Debug.LogError($"insertConstraintSegment loop too many times! loopTimes:{loopTimes}");
+                    break;
+                }
+
                 done = false;
 
                 if (currObjet is Intersection_EVertex v)
