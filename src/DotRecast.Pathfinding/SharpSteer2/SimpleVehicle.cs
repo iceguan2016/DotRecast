@@ -39,6 +39,8 @@ namespace SharpSteer2
 			Speed = FixMath.F64.Zero;         // speed along Forward direction.
 
 			Radius = FixMath.F64.Half;     // size of bounding sphere
+			MaxSpeed = DefaultMaxSpeed;
+			MaxForce = DefaultMaxForce;
 
 			// reset bookkeeping to do running averages of these quanities
 			ResetSmoothedPosition();
@@ -68,19 +70,13 @@ namespace SharpSteer2
         // the maximum steering force this vehicle can apply
         // (steering force is clipped to this magnitude)
 		static FixMath.F64 DefaultMaxForce = FixMath.F64.FromFloat(0.1f);
-        public override FixMath.F64 MaxForce
-        {
-            get { return DefaultMaxForce; }
-        }
+        public override FixMath.F64 MaxForce { get; set; }
 
 	    // get/set maxSpeed
         // the maximum speed this vehicle is allowed to move
         // (velocity is clipped to this magnitude)
 		static FixMath.F64 DefaultMaxSpeed = FixMath.F64.FromFloat(1.0f);
-	    public override FixMath.F64 MaxSpeed
-	    {
-	        get { return DefaultMaxSpeed; }
-	    }
+	    public override FixMath.F64 MaxSpeed { get; set; }
 
 	    // apply a given steering force to our momentum,
 		// adjusting our orientation to maintain velocity-alignment.

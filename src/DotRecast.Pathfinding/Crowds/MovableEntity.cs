@@ -26,7 +26,7 @@ namespace Pathfinding.Crowds
 
         Count,
     }
-    public class TMovableEntityTemplate : TEntityTemplate, ICloneable
+    public class TMovableEntityTemplate : TEntityTemplate
     {
         // stop move radius
         public FixMath.F64 StopMoveRadius = FixMath.F64.FromFloat(1.5f);
@@ -64,41 +64,6 @@ namespace Pathfinding.Crowds
 
         // debug toggles
         public bool[] DebugVec3Toggles = new bool[(int)eDebugVec3Item.Count];
-
-        public object Clone()
-        {
-            var template = new TMovableEntityTemplate() {
-                StopMoveRadius  = this.StopMoveRadius,
-                Radius          = this.Radius,
-                MaxSpeed        = this.MaxSpeed,
-                MaxForce        = this.MaxForce,
-
-
-                ForwardMoveWeight       = this.ForwardMoveWeight,
-                FollowPathAheadTime     = this.FollowPathAheadTime,
-                FollowPathWeight        = this.FollowPathWeight,
-                AvoidObstacleAheadTime  = this.AvoidObstacleAheadTime,
-                AvoidObstacleWeight     = this.AvoidObstacleWeight,
-                AvoidNeighborAheadTime  = this.AvoidNeighborAheadTime,
-                AvoidNeighborWeight     = this.AvoidNeighborWeight,
-
-                SeparationRadius    = this.SeparationRadius,
-                SeparationAngle     = this.SeparationAngle,
-                SeparationWeight    = this.SeparationWeight,
-
-                AlignmentRadius     = this.AlignmentRadius,
-                AlignmentAngle      = this.AlignmentAngle,
-                AlignmentWeight     = this.AlignmentWeight,
-                
-                CohesionRadius      = this.CohesionRadius,
-                CohesionAngle       = this.CohesionAngle,
-                CohesionWeight      = this.CohesionWeight,
-            };
-
-            Array.Copy(this.DebugVec3Toggles, template.DebugVec3Toggles, this.DebugVec3Toggles.Length);
-
-            return template;
-        }
     }
 
     public class MovableEntity : SimpleVehicle, ICrowdEntityActor
@@ -135,10 +100,6 @@ namespace Pathfinding.Crowds
         // a pointer to this boid's interface object for the proximity database
         private ITokenForProximityDatabase<IVehicle> _proximityToken;
 
-        // Config values
-        public override FixMath.F64 MaxForce { get { return (Template as TMovableEntityTemplate).MaxForce; } }
-        public override FixMath.F64 MaxSpeed { get { return (Template as TMovableEntityTemplate).MaxSpeed; } }
-
         public FixMath.F64 QueryLocalBoundaryRadius { 
             get {
                 var template = Template as TMovableEntityTemplate;
@@ -169,23 +130,34 @@ namespace Pathfinding.Crowds
             
             set 
             {
-                isTargetDirty = null == targetLocation || FixMath.F64Vec3.DistanceFast(targetLocation.Value, value.Value) > FixMath.F64.Two;
-                if (isTargetDirty) 
+                if (value != null)
                 {
-                    targetLocation = value;
-                    if (null != targetLocation)
+                    isTargetDirty = null == targetLocation || FixMath.F64Vec3.DistanceFast(targetLocation.Value, value.Value) > FixMath.F64.Two;
+                    if (isTargetDirty) 
                     {
-                        // Give a little initial speed to prevent the position from being unchanged due to the speed being 0 in the PredictFuturePosition function,
-                        // causing some division by 0 exceptions
-                        Speed = DEFAULT_INITIAL_MOVE_SPEED;
-                        SetEntityState(eEntityState.Moving);
-                    }
-                    else
-                    {
-                        Speed = FixMath.F64.Zero;
-                        ClearEntityState(eEntityState.Moving);
+                        targetLocation = value;
+                        if (null != targetLocation)
+                        {
+                            var template = Template as TMovableEntityTemplate;
+                            // Give a little initial speed to prevent the position from being unchanged due to the speed being 0 in the PredictFuturePosition function,
+                            // causing some division by 0 exceptions
+                            Speed = template.MaxSpeed * FixMath.F64.Half;
+                            SetEntityState(eEntityState.Moving);
+                        }
+                        else
+                        {
+                            Speed = FixMath.F64.Zero;
+                            ClearEntityState(eEntityState.Moving);
+                        }
                     }
                 }
+                else
+                {
+                    Speed = FixMath.F64.Zero;
+                    ClearEntityState(eEntityState.Moving);
+                }
+
+                targetLocation = value;
             }
         }
 
@@ -290,6 +262,8 @@ namespace Pathfinding.Crowds
             // initial slow speed
             Speed = FixMath.F64.Zero;
             Radius = template.Radius;
+            MaxSpeed = template.MaxSpeed;
+            MaxForce = template.MaxForce;
 
             if (_proximityToken != null)
                 _proximityToken.UpdateForNewPosition(Position);

@@ -53,7 +53,10 @@ namespace Pathfinding.Crowds.SteeringForce
 
                 var avoidDirection = _avoidQuerySystem.QueryAvoidDirection(owner, entityManager.FrameNo, ref _avoidNeighborInfo);
                 var lateral = Vector3Helpers.PerpendicularComponent(avoidDirection, owner.Forward);
-                collisionAvoidance = FixMath.F64Vec3.NormalizeFast(lateral) * owner.MaxForce * Weight;
+                if (lateral != FixMath.F64Vec3.Zero)
+                {
+                    collisionAvoidance = FixMath.F64Vec3.NormalizeFast(lateral) * owner.MaxForce * Weight;
+                }
             }
             return collisionAvoidance;
         }

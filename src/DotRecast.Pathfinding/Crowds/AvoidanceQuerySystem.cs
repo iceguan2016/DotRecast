@@ -171,7 +171,7 @@ namespace Pathfinding.Crowds
                 // if (FixMath.F64Vec2.Dot(Velocity, relativePosition) > 0)  // in front
                 {
                     /* will collision */
-                    FixMath.F64 leg = FixMath.F64.Sqrt(distSq - combinedRadiusSq);
+                    FixMath.F64 leg = FixMath.F64.Sqrt(FixMath.F64.Max(distSq - combinedRadiusSq, FixMath.F64.Zero));
 
                     left = new FixMath.F64Vec2(relativePosition.X * leg - relativePosition.Y * combinedRadius,
                             relativePosition.X * combinedRadius + relativePosition.Y * leg) / distSq;

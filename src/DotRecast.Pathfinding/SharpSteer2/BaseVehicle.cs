@@ -20,8 +20,8 @@ namespace SharpSteer2
 
         public abstract FixMath.F64Vec3 PredictFuturePosition(FixMath.F64 predictionTime);
 
-		public abstract FixMath.F64 MaxForce { get; }
-		public abstract FixMath.F64 MaxSpeed { get; }
+		public abstract FixMath.F64 MaxForce { get; set; }
+		public abstract FixMath.F64 MaxSpeed { get; set; }
 
         public abstract FixMath.F64Vec3 GetAvoidObstacleDirection(Obstacles.IObstacle obstacle, ref Obstacles.PathIntersection pathIntersection, ref IVehicle.FAvoidObstacleInfo info);
         public abstract FixMath.F64Vec3 GetAvoidNeighborDirection(IVehicle threat, Obstacles.PathIntersection? intersection, ref IVehicle.FAvoidNeighborInfo info);
