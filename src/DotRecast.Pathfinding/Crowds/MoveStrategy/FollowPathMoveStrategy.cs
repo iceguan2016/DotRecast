@@ -80,7 +80,11 @@ namespace Pathfinding.Crowds.MoveStrategy
         public override F64Vec3 OnUpdate(MovableEntity owner, F64 deltaSeconds)
         {
             var followPathForce = _followPathForce.GetSteeringForce(owner);
+
+            _avoidIdleNeighborForce.UpdateAvoidNeighborInfo(owner, _avoidObstacleForce.AvoidObstacleInfo);
             var avoidIdleForce = _avoidIdleNeighborForce.GetSteeringForce(owner);
+
+            _avoidObstacleForce.UpdateAvoidObstacleInfo(owner, _avoidIdleNeighborForce.AvoidNeighborInfo);
             var avoidObstacleForce = _avoidObstacleForce.GetSteeringForce(owner);
 
             var forwardMoveForce = FixMath.F64Vec3.Zero;

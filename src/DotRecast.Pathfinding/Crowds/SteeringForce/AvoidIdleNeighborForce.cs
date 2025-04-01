@@ -19,6 +19,7 @@ namespace Pathfinding.Crowds.SteeringForce
         private List<UniqueId> _avoidNeghborIDs = new List<UniqueId>();
 
         private IVehicle.FAvoidNeighborInfo _avoidNeighborInfo = new IVehicle.FAvoidNeighborInfo();
+        public IVehicle.FAvoidNeighborInfo AvoidNeighborInfo { get { return _avoidNeighborInfo; } }
 
         bool NeedAvoidNeighbor(MovableEntity owner, MovableEntity neighbor)
         {
@@ -32,8 +33,6 @@ namespace Pathfinding.Crowds.SteeringForce
 
         public override F64Vec3 GetSteeringForce(MovableEntity owner)
         {
-            updateAvoidNeighborInfo(owner);
-
             var entityManager = owner.EntityManager;
             var neighbors = owner.Neighbors;
             var collisionAvoidance = FixMath.F64Vec3.Zero;
@@ -112,14 +111,13 @@ namespace Pathfinding.Crowds.SteeringForce
             }
         }
 
-        void updateAvoidNeighborInfo(MovableEntity owner)
+        public void UpdateAvoidNeighborInfo(MovableEntity owner, IVehicle.FAvoidObstacleInfo referenceAvoidObstacleInfo)
         {
             var entityManager = owner.EntityManager;
 
             if (!_avoidNeighborInfo.EntityId.IsValid())
             {
                 _avoidNeighborInfo.Reset();
-                return;
             }
 
             // 远离避让单位一定距离了才考虑清除避让信息
@@ -127,13 +125,22 @@ namespace Pathfinding.Crowds.SteeringForce
             if (null == other)
             {
                 _avoidNeighborInfo.Reset();
-                return;
+            }
+            else
+            {
+                var distance = FixMath.F64Vec3.DistanceFast(owner.Position, other.GetPosition());
+                if (distance > CheckResetAvoidInfoDistance)
+                {
+                    _avoidNeighborInfo.Reset();
+                }
             }
 
-            var distance = FixMath.F64Vec3.DistanceFast(owner.Position, other.GetPosition());
-            if (distance > CheckResetAvoidInfoDistance)
-            {
-                _avoidNeighborInfo.Reset();
+            // 根据传入的FAvoidObstacleInfo信息更新避让初始信息，防止从避让Obstacle过渡到Entity方向不一致导致单位原地打转
+            if (!_avoidNeighborInfo.IsValid && 
+                referenceAvoidObstacleInfo.IsValid && 
+                referenceAvoidObstacleInfo.FrameNo > _avoidNeighborInfo.FrameNo)
+            { 
+                _avoidNeighborInfo.SetAvoidInfo(entityManager.FrameNo, UniqueId.InvalidID, referenceAvoidObstacleInfo.Side);
             }
         }
     }

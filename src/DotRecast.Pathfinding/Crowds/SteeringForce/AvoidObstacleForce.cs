@@ -11,11 +11,10 @@ namespace Pathfinding.Crowds.SteeringForce
         public FixMath.F64 CheckResetAvoidInfoDistance = FixMath.F64.One;
 
         private IVehicle.FAvoidObstacleInfo _avoidObstacleInfo = new IVehicle.FAvoidObstacleInfo();
+        public IVehicle.FAvoidObstacleInfo AvoidObstacleInfo { get { return _avoidObstacleInfo; } }
 
         public override F64Vec3 GetSteeringForce(MovableEntity owner)
         {
-            updateAvoidObstacleInfo(owner);
-
             var boundaryObstacles = owner.BoundaryObstacles;
             var obstacleAvoidance = FixMath.F64Vec3.Zero;
             {
@@ -32,21 +31,29 @@ namespace Pathfinding.Crowds.SteeringForce
             _avoidObstacleInfo.Reset();
         }
 
-        void updateAvoidObstacleInfo(MovableEntity owner)
+        public void UpdateAvoidObstacleInfo(MovableEntity owner, IVehicle.FAvoidNeighborInfo referenceAoidNeighborInfo)
         {
             var entityManager = owner.EntityManager;
 
             if (null == _avoidObstacleInfo.Obstacle)
             {
                 _avoidObstacleInfo.Reset();
-                return;
+            }
+            else
+            {
+                var distance = _avoidObstacleInfo.Obstacle.pointToObstacleDistance(owner.Position);
+                if (distance >= CheckResetAvoidInfoDistance)
+                {
+                    _avoidObstacleInfo.Reset();
+                }
             }
 
-            var distance = _avoidObstacleInfo.Obstacle.pointToObstacleDistance(owner.Position);
-            if (distance >= CheckResetAvoidInfoDistance)
+            // 根据传入的FAvoidNeighborInfo信息更新避让初始信息，防止从避让Entity过渡到Obstacle方向不一致导致单位原地打转
+            if (!_avoidObstacleInfo.IsValid &&
+                referenceAoidNeighborInfo.IsValid && 
+                referenceAoidNeighborInfo.FrameNo > _avoidObstacleInfo.FrameNo)
             {
-                _avoidObstacleInfo.Reset();
-                return;
+                _avoidObstacleInfo.SetAvoidInfo(entityManager.FrameNo, null, referenceAoidNeighborInfo.Side);
             }
         }
     }
