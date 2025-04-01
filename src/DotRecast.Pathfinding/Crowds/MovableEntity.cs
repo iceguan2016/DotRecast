@@ -371,8 +371,14 @@ namespace Pathfinding.Crowds
                 var distance = FixMath.F64Vec3.DistanceFast(Position, targetLocation.Value);
                 if (distance < template.StopMoveRadius)
                 {
+                    Speed = FixMath.F64.Zero;
                     ClearEntityState(eEntityState.Moving);
                 }
+            }
+            else
+            {
+                Speed = FixMath.F64.Zero;
+                return;
             }
 
             // 更新移动策略
