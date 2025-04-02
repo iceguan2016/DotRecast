@@ -53,15 +53,15 @@ namespace Pathfinding.Crowds
         // flocks
         public FixMath.F64 SeparationRadius = FixMath.F64.FromFloat(3.0f);
         public FixMath.F64 SeparationAngle = FixMath.F64.FromFloat(-0.707f);
-        public FixMath.F64 SeparationWeight = FixMath.F64.FromFloat(0.0f);
+        public FixMath.F64 SeparationWeight = FixMath.F64.FromFloat(0.3f);
 
         public FixMath.F64 AlignmentRadius = FixMath.F64.FromFloat(5.0f);
         public FixMath.F64 AlignmentAngle = FixMath.F64.FromFloat(0.707f);
-        public FixMath.F64 AlignmentWeight = FixMath.F64.FromFloat(0.0f);
+        public FixMath.F64 AlignmentWeight = FixMath.F64.FromFloat(0.4f);
 
         public FixMath.F64 CohesionRadius = FixMath.F64.FromFloat(4.0f);
         public FixMath.F64 CohesionAngle = FixMath.F64.FromFloat(-0.15f);
-        public FixMath.F64 CohesionWeight = FixMath.F64.FromFloat(0.0f);
+        public FixMath.F64 CohesionWeight = FixMath.F64.FromFloat(0.1f);
 
         // debug toggles
         public bool[] DebugVec3Toggles = new bool[(int)eDebugVec3Item.Count];

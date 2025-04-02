@@ -121,7 +121,7 @@ public class TestFixedCrowdTool : IRcToolable
             AvoidObstacleAheadTime = FixMath.F64.FromFloat(2.0f),
             AvoidObstacleWeight = FixMath.F64.FromFloat(1.0f),
 
-            PredictionAvoidIdleNeighborTime = FixMath.F64.FromFloat(0.0f),
+            PredictionAvoidIdleNeighborTime = FixMath.F64.FromFloat(0.2f),
             AvoidNeighborAheadTime = FixMath.F64.FromFloat(2.0f),
             AvoidNeighborWeight = FixMath.F64.FromFloat(1.0f),
 
