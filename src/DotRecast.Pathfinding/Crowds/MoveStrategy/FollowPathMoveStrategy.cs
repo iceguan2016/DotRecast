@@ -15,6 +15,8 @@ namespace Pathfinding.Crowds.MoveStrategy
         FlockAlignmentForce _flockAlignmentForce;
         FlockCohesionForce _flockCohesionForce;
 
+        FixMath.F64 _predictionAvoidIdleNeighborTime = FixMath.F64.FromDouble(0.05);
+
         public FollowPathMoveStrategy(MovableEntity owner)
         {
             var template = owner.Template as TMovableEntityTemplate;
@@ -27,6 +29,8 @@ namespace Pathfinding.Crowds.MoveStrategy
             _avoidIdleNeighborForce.AvoidNeighborAheadTime = template.AvoidNeighborAheadTime;
             _avoidIdleNeighborForce.CheckResetAvoidInfoDistance = template.Radius * 6;
             _avoidIdleNeighborForce.Weight = template.AvoidNeighborWeight;
+
+            _predictionAvoidIdleNeighborTime = template.PredictionAvoidIdleNeighborTime;
 
             _avoidObstacleForce = new AvoidObstacleForce();
             _avoidObstacleForce.AvoidObstacleAheadTime = template.AvoidObstacleAheadTime;
@@ -88,21 +92,46 @@ namespace Pathfinding.Crowds.MoveStrategy
             var avoidObstacleForce = _avoidObstacleForce.GetSteeringForce(owner);
 
             var forwardMoveForce = FixMath.F64Vec3.Zero;
-            var flockMoveForce = FixMath.F64Vec3.Zero;
+            var flockSeparationForce = FixMath.F64Vec3.Zero;
+            var flockAlignmentForce = FixMath.F64Vec3.Zero;
+            var flockCohesionForce = FixMath.F64Vec3.Zero;
             if (avoidIdleForce != FixMath.F64Vec3.Zero ||
                 avoidObstacleForce != FixMath.F64Vec3.Zero)
             {
                 // 如果有避让单位，给一个前向驱动的力
                 forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
+                // 不应用路径跟随力
+                followPathForce = FixMath.F64Vec3.Zero;
             }
-            else
+            else 
             {
                 // 没有避让，则施加群体行为驱动力
-                flockMoveForce = _flockSeparationForce.GetSteeringForce(owner)
-                    + _flockAlignmentForce.GetSteeringForce(owner)
-                    + _flockCohesionForce.GetSteeringForce(owner);
+                flockSeparationForce = _flockSeparationForce.GetSteeringForce(owner);
+                flockAlignmentForce = _flockAlignmentForce.GetSteeringForce(owner);
+                flockCohesionForce = _flockCohesionForce.GetSteeringForce(owner);
+
+                // 检查下一帧是否会避让邻近单位
+                if (_predictionAvoidIdleNeighborTime > 0)
+                {
+                    var totalForce = followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce
+                        + flockSeparationForce + flockAlignmentForce + flockCohesionForce;
+                    if (totalForce != FixMath.F64Vec3.Zero)
+                    {
+                        var predictionAvoidIdleForce = PredictionAvoidIdleNeighborsFoce(owner, totalForce, _predictionAvoidIdleNeighborTime, _avoidIdleNeighborForce.AvoidNeighborAheadTime);
+                        if (predictionAvoidIdleForce != FixMath.F64Vec3.Zero)
+                        {
+                            // 应用前驱力
+                            forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
+
+                            // 不应用路径跟随力和聚集力
+                            followPathForce = FixMath.F64Vec3.Zero;
+                            flockCohesionForce = FixMath.F64Vec3.Zero;
+                        }
+                    }
+                }
             }
-            return followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce + flockMoveForce;
+            return followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce 
+                + flockSeparationForce + flockAlignmentForce + flockCohesionForce;
         }
 
         public override void DrawGizmos(MovableEntity owner)

@@ -17,7 +17,7 @@ namespace Pathfinding.Crowds
 
         protected FixMath.F64 timeHorizon = FixMath.F64.Half;
         protected FixMath.F64 invTimeHorizon = FixMath.F64.One;
-        protected FixMath.F64 checkHitObstacleTime = FixMath.F64.Half;
+        protected bool isCheckHitObstacle = true;
 
         static FixMath.F64 CHECK_HIT_OBSTACLE_RADIUS_SCALE = FixMath.F64.FromDouble(2.0);
         protected FixMath.F64 checkHitObstacleDistance = FixMath.F64.One;
@@ -60,7 +60,7 @@ namespace Pathfinding.Crowds
                     Direction = dir;
                     if (dir != FixMath.F64Vec2.Zero)
                     {
-                        Angle = FixMath.F64.Atan2Fastest(dir.Y, dir.X); // (-PI, PI)
+                        Angle = FixMath.F64.Atan2Fast(dir.Y, dir.X); // (-PI, PI)
                         // while (Angle < 0) Angle += FixMath.F64.Pi2;
                         // while (Angle > FixMath.F64.Pi2) Angle -= FixMath.F64.Pi2;
                     }
@@ -133,14 +133,14 @@ namespace Pathfinding.Crowds
         public void Init(
             UniqueId ownerEntityId,
             FixMath.F64Vec2 position, FixMath.F64 radius, FixMath.F64Vec2 velocity, 
-            FixMath.F64 timeHorizon, FixMath.F64 checkHitObstacleTime)
+            FixMath.F64 timeHorizon, bool isCheckHitObstacle)
         {
             this.Position = position;
             this.Radius = radius;
             this.Velocity = velocity;
             this.timeHorizon = timeHorizon;
             this.invTimeHorizon = FixMath.F64.One / timeHorizon;
-            this.checkHitObstacleTime = checkHitObstacleTime;
+            this.isCheckHitObstacle = isCheckHitObstacle;
             this.checkHitObstacleDistance = radius * CHECK_HIT_OBSTACLE_RADIUS_SCALE;
 
             this.voLists.Clear();
@@ -230,14 +230,19 @@ namespace Pathfinding.Crowds
 
             // update hit obstacle info
             var checkHitObstacles = new bool[voLists.Count * 2];
-            for (int i = 0; i < voLists.Count; ++i)
-            { 
-                var vo = voLists[i];
-                for(var s = VO.EdgeLeftIndex; s <= VO.EdgeRightIndex; ++s)
+            Array.Fill(checkHitObstacles, false);
+
+            if (isCheckHitObstacle)
+            {
+                for (int i = 0; i < voLists.Count; ++i)
                 {
-                    var dir = vo.Edges[s].Direction.Cast(FixMath.F64.Zero);
-                    var hit = AbstractSteeringForce.CheckHitObstacle(vehicle as MovableEntity, dir);
-                    checkHitObstacles[i * 2 + s] = hit.intersect && hit.distance <= checkHitObstacleDistance;
+                    var vo = voLists[i];
+                    for (var s = VO.EdgeLeftIndex; s <= VO.EdgeRightIndex; ++s)
+                    {
+                        var dir = vo.Edges[s].Direction.Cast(FixMath.F64.Zero);
+                        var hit = AbstractSteeringForce.CheckHitObstacle(vehicle as MovableEntity, dir);
+                        checkHitObstacles[i * 2 + s] = hit.intersect && hit.distance <= checkHitObstacleDistance;
+                    }
                 }
             }
 

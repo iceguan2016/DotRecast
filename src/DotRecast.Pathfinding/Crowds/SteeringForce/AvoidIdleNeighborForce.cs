@@ -12,7 +12,6 @@ namespace Pathfinding.Crowds.SteeringForce
     {
         // Avoid neighbor look-ahead time
         public FixMath.F64 AvoidNeighborAheadTime = FixMath.F64.FromDouble(1.0f);
-        public FixMath.F64 CheckHitObstacleTime = FixMath.F64.FromDouble(1.5f);
         public FixMath.F64 CheckResetAvoidInfoDistance = FixMath.F64.One;
 
         private AvoidanceQuerySystem _avoidQuerySystem = new AvoidanceQuerySystem();
@@ -38,7 +37,7 @@ namespace Pathfinding.Crowds.SteeringForce
             var collisionAvoidance = FixMath.F64Vec3.Zero;
             {
                 _avoidNeghborIDs.Clear();
-                _avoidQuerySystem.Init(owner.ID, owner.Position.Cast2D(), owner.Radius, owner.Velocity.Cast2D(), AvoidNeighborAheadTime, CheckHitObstacleTime);
+                _avoidQuerySystem.Init(owner.ID, owner.Position.Cast2D(), owner.Radius, owner.Velocity.Cast2D(), AvoidNeighborAheadTime, true);
                 for (var i = 0; i < neighbors.Count; ++i)
                 {
                     var neighbor = neighbors[i] as MovableEntity;
