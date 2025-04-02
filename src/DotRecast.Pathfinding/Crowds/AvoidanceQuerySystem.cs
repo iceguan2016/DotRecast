@@ -150,7 +150,8 @@ namespace Pathfinding.Crowds
             UniqueId neighborEntityId,
             FixMath.F64Vec2 position, 
             FixMath.F64 radius, 
-            FixMath.F64Vec2 velocity)
+            FixMath.F64Vec2 velocity,
+            bool isSelected = false)
         {
             /* calculate vo */
             FixMath.F64Vec2 ownerPosition2D = this.Position;
@@ -178,6 +179,10 @@ namespace Pathfinding.Crowds
                     otherPosition2D, otherRadius, out tmin, out tmax);
                 if (collision && tmin < this.timeHorizon)
                 {
+                    if (isSelected)
+                    {
+                        int Stop = 0;                        
+                    }
                     /* will collision */
                     FixMath.F64 leg = FixMath.F64.Sqrt(FixMath.F64.Max(distSq - combinedRadiusSq, FixMath.F64.Zero));
 

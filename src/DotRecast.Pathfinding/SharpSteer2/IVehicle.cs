@@ -89,6 +89,7 @@ namespace SharpSteer2
 
             public void Reset()
             {
+                FrameNo = 0;
                 Obstacle = null;
                 Side = eAvoidSide.None;
             }
@@ -120,6 +121,7 @@ namespace SharpSteer2
 
             public void Reset()
             {
+                FrameNo = 0;
                 EntityId = UniqueId.InvalidID;
                 Side = eAvoidSide.None;
             }

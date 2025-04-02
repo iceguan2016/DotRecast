@@ -32,6 +32,12 @@ namespace Pathfinding.Crowds.SteeringForce
 
         public override F64Vec3 GetSteeringForce(MovableEntity owner)
         {
+            var isSelected = owner.HasEntityState(MovableEntity.eEntityState.Selected);
+            if (isSelected)
+            {
+                int stop = 0;
+            }
+
             var entityManager = owner.EntityManager;
             var neighbors = owner.Neighbors;
             var collisionAvoidance = FixMath.F64Vec3.Zero;
@@ -46,7 +52,7 @@ namespace Pathfinding.Crowds.SteeringForce
                     if (!NeedAvoidNeighbor(owner, neighbor))
                         continue;
 
-                    var add = _avoidQuerySystem.AddCircle(neighbor.ID, neighbor.Position.Cast2D(), neighbor.Radius, neighbor.Velocity.Cast2D());
+                    var add = _avoidQuerySystem.AddCircle(neighbor.ID, neighbor.Position.Cast2D(), neighbor.Radius, neighbor.Velocity.Cast2D(), isSelected);
                     if (add)
                         _avoidNeghborIDs.Add(neighbor.ID);
                 }

@@ -96,6 +96,8 @@ namespace Pathfinding.Crowds
         {
 	        Moving = 0,
             Attack,
+
+            Selected,
         };
 
         // a pointer to this boid's interface object for the proximity database
