@@ -100,8 +100,9 @@ namespace Pathfinding.Crowds.MoveStrategy
             {
                 // 如果有避让单位，给一个前向驱动的力
                 forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
-                // 不应用路径跟随力
-                followPathForce = FixMath.F64Vec3.Zero;
+                // 不应用路径跟随力(只在有避让Idle单位时候)
+                if (avoidIdleForce != FixMath.F64Vec3.Zero)
+                    followPathForce = FixMath.F64Vec3.Zero;
             }
             else 
             {
