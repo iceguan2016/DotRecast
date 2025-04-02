@@ -528,6 +528,10 @@ public class TestFixedCrowdTool : IRcToolable
         propertyChanged |= ImGui.SliderFloat("FollowPathWeight", ref followPathWeight, 0.0f, 5.0f);
         currTemplate.FollowPathWeight = FixMath.F64.FromFloat(followPathWeight);
 
+        var predictionAvoidIldeNeighborime = currTemplate.PredictionAvoidIdleNeighborTime.Float;
+        propertyChanged |= ImGui.SliderFloat("PredictionAvoidIdleNeighborTime", ref predictionAvoidIldeNeighborime, 0.0f, 5.0f);
+        currTemplate.PredictionAvoidIdleNeighborTime = FixMath.F64.FromFloat(predictionAvoidIldeNeighborime);
+
         var avoidNeighborAheadTime = currTemplate.AvoidNeighborAheadTime.Float;
         propertyChanged |= ImGui.SliderFloat("AvoidNeighborAheadTime", ref avoidNeighborAheadTime, 0.1f, 5.0f);
         currTemplate.AvoidNeighborAheadTime = FixMath.F64.FromFloat(avoidNeighborAheadTime);
