@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.IO;
 using FixMath;
 using Pathfinding.Crowds;
 using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;
 using SharpSteer2.Helpers;
-using SharpSteer2.Pathway;
 using Volatile;
 using static Pathfinding.Crowds.IMovableEntityManager;
 
@@ -53,8 +53,8 @@ namespace Pathfinding.Crowds
         private FixMath.F64 _tickElapsedTime = FixMath.F64.Zero;
 
         // 记录单位Id到索引对象的映射
-        Dictionary<UniqueId, int> EntityId2Index =  new Dictionary<UniqueId, int>();
-        List<ICrowdEntityActor> Entities = new List<ICrowdEntityActor>();
+        Dictionary<UniqueId, int> EntityId2Index = null;
+        List<ICrowdEntityActor> Entities = null;
 
         // pointer to database used to accelerate proximity queries
         private IProximityDatabase<IVehicle> _pd;
@@ -88,8 +88,16 @@ namespace Pathfinding.Crowds
 
         public Map Map { get { return _map; } }
 
+        private FInitializeParams initializeParams;
+        private Recorder _recorder = null;
+
         public UniqueId CreateEntity(CreateEntityParams inParams)
         {
+            if (null != _recorder && _recorder.IsRecording)
+            {
+                _recorder.SerilaizeOperation(new OperationCreateEntity(inParams));
+            }
+
             ICrowdEntityActor entityActor = null;
             if (inParams.Template is TMovableEntityTemplate)
             {
@@ -131,6 +139,11 @@ namespace Pathfinding.Crowds
 
         public bool DeleteEntity(UniqueId inEntityId)
         {
+            if (null != _recorder && _recorder.IsRecording)
+            {
+                _recorder.SerilaizeOperation(new OperationDeleteEntity(inEntityId));
+            }
+
             if (EntityId2Index.TryGetValue(inEntityId, out var findIndex))
 	        {
                 var slotIndex = findIndex;
@@ -149,6 +162,22 @@ namespace Pathfinding.Crowds
                 }
                 Utilities.RemoveAtSwap(Entities, slotIndex);
                 EntityId2Index.Remove(inEntityId);
+                return true;
+            }
+            return false;
+        }
+
+        public bool MoveEntity(UniqueId inEntityId, FixMath.F64Vec3? target)
+        {
+            if (null != _recorder && _recorder.IsRecording)
+            {
+                _recorder.SerilaizeOperation(new OperationMoveEntity(inEntityId, target));
+            }
+
+            var entity = GetEntityById(inEntityId);
+            if (entity is MovableEntity movable)
+            {
+                movable.TargetLocation = target;
                 return true;
             }
             return false;
@@ -191,7 +220,12 @@ namespace Pathfinding.Crowds
         {
             if (_initialized) return true;
 
+            EntityId2Index = new Dictionary<UniqueId, int>();
+            Entities = new List<ICrowdEntityActor>();
+
             FrameNo = 1;
+            _entityIdCounter = 1;
+            _tickElapsedTime = FixMath.F64.Zero;
 
             var center = (inParams.MapBoundsMin + inParams.MapBoundsMax) * FixMath.F64.Half;
             var size = inParams.MapBoundsMax - inParams.MapBoundsMin;
@@ -210,6 +244,8 @@ namespace Pathfinding.Crowds
             _map = new Map();
             _map.SetMap(inParams.MapBoundsMin.X, inParams.MapBoundsMin.Z, size.X, size.Z);
 
+            initializeParams = inParams;
+
             return true;
         }
 
@@ -217,14 +253,87 @@ namespace Pathfinding.Crowds
         {
             if (!_initialized) return true;
 
+            var PendingDeleteEntities = new List<ICrowdEntityActor>(Entities);
+            for (var i = 0; i < PendingDeleteEntities.Count; ++i)
+            {
+                DeleteEntity(PendingDeleteEntities[i].ID);
+            }
+
+            Entities.Clear();
+            EntityId2Index.Clear();
+
             _physicsWorld.SetContactListener(null);
             _physicsWorld = null;
+
+            StopRecord();
 
             return true;
         }
 
+        public void FrameBegin()
+        {
+            if (null != _recorder && _recorder.IsRecording)
+            {
+                _recorder.SerilaizeOperation(new OperationFrameBegin());
+            }
+        }
+
+        public void FrameEnd()
+        {
+            if (null != _recorder && _recorder.IsRecording)
+            {
+                _recorder.SerilaizeOperation(new OperationFrameBegin());
+            }
+        }
+
+        public bool StartRecord(string outputDir)
+        {
+            if (!_initialized) return false;
+            _recorder = new Recorder(this);
+            if (_recorder.StartRecord(outputDir))
+            {
+                _recorder.SerilaizeOperation(new OperatioMapInitial(initializeParams));
+                return true;
+            }
+            return false;
+        }
+        public bool StopRecord()
+        {
+            if (null != _recorder)
+            {
+                _recorder.StopRecord();
+                _recorder = null;
+            }
+            return false;
+        }
+
+        public bool StartReplay(string inputFile)
+        {
+            _recorder = new Recorder(this);
+            if (_recorder.StartReplay(inputFile))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public bool StopReplay()
+        {
+            if (null != _recorder)
+            {
+                _recorder.StopReplay();
+                _recorder = null;
+            }
+            return false;
+        }
+
         public void Tick(FixMath.F64 inDelteTime)
         {
+            if (null != _recorder && _recorder.IsRecording)
+            {
+                _recorder.SerilaizeOperation(new OperationTick(inDelteTime));
+            }
+
             _tickElapsedTime += inDelteTime;
 
             while (_tickElapsedTime > TICK_FRAME_DELTATIME)

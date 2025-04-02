@@ -1,3 +1,4 @@
+using System.IO;
 using Pathfinding.Util;
 using SharpSteer2;
 
@@ -36,11 +37,23 @@ namespace Pathfinding.Crowds
         bool Initialize(FInitializeParams inParams);
         bool UnInitialize();
 
+        void FrameBegin();
+        void FrameEnd();
+
+        bool StartRecord(string outputDir);
+        bool StopRecord();
+
+        bool StartReplay(string inputFile);
+        bool StopReplay();
+
         // create new entity
         UniqueId CreateEntity(CreateEntityParams inParams);
 
         // remove entity
         bool DeleteEntity(UniqueId inEntityId);
+
+        // 
+        bool MoveEntity(UniqueId inEntityId, FixMath.F64Vec3? target);
 
         // find entity
         ICrowdEntityActor GetEntityById(UniqueId inEntityId);

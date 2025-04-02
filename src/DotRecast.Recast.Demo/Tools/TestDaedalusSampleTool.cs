@@ -637,19 +637,9 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     public void MoveCrowdEntity(double x, double y)
     {
         var Position = FixMath.F64Vec3.FromDouble(x, MapHeight, y);
-        //_entityManager.ForEachEntity((InEntity) => { 
-        //    if (null != InEntity)
-        //    {
-        //        InEntity.TargetLocation = Position;
-        //    }
-        //});
         for (var i = 0; i < _selectEntities.Count; ++i)
         {
-            var entity = _entityManager.GetEntityById(_selectEntities[i]) as MovableEntity;
-            if (null != entity)
-            {
-                entity.TargetLocation = Position;
-            }
+            _entityManager.MoveEntity(_selectEntities[i], Position);
         }
     }
 

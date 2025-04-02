@@ -125,7 +125,7 @@ namespace Pathfinding.Crowds
         protected FixMath.F64Vec3? targetLocation = null;
 
         static FixMath.F64 DEFAULT_INITIAL_MOVE_SPEED = FixMath.F64.FromFloat(0.1f);
-        public FixMath.F64Vec3? TargetLocation { 
+        internal FixMath.F64Vec3? TargetLocation { 
             get
             {
                 return targetLocation;
