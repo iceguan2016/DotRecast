@@ -535,6 +535,9 @@ namespace Pathfinding.Crowds
 
         public void ForEachEntity(System.Action<ICrowdEntityActor> InAction)
         {
+            if (null == Entities)
+                return;
+            
             for (var i = 0; i < Entities.Count; i++)
             {
                 InAction(Entities[i]);

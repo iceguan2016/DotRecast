@@ -19,8 +19,6 @@ using Pathfinding.Triangulation.AI;
 using Volatile;
 using FixMath.NET;
 using Pathfinding.Main;
-using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json.Linq;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -135,7 +133,7 @@ public class TestFixedCrowdTool : IRcToolable
     private int _templateIndex = 0;
 
     // crowd entities
-    private IMovableEntityManager _entityManager = new MovableEntityManager();
+    private IMovableEntityManager _entityManager = null;
     public IMovableEntityManager EntityManager { get { return _entityManager; } }
     private List<UniqueId> _selectEntities = new List<UniqueId>();
     public List<UniqueId> SelectEntities { get { return _selectEntities; } }
@@ -147,6 +145,9 @@ public class TestFixedCrowdTool : IRcToolable
             return EntityManager.Map.NavMesh;
         } 
     }
+
+    // 
+    public bool IsOpenRecord = false;
 
     double RandomRange(double min, double max)
     {
@@ -162,6 +163,7 @@ public class TestFixedCrowdTool : IRcToolable
     {
         PathfindingMoudle.StartupModule();
 
+        _entityManager = new MovableEntityManager();
         if (null != _entityManager)
         {
             var mapYExtent = FixMath.F64.FromDouble(5.0f);
@@ -171,7 +173,7 @@ public class TestFixedCrowdTool : IRcToolable
                 MapBoundsMax = new FixMath.F64Vec3(FixMath.F64.FromDouble(x + mapWidth), MapHeight + mapYExtent / 2, FixMath.F64.FromDouble(y + mapHeight)),
                 MapCellDivs = 10,
 
-                IsOpenRecord = true,
+                IsOpenRecord = IsOpenRecord,
                 RecordRootDir = Debug.RecordRootDir,
             };
 
@@ -314,6 +316,9 @@ public class TestFixedCrowdTool : IRcToolable
 
     public void DrawCrowdEntity()
     {
+        if (null == _entityManager) 
+            return;
+
         _entityManager.ForEachEntity((InEntity) =>
         {
             if (InEntity is MovableEntity entity)
@@ -776,7 +781,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         Volatile.Color bodyAabbColor = Volatile.Color.magenta;
         Volatile.Color shapeAabbColor = Volatile.Color.cyan;
 
-        if (_tool.IsDrawPhysicsWorld)
+        if (_tool.IsDrawPhysicsWorld && null != _tool.EntityManager)
         {
             _tool.EntityManager.ForEachEntity((InEntity) =>
             {
@@ -858,6 +863,112 @@ public class TestFixedCrowdSampleTool : ISampleTool
         ImGui.NewLine();
     }
 
+    void Layout_CreateEntityManager()
+    {
+        if (null == _sample || null == _tool)
+            return;
+
+
+        ImGui.Checkbox("Open Record", ref _tool.IsOpenRecord);
+
+        if (ImGui.Button("Create Entity Manager"))
+        {
+            var geom = _sample.GetInputGeom();
+            var bound_min = geom.GetMeshBoundsMin();
+            var bound_max = geom.GetMeshBoundsMax();
+
+            var bound_center = (bound_min + bound_max) * 0.5f;
+
+            var mapWidth = bound_max.X - bound_min.X;
+            var mapHeight = bound_max.Z - bound_min.Z;
+
+            RandomHelpers.InitialRandom((int)DateTime.Now.Ticks);
+
+            if (null != _tool)
+                _tool.Start(0.0, 0.0, mapWidth, mapHeight);
+
+            Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
+        }
+    }
+
+    void Layout_Replay()
+    {
+        if (!_tool.EntityManager.IsReplaying())
+        {
+            // 列出最新的录像文件
+            var fileList = Debug.GetLatestRecordFiles(5);
+            if (fileList != null)
+            {
+                var CurrItemIndex = fileList.FindIndex(file => file.Name == Debug.ReplayFileName);
+
+                if (ImGui.BeginCombo("Files", CurrItemIndex != -1 ? fileList[CurrItemIndex].Name : ""))
+                {
+                    for (int n = 0; n < fileList.Count; n++)
+                    {
+                        bool is_selected = (CurrItemIndex == n);
+                        if (ImGui.Selectable(fileList[n].Name, is_selected))
+                            CurrItemIndex = n;
+                        if (is_selected)
+                            ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
+                    }
+                }
+                ImGui.EndCombo();
+
+                if (CurrItemIndex != -1)
+                {
+                    Debug.ReplayFileName = fileList[CurrItemIndex].Name;
+                }
+                else
+                {
+                    Debug.ReplayFileName = "";
+                }
+            }
+
+            if (ImGui.Button("StartReplay"))
+            {
+                if (Debug.ReplayFileName != "")
+                {
+                    _tool.EntityManager.StartReplay(Debug.RecordRootDir + "/" + Debug.ReplayFileName);
+                }
+            }
+        }
+        else
+        {
+            if (ImGui.Button("StopReplay"))
+            {
+                _tool.EntityManager.StopReplay();
+            }
+
+            if (_tool.EntityManager.IsPauseReplay)
+            {
+                if (ImGui.Button("ResumeReplay"))
+                {
+                    _tool.EntityManager.IsPauseReplay = false;
+                }
+            }
+            else
+            {
+                if (ImGui.Button("PauseReplay"))
+                {
+                    _tool.EntityManager.IsPauseReplay = true;
+                }
+            }
+
+            ImGui.LabelText("ReplaySpeed", $"{_tool.EntityManager.ReplaySpeed}");
+
+            if (ImGui.Button("x0.5"))
+                _tool.EntityManager.ReplaySpeed = FixMath.F64.Half;
+            if (ImGui.Button("x1.0"))
+                _tool.EntityManager.ReplaySpeed = FixMath.F64.One;
+            if (ImGui.Button("x2.0"))
+                _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(2.0);
+            if (ImGui.Button("x4.0"))
+                _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(4.0);
+            if (ImGui.Button("x8.0"))
+                _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(8.0);
+        }
+    }
+
     public void Layout()
     {
         ImGui.Text($"Test Daedalus Tool Mode");
@@ -886,12 +997,16 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
         if (Debug.IsSimulationMode(eSimulationMode.Normal))
         {
-            Layout_Toggles();
-
-            // 正常模拟模式
-            _tool.Layout();
-
-            Layout_TickControl();
+            if (null == _tool.EntityManager)
+            {
+                Layout_CreateEntityManager();
+            }
+            else
+            {
+                Layout_Toggles();
+                _tool.Layout();
+                Layout_TickControl();
+            }
         }
         else if (Debug.IsSimulationMode(eSimulationMode.Playback))
         {
@@ -1005,77 +1120,15 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
         else if (Debug.IsSimulationMode(eSimulationMode.Replay))
         {
-            Layout_Toggles();
-            Layout_TickControl();
-
-            if (!_tool.EntityManager.IsReplaying())
+            if (null == _tool.EntityManager)
             {
-                // 列出最新的录像文件
-                var fileList = Debug.GetLatestRecordFiles(5);
-                if (fileList != null) 
-                {
-                    var CurrItemIndex = fileList.FindIndex(file => file.Name == Debug.ReplayFileName);
-
-                    if (ImGui.BeginCombo("Files", CurrItemIndex != -1? fileList[CurrItemIndex].Name : ""))
-                    {
-                        for (int n = 0; n < fileList.Count; n++)
-                        {
-                            bool is_selected = (CurrItemIndex == n);
-                            if (ImGui.Selectable(fileList[n].Name, is_selected))
-                                CurrItemIndex = n;
-                            if (is_selected)
-                                ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
-                        }
-                    }
-                    ImGui.EndCombo();
-
-                    if (CurrItemIndex != -1)
-                    {
-                        Debug.ReplayFileName = fileList[CurrItemIndex].Name;
-                    }
-                    else
-                    {
-                        Debug.ReplayFileName = "";
-                    }
-                }
-
-                if (ImGui.Button("StartReplay"))
-                { 
-                    if (Debug.ReplayFileName != "")
-                    {
-                        _tool.EntityManager.StartReplay(Debug.RecordRootDir + "/" +  Debug.ReplayFileName);
-                    }
-                }
+                Layout_CreateEntityManager();
             }
             else
             {
-                if (ImGui.Button("StopReplay"))
-                {
-                    _tool.EntityManager.StopReplay();
-                }
-
-                if (_tool.EntityManager.IsPauseReplay)
-                {
-                    if (ImGui.Button("ResumeReplay"))
-                    {
-                        _tool.EntityManager.IsPauseReplay = false;
-                    }
-                }
-                else
-                {
-                    if (ImGui.Button("PauseReplay"))
-                    {
-                        _tool.EntityManager.IsPauseReplay = true;
-                    }
-                }
-
-                ImGui.LabelText("ReplaySpeed", $"{_tool.EntityManager.ReplaySpeed}");
-                
-                if (ImGui.Button("x0.5")) _tool.EntityManager.ReplaySpeed = FixMath.F64.Half;
-                if (ImGui.Button("x1.0")) _tool.EntityManager.ReplaySpeed = FixMath.F64.One;
-                if (ImGui.Button("x2.0")) _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(2.0);
-                if (ImGui.Button("x4.0")) _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(4.0);
-                if (ImGui.Button("x8.0")) _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(8.0);
+                Layout_Toggles();
+                Layout_TickControl();
+                Layout_Replay();
             }
         }
     }
@@ -1088,26 +1141,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
     {
         _sample = sample;
 
-        var geom = _sample.GetInputGeom();
-        var bound_min = geom.GetMeshBoundsMin();
-        var bound_max = geom.GetMeshBoundsMax();
-
-        var bound_center = (bound_min + bound_max) * 0.5f;
-
-        var mapWidth = bound_max.X - bound_min.X;
-        var mapHeight = bound_max.Z - bound_min.Z;
-
-        RandomHelpers.InitialRandom((int)DateTime.Now.Ticks);
-
         if (null != _tool) _tool.Destroy();
 
         _tool = new TestFixedCrowdTool();
-        if (mapWidth > 190 && mapHeight > 190)
-        {
-            if (null != _tool)
-                _tool.Start(0.0, 0.0, mapWidth, mapHeight);
-
-            Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
-        }
     }
 }
