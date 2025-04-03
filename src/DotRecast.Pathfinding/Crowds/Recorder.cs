@@ -33,7 +33,7 @@ namespace Pathfinding.Crowds
         public FixMath.F64 ReplaySpeed { get; set; }
 
         double _tickElapsedTime = 0.0;
-        internal long LastOperationExecuteTime { get; private set; }
+
         static int CACHE_REPLAY_OPERATION_COUNT = 100;
         Queue<IRecordOperation> _replayOperations = null;
 
@@ -151,8 +151,8 @@ namespace Pathfinding.Crowds
 
                 // 设置基本参数
                 ReplaySpeed = FixMath.F64.One;
-                LastOperationExecuteTime = DateTime.Now.Ticks;
                 IsPauseReplay = false;
+                _tickElapsedTime = 0.0;
             }
             catch (Exception e)
             {
@@ -184,7 +184,7 @@ namespace Pathfinding.Crowds
         {
             if (IsReplaying && !IsPauseReplay)
             {
-                _tickElapsedTime += inDeltaTime.Double;
+                _tickElapsedTime += inDeltaTime.Double * ReplaySpeed.Double;
 
                 while (_tickElapsedTime > 0)
                 {
@@ -196,12 +196,10 @@ namespace Pathfinding.Crowds
                     if (operation == null)
                         return;
 
-                    if (operation.CanExecute(this))
+                    var executeTime = operation.ExecuteTime(this);
+                    if (_tickElapsedTime >= executeTime)
                     {
-                        var timeSpan = new TimeSpan(DateTime.Now.Ticks - LastOperationExecuteTime);
-                        _tickElapsedTime -= timeSpan.TotalSeconds;
-
-                        LastOperationExecuteTime = DateTime.Now.Ticks;
+                        _tickElapsedTime -= executeTime;
                         _replayOperations.Dequeue().Execute(this);
                     }
                 }

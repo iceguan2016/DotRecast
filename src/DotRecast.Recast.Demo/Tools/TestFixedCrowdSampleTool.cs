@@ -1084,9 +1084,9 @@ public class TestFixedCrowdSampleTool : ISampleTool
                 
                 if (ImGui.Button("x0.5")) _tool.EntityManager.ReplaySpeed = FixMath.F64.Half;
                 if (ImGui.Button("x1.0")) _tool.EntityManager.ReplaySpeed = FixMath.F64.One;
-                if (ImGui.Button("x1.5")) _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(1.5);
                 if (ImGui.Button("x2.0")) _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(2.0);
                 if (ImGui.Button("x4.0")) _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(4.0);
+                if (ImGui.Button("x8.0")) _tool.EntityManager.ReplaySpeed = FixMath.F64.FromDouble(8.0);
             }
         }
     }

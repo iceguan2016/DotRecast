@@ -201,7 +201,7 @@ namespace Pathfinding.Crowds
 
         void Serialize(Recorder recorder);
 
-        bool CanExecute(Recorder recorder);
+        double ExecuteTime(Recorder recorder);
 
         void Execute(Recorder recorder);
     }
@@ -231,9 +231,9 @@ namespace Pathfinding.Crowds
             _param.Serialize(recorder);
         }
 
-        public bool CanExecute(Recorder recorder)
+        public double ExecuteTime(Recorder recorder)
         {
-            return true;
+            return 0.0;
         }
     }
 
@@ -254,9 +254,9 @@ namespace Pathfinding.Crowds
             
         }
 
-        public bool CanExecute(Recorder recorder)
+        public double ExecuteTime(Recorder recorder)
         {
-            return true;
+            return 0.0;
         }
     }
 
@@ -277,9 +277,9 @@ namespace Pathfinding.Crowds
 
         }
 
-        public bool CanExecute(Recorder recorder)
+        public double ExecuteTime(Recorder recorder)
         {
-            return true;
+            return 0.0;
         }
     }
 
@@ -307,9 +307,9 @@ namespace Pathfinding.Crowds
             DataSerialize.Serialize(ref _param, recorder);
         }
 
-        public bool CanExecute(Recorder recorder)
+        public double ExecuteTime(Recorder recorder)
         {
-            return true;
+            return 0.0;
         }
     }
 
@@ -336,9 +336,9 @@ namespace Pathfinding.Crowds
             _entityId.Serialize(recorder);
         }
 
-        public bool CanExecute(Recorder recorder)
+        public double ExecuteTime(Recorder recorder)
         {
-            return true;
+            return 0.0;
         }
     }
 
@@ -385,9 +385,9 @@ namespace Pathfinding.Crowds
             }
         }
 
-        public bool CanExecute(Recorder recorder)
+        public double ExecuteTime(Recorder recorder)
         {
-            return true;
+            return 0.0;
         }
     }
 
@@ -414,11 +414,9 @@ namespace Pathfinding.Crowds
             _deltaTime.Serialize(recorder);
         }
 
-        public bool CanExecute(Recorder recorder)
+        public double ExecuteTime(Recorder recorder)
         {
-            var scaledDeltaTime = _deltaTime / recorder.ReplaySpeed;
-            var timeSpan = new TimeSpan(DateTime.Now.Ticks - recorder.LastOperationExecuteTime);
-            return timeSpan.TotalSeconds >= scaledDeltaTime.Double;
+            return _deltaTime.Double;
         }
     }
 }
