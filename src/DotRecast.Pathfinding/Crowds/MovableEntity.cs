@@ -310,14 +310,10 @@ namespace Pathfinding.Crowds
 
             _debugVec3Items = new FixMath.F64Vec3[(int)eDebugVec3Item.Count];
             Array.Fill(_debugVec3Items, FixMath.F64Vec3.Zero);
-
-            Debug.SyncLogToFile($"MovableEntity.OnCreate, ID:{ID}");
         }
 
         public virtual void OnDelete()
         {
-            Debug.SyncLogToFile($"MovableEntity.OnDelete, ID:{ID} Position:{GetPosition()} Rotation:{GetRotation()} Velocity:{Velocity}");
-
             _moveStrategies = null;
             ICrowdEntityActor.DestroyPhysicsBody(this, PhysicsBody);
             PhysicsBody = null;
@@ -433,14 +429,6 @@ namespace Pathfinding.Crowds
             {
                 isTargetDirty = false;
                 Pathway = PathwayQuerier.FindPath(this, targetLocation.Value);
-
-                if (null != Pathway)
-                {
-                    foreach(var point in Pathway.Points)
-                    {
-                        Debug.SyncLogToFile($"ID:{ID} Pathway point{point}");
-                    }
-                }
             }
 
             // update neighbors
@@ -448,19 +436,12 @@ namespace Pathfinding.Crowds
             {
                 _neighbors.Clear();
                 _proximityToken.FindNeighbors(Position, QueryLocalNeighborRadius, _neighbors);
-
-                foreach (var nei in _neighbors)
-                {
-                    Debug.SyncLogToFile($"ID:{ID} _neighbors {(nei as MovableEntity).ID}");
-                }
             }
 
             // update local boundary
             if (null != LocalBoundaryQuerier)
             {
                 _boundarySegmentNum = LocalBoundaryQuerier.QueryBoundaryInCircle(this, QueryLocalBoundaryRadius, _boundarySegements);
-                Debug.SyncLogToFile($"ID:{ID} _boundarySegmentNum: {_boundarySegmentNum}");
-
                 // create boundary obstacles
                 _boundaryObstacles.Clear();
                 // var obstacles = new List<IObstacle>();
@@ -507,8 +488,6 @@ namespace Pathfinding.Crowds
 
                 _debugVec3Items[(int)eDebugVec3Item.Velocity] = Velocity;
             }
-
-            Debug.SyncLogToFile($"MovableEntity.OnUpdate, ID:{ID} Position:{GetPosition()} Rotation:{GetRotation()} Velocity:{Velocity}");
         }
 
         public virtual void OnDraw(bool selected)

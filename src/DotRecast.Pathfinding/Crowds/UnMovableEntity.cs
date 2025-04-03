@@ -40,8 +40,6 @@ namespace Pathfinding.Crowds
             // 添加到Map
             var map = EntityManager.Map;
             _obstacle = map.AddObstacle(ID, _poistion, _rotation, template.HalfExtent.Cast(FixMath.F64.Zero));
-
-            Debug.SyncLogToFile($"UnMovableEntity.OnCreate, ID:{ID}");
         }
 
         public override void OnCreatePhysicsState()
@@ -75,8 +73,6 @@ namespace Pathfinding.Crowds
                 var map = EntityManager.Map;
                 map.RemoveObstacle(_obstacle);
             }
-
-            Debug.SyncLogToFile($"UnMovableEntity.OnDelete, ID:{ID}");
         }
 
         public override void OnDestroyPhysicsState()

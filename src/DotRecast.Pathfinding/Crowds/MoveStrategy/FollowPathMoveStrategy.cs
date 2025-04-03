@@ -133,9 +133,6 @@ namespace Pathfinding.Crowds.MoveStrategy
                 }
             }
 
-            Debug.SyncLogToFile($"FollowPathMoveStrategy.OnUpdate, followPathForce:{followPathForce}, avoidIdleForce:{avoidIdleForce}" +
-                $"avoidObstacleForce:{avoidObstacleForce}, forwardMoveForce:{forwardMoveForce}" +
-                $"flockSeparationForce:{flockSeparationForce}, flockAlignmentForce:{flockAlignmentForce}, flockCohesionForce:{flockCohesionForce}");
             return followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce 
                 + flockSeparationForce + flockAlignmentForce + flockCohesionForce;
         }

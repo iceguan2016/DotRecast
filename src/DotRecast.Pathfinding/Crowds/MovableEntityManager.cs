@@ -105,8 +105,6 @@ namespace Pathfinding.Crowds
                 _recorder.AddReplayOperation(new OperationCreateEntity(inParams));
             }
 
-            Debug.SyncLogToFile($"CreateEntity, CreateEntityParams, pos: {inParams.SpawnPosition}, rot: {inParams.SpawnRotation}, templateHashCode:{inParams.Template.GetHashCode()}");
-
             ICrowdEntityActor entityActor = null;
             if (inParams.Template is TMovableEntityTemplate)
             {
@@ -158,8 +156,6 @@ namespace Pathfinding.Crowds
                 _recorder.AddReplayOperation(new OperationDeleteEntity(inEntityId));
             }
 
-            Debug.SyncLogToFile($"DeleteEntity, inEntityId:{inEntityId}");
-
             if (EntityId2Index.TryGetValue(inEntityId, out var findIndex))
 	        {
                 var slotIndex = findIndex;
@@ -191,15 +187,6 @@ namespace Pathfinding.Crowds
             if (null != _recorder && _recorder.IsRecording)
             {
                 _recorder.AddReplayOperation(new OperationMoveEntity(inEntityId, target));
-            }
-
-            if (null != target)
-            {
-                Debug.SyncLogToFile($"MoveEntity, inEntityId:{inEntityId}, target:{target.Value}");
-            }
-            else
-            {
-                Debug.SyncLogToFile($"MoveEntity, inEntityId:{inEntityId}, target:null");
             }
 
             var entity = GetEntityById(inEntityId);
@@ -293,8 +280,6 @@ namespace Pathfinding.Crowds
                 StartRecord(inParams.RecordRootDir);
             }
 
-            Debug.SyncLogToFile($"Initialize, min:{inParams.MapBoundsMin}, max:{inParams.MapBoundsMax}");
-
             return true;
         }
 
@@ -318,9 +303,6 @@ namespace Pathfinding.Crowds
             _physicsWorld = null;
 
             _initialized = false;
-
-            Debug.SyncLogToFile($"UnInitialize");
-
             return true;
         }
 
@@ -333,8 +315,6 @@ namespace Pathfinding.Crowds
             {
                 _recorder.AddReplayOperation(new OperationFrameBegin());
             }
-
-            Debug.SyncLogToFile($"FrameBegin, FrameNo:{FrameNo}");
         }
 
         public void FrameEnd()
@@ -346,8 +326,6 @@ namespace Pathfinding.Crowds
             {
                 _recorder.AddReplayOperation(new OperationFrameBegin());
             }
-
-            Debug.SyncLogToFile($"FrameEnd, FrameNo:{FrameNo}");
         }
 
         #region Recorder
@@ -390,7 +368,6 @@ namespace Pathfinding.Crowds
             if (_recorder.StartReplay(inputFile))
             {
                 _isReplayControlMode = true;
-                Debug.SyncLogToFile($"StartReplay, File:{inputFile}");
                 return true;
             }
             return false;
@@ -450,8 +427,6 @@ namespace Pathfinding.Crowds
             {
                 _recorder.AddReplayOperation(new OperationTick(inDelteTime));
             }
-
-            Debug.SyncLogToFile($"Tick, _tickElapsedTime:{_tickElapsedTime}, inDelteTime:{inDelteTime}");
 
             _tickElapsedTime += inDelteTime;
 
