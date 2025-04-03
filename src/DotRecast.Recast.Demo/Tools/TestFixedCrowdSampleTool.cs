@@ -217,7 +217,10 @@ public class TestFixedCrowdTool : IRcToolable
     {
         if (null != _entityManager)
         {
+            _entityManager.FrameBegin();
             _entityManager.Tick(FixMath.F64.FromDouble(inDeltaTime));
+            _entityManager.FrameEnd();
+
             _entityManager.TickReplay(FixMath.F64.FromDouble(inDeltaTime));
         }
     }
