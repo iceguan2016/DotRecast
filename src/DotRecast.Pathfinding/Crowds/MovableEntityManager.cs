@@ -95,7 +95,7 @@ namespace Pathfinding.Crowds
         {
             if (null != _recorder && _recorder.IsRecording)
             {
-                _recorder.SerilaizeOperation(new OperationCreateEntity(inParams));
+                _recorder.AddReplayOperation(new OperationCreateEntity(inParams));
             }
 
             ICrowdEntityActor entityActor = null;
@@ -141,7 +141,7 @@ namespace Pathfinding.Crowds
         {
             if (null != _recorder && _recorder.IsRecording)
             {
-                _recorder.SerilaizeOperation(new OperationDeleteEntity(inEntityId));
+                _recorder.AddReplayOperation(new OperationDeleteEntity(inEntityId));
             }
 
             if (EntityId2Index.TryGetValue(inEntityId, out var findIndex))
@@ -171,7 +171,7 @@ namespace Pathfinding.Crowds
         {
             if (null != _recorder && _recorder.IsRecording)
             {
-                _recorder.SerilaizeOperation(new OperationMoveEntity(inEntityId, target));
+                _recorder.AddReplayOperation(new OperationMoveEntity(inEntityId, target));
             }
 
             var entity = GetEntityById(inEntityId);
@@ -274,7 +274,7 @@ namespace Pathfinding.Crowds
         {
             if (null != _recorder && _recorder.IsRecording)
             {
-                _recorder.SerilaizeOperation(new OperationFrameBegin());
+                _recorder.AddReplayOperation(new OperationFrameBegin());
             }
         }
 
@@ -282,7 +282,7 @@ namespace Pathfinding.Crowds
         {
             if (null != _recorder && _recorder.IsRecording)
             {
-                _recorder.SerilaizeOperation(new OperationFrameBegin());
+                _recorder.AddReplayOperation(new OperationFrameBegin());
             }
         }
 
@@ -292,7 +292,7 @@ namespace Pathfinding.Crowds
             _recorder = new Recorder(this);
             if (_recorder.StartRecord(outputDir))
             {
-                _recorder.SerilaizeOperation(new OperatioMapInitial(initializeParams));
+                _recorder.AddReplayOperation(new OperatioMapInitial(initializeParams));
                 return true;
             }
             return false;
@@ -331,7 +331,7 @@ namespace Pathfinding.Crowds
         {
             if (null != _recorder && _recorder.IsRecording)
             {
-                _recorder.SerilaizeOperation(new OperationTick(inDelteTime));
+                _recorder.AddReplayOperation(new OperationTick(inDelteTime));
             }
 
             _tickElapsedTime += inDelteTime;

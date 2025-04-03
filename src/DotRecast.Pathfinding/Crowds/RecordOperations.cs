@@ -1,4 +1,5 @@
 
+using System;
 using Pathfinding.Util;
 
 namespace Pathfinding.Crowds
@@ -184,7 +185,8 @@ namespace Pathfinding.Crowds
 
     public enum eRecordOperation
     {
-        MapInitial = 0,
+        None = 0,
+        MapInitial,
         FrameBegin,
         FrameEnd,
         CreateEntity,
@@ -199,6 +201,8 @@ namespace Pathfinding.Crowds
 
         void Serialize(Recorder recorder);
 
+        bool CanExecute(Recorder recorder);
+
         void Execute(Recorder recorder);
     }
 
@@ -208,7 +212,7 @@ namespace Pathfinding.Crowds
 
         public eRecordOperation Operation => eRecordOperation.MapInitial;
 
-        public OperatioMapInitial(IMovableEntityManager.FInitializeParams? param)
+        public OperatioMapInitial(IMovableEntityManager.FInitializeParams? param = null)
         {
             _param = param?? new IMovableEntityManager.FInitializeParams();
         }
@@ -226,6 +230,11 @@ namespace Pathfinding.Crowds
         {
             _param.Serialize(recorder);
         }
+
+        public bool CanExecute(Recorder recorder)
+        {
+            return true;
+        }
     }
 
     public class OperationFrameBegin : IRecordOperation
@@ -241,6 +250,11 @@ namespace Pathfinding.Crowds
         {
             
         }
+
+        public bool CanExecute(Recorder recorder)
+        {
+            return true;
+        }
     }
 
     public class OperationFrameEnd : IRecordOperation
@@ -255,6 +269,11 @@ namespace Pathfinding.Crowds
         public void Serialize(Recorder recorder)
         {
 
+        }
+
+        public bool CanExecute(Recorder recorder)
+        {
+            return true;
         }
     }
 
@@ -281,6 +300,11 @@ namespace Pathfinding.Crowds
         {
             DataSerialize.Serialize(ref _param, recorder);
         }
+
+        public bool CanExecute(Recorder recorder)
+        {
+            return true;
+        }
     }
 
     public class OperationDeleteEntity : IRecordOperation
@@ -305,6 +329,11 @@ namespace Pathfinding.Crowds
         {
             _entityId.Serialize(recorder);
         }
+
+        public bool CanExecute(Recorder recorder)
+        {
+            return true;
+        }
     }
 
     public class OperationMoveEntity : IRecordOperation
@@ -315,7 +344,7 @@ namespace Pathfinding.Crowds
         FixMath.F64Vec3? _target;
         public eRecordOperation Operation => eRecordOperation.MoveEntity;
 
-        public OperationMoveEntity(UniqueId? entityId, FixMath.F64Vec3? target)
+        public OperationMoveEntity(UniqueId? entityId = null, FixMath.F64Vec3? target = null)
         {
             _entityId = entityId ?? UniqueId.InvalidID;
             _target = target;
@@ -349,6 +378,11 @@ namespace Pathfinding.Crowds
                     _target = p;
             }
         }
+
+        public bool CanExecute(Recorder recorder)
+        {
+            return true;
+        }
     }
 
     public class OperationTick : IRecordOperation
@@ -356,7 +390,7 @@ namespace Pathfinding.Crowds
         FixMath.F64 _deltaTime;
         public eRecordOperation Operation => eRecordOperation.Tick;
 
-        public OperationTick(FixMath.F64? deltaTime)
+        public OperationTick(FixMath.F64? deltaTime = null)
         {
             _deltaTime = deltaTime?? FixMath.F64.Zero;
         }
@@ -372,6 +406,13 @@ namespace Pathfinding.Crowds
         public void Serialize(Recorder recorder)
         {
             _deltaTime.Serialize(recorder);
+        }
+
+        public bool CanExecute(Recorder recorder)
+        {
+            var scaledDeltaTime = _deltaTime * recorder.ReplaySpeed;
+            var deltaTime = new TimeSpan(DateTime.Now.Ticks - recorder.LastOperationExecuteTime);
+            return deltaTime.TotalSeconds >= scaledDeltaTime.Double;
         }
     }
 }

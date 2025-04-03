@@ -2,6 +2,7 @@
 using System.IO;
 using System;
 using Pathfinding.Util;
+using System.Collections.Generic;
 
 namespace Pathfinding.Crowds
 {
@@ -28,6 +29,10 @@ namespace Pathfinding.Crowds
         // replay
         public BinaryReader RecordReader { get; private set; }
         public bool IsReplaying { get { return WorkMode == eWorkMode.Replay && null != RecordReader; } }
+        public FixMath.F64 ReplaySpeed { get; set; }
+        internal long LastOperationExecuteTime { get; private set; }
+        static int CACHE_REPLAY_OPERATION_COUNT = 100;
+        Queue<IRecordOperation> _replayOperations = null;
 
         public Recorder(IMovableEntityManager entityManager)
         {
@@ -61,6 +66,9 @@ namespace Pathfinding.Crowds
                 };
 
                 header.Serialize(this);
+
+                // 缓存一定数量的Operations再写入文件
+                _replayOperations = new Queue<IRecordOperation>(CACHE_REPLAY_OPERATION_COUNT);
             }
             catch (Exception e)
             {
@@ -79,6 +87,33 @@ namespace Pathfinding.Crowds
             RecordWriter = null;
             _recordStream = null;
             return false;
+        }
+
+        void ReadReplayOperations(int count)
+        { 
+            if (!IsReplaying) return;
+
+            while (_recordStream.Position < _recordStream.Length 
+                && _replayOperations.Count < count) 
+            {
+                int op = 0;
+                op.Serialize(this);
+
+                var operation = DeserializeOperation((eRecordOperation)op);
+                if (null == operation) break;
+                _replayOperations.Enqueue(operation);
+            }
+        }
+
+        void WriteReplayOperations(int count)
+        {
+            if (!IsRecording) return;
+            int i = 0;
+            while (_replayOperations.Count > 0 || i < count)
+            {
+                SerilaizeOperation(_replayOperations.Dequeue());
+                ++i;
+            }
         }
 
         public bool StartReplay(string inputFile)
@@ -106,6 +141,14 @@ namespace Pathfinding.Crowds
                     StopRecord();
                     return false;
                 }
+
+                // 缓存一定数量的Operations再播放
+                _replayOperations = new Queue<IRecordOperation>(CACHE_REPLAY_OPERATION_COUNT);
+                ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
+
+                // 设置基本参数
+                ReplaySpeed = FixMath.F64.One;
+                LastOperationExecuteTime = DateTime.Now.Ticks;
             }
             catch (Exception e)
             {
@@ -116,6 +159,8 @@ namespace Pathfinding.Crowds
 
         public bool StopReplay()
         {
+            WriteReplayOperations(_replayOperations.Count);
+
             if (null != RecordReader)
                 RecordReader.Close();
             if (null != _recordStream)
@@ -123,16 +168,71 @@ namespace Pathfinding.Crowds
             return true;
         }
 
-        public void SerilaizeOperation(IRecordOperation operation)
+        public void AddReplayOperation(IRecordOperation operation)
+        {
+            WriteReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
+
+            _replayOperations.Enqueue(operation);
+        }
+
+        public void TickReplay()
+        {
+            if (IsReplaying)
+            {
+                if (_recordStream.Position >= _recordStream.Length) return;
+
+                ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
+
+                if (_replayOperations.Count <= 0) return;
+                var operation = _replayOperations.Peek();
+                if (operation == null) return;
+                if (operation.CanExecute(this))
+                {
+                    LastOperationExecuteTime = DateTime.Now.Ticks;
+                    _replayOperations.Dequeue().Execute(this);
+                }
+            }
+        }
+
+        void SerilaizeOperation(IRecordOperation operation)
         {
             var op = (int)operation.Operation;
             op.Serialize(this);
             operation.Serialize(this);
         }
 
-        public IRecordOperation DeserializeOperation(eRecordOperation type)
+        IRecordOperation DeserializeOperation(eRecordOperation type)
         {
-            return null;
+            IRecordOperation operation = null;
+            switch (type)
+            {
+                case eRecordOperation.MapInitial:
+                    operation = new OperatioMapInitial();
+                    break;
+                case eRecordOperation.FrameBegin:
+                    operation = new OperationFrameBegin();
+                    break;
+                case eRecordOperation.FrameEnd:
+                    operation = new OperationFrameEnd();
+                    break;
+                case eRecordOperation.CreateEntity:
+                    operation = new OperationCreateEntity();
+                    break;
+                case eRecordOperation.DeleteEntity:
+                    operation = new OperationDeleteEntity();
+                    break;
+                case eRecordOperation.MoveEntity:
+                    operation = new OperationMoveEntity();
+                    break;
+                case eRecordOperation.Tick:
+                    operation = new OperationTick();
+                    break;
+                default:
+                    break;
+
+            }
+            operation.Serialize(this);
+            return operation;
         }
     }
 }
