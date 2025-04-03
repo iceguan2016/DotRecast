@@ -109,7 +109,7 @@ namespace Pathfinding.Crowds
         {
             if (!IsRecording) return;
             int i = 0;
-            while (_replayOperations.Count > 0 || i < count)
+            while (_replayOperations.Count > 0 && i < count)
             {
                 SerilaizeOperation(_replayOperations.Dequeue());
                 ++i;
@@ -159,7 +159,8 @@ namespace Pathfinding.Crowds
 
         public bool StopReplay()
         {
-            WriteReplayOperations(_replayOperations.Count);
+            if (null != _replayOperations)
+                WriteReplayOperations(_replayOperations.Count);
 
             if (null != RecordReader)
                 RecordReader.Close();
@@ -179,8 +180,6 @@ namespace Pathfinding.Crowds
         {
             if (IsReplaying)
             {
-                if (_recordStream.Position >= _recordStream.Length) return;
-
                 ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
 
                 if (_replayOperations.Count <= 0) return;

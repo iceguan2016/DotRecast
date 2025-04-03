@@ -90,9 +90,14 @@ namespace Pathfinding.Crowds
 
         private FInitializeParams initializeParams;
         private Recorder _recorder = null;
+        // 标记当前是否是录像控制模式（不允许执行任何逻辑，全部由replay来驱动逻辑）
+        private bool _isReplayControlMode = false;
 
         public UniqueId CreateEntity(CreateEntityParams inParams)
         {
+            if (_isReplayControlMode)
+                return UniqueId.InvalidID;
+
             if (null != _recorder && _recorder.IsRecording)
             {
                 _recorder.AddReplayOperation(new OperationCreateEntity(inParams));
@@ -139,6 +144,9 @@ namespace Pathfinding.Crowds
 
         public bool DeleteEntity(UniqueId inEntityId)
         {
+            if (_isReplayControlMode)
+                return false;
+
             if (null != _recorder && _recorder.IsRecording)
             {
                 _recorder.AddReplayOperation(new OperationDeleteEntity(inEntityId));
@@ -169,6 +177,9 @@ namespace Pathfinding.Crowds
 
         public bool MoveEntity(UniqueId inEntityId, FixMath.F64Vec3? target)
         {
+            if (_isReplayControlMode)
+                return false;
+
             if (null != _recorder && _recorder.IsRecording)
             {
                 _recorder.AddReplayOperation(new OperationMoveEntity(inEntityId, target));
@@ -218,6 +229,9 @@ namespace Pathfinding.Crowds
 
         public bool Initialize(FInitializeParams inParams)
         {
+            if (_isReplayControlMode)
+                return false;
+
             if (_initialized) return true;
 
             EntityId2Index = new Dictionary<UniqueId, int>();
@@ -245,12 +259,22 @@ namespace Pathfinding.Crowds
             _map.SetMap(inParams.MapBoundsMin.X, inParams.MapBoundsMin.Z, size.X, size.Z);
 
             initializeParams = inParams;
+            _initialized = true;
+
+            // 打开录像
+            if (!_isReplayControlMode && null == _recorder && inParams.IsOpenRecord)
+            {
+                StartRecord(inParams.RecordRootDir);
+            }
 
             return true;
         }
 
         public bool UnInitialize()
         {
+            if (_isReplayControlMode)
+                return false;
+
             if (!_initialized) return true;
 
             var PendingDeleteEntities = new List<ICrowdEntityActor>(Entities);
@@ -265,13 +289,16 @@ namespace Pathfinding.Crowds
             _physicsWorld.SetContactListener(null);
             _physicsWorld = null;
 
-            StopRecord();
+            _initialized = false;
 
             return true;
         }
 
         public void FrameBegin()
         {
+            if (_isReplayControlMode) 
+                return;
+
             if (null != _recorder && _recorder.IsRecording)
             {
                 _recorder.AddReplayOperation(new OperationFrameBegin());
@@ -280,12 +307,19 @@ namespace Pathfinding.Crowds
 
         public void FrameEnd()
         {
+            if (_isReplayControlMode)
+                return;
+
             if (null != _recorder && _recorder.IsRecording)
             {
                 _recorder.AddReplayOperation(new OperationFrameBegin());
             }
         }
 
+        public bool IsRecording()
+        {
+            return null != _recorder && _recorder.IsRecording;
+        }
         public bool StartRecord(string outputDir)
         {
             if (!_initialized) return false;
@@ -307,11 +341,16 @@ namespace Pathfinding.Crowds
             return false;
         }
 
+        public bool IsReplaying()
+        {
+            return null != _recorder && _recorder.IsReplaying;
+        }
         public bool StartReplay(string inputFile)
         {
             _recorder = new Recorder(this);
             if (_recorder.StartReplay(inputFile))
             {
+                _isReplayControlMode = true;
                 return true;
             }
             return false;
@@ -324,11 +363,15 @@ namespace Pathfinding.Crowds
                 _recorder.StopReplay();
                 _recorder = null;
             }
+            _isReplayControlMode = false;
             return false;
         }
 
         public void Tick(FixMath.F64 inDelteTime)
         {
+            if (_isReplayControlMode)
+                return;
+
             if (null != _recorder && _recorder.IsRecording)
             {
                 _recorder.AddReplayOperation(new OperationTick(inDelteTime));
@@ -344,7 +387,7 @@ namespace Pathfinding.Crowds
             }
         }
 
-        public void TickInteral(FixMath.F64 inDelteTime)
+        void TickInteral(FixMath.F64 inDelteTime)
         {
             ++FrameNo;
 
@@ -401,6 +444,19 @@ namespace Pathfinding.Crowds
                     }
                 }
             }
+        }
+
+        public void TickReplay(FixMath.F64 inDelteTime)
+        {
+            if (!_isReplayControlMode) 
+                return;
+            if (null == _recorder || !_recorder.IsReplaying)
+                return;
+
+            // 临时关闭_isReplayControlMode,让其能够执行逻辑
+            _isReplayControlMode = false;
+            _recorder.TickReplay();
+            _isReplayControlMode = true;
         }
 
         public void ForEachEntity(System.Action<ICrowdEntityActor> InAction)

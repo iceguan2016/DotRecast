@@ -296,6 +296,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         if (null != _entityManager)
         {
             _entityManager.Tick(FixMath.F64.FromDouble(inDeltaTime));
+            _entityManager.TickReplay(FixMath.F64.FromDouble(inDeltaTime));
         }
     }
 

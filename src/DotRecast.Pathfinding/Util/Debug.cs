@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Pathfinding.Crowds;
 using UnityEngine;
+using static System.Net.WebRequestMethods;
 
 namespace Pathfinding.Util
 {
@@ -26,8 +29,9 @@ namespace Pathfinding.Util
 
     public enum eSimulationMode
     {
-        Normal = 0, // 正常模拟模式
-        Playback    // 回放模式
+        Normal = 0,     // 正常模拟模式
+        Playback,       // 回放模式
+        Replay,         // 录像模式
     }
 
     public static class Debug
@@ -84,9 +88,48 @@ namespace Pathfinding.Util
             return (WatchNeighborIndex % neiCount) == neiIndex;
         }
 
+        public static string RecordRootDir = "H:/0.Gitbub/DotRecast/record";
+        public static string ReplayFileName = "";
+        public static List<FileInfo> GetLatestRecordFiles(int count)
+        {
+            var fileExtension = "record";
+            try
+            {
+                // 获取所有文件并按最后修改时间降序排序
+                var sortedFiles = Directory.EnumerateFiles(RecordRootDir, $"*{fileExtension}")
+                                 .Select(file => new FileInfo(file))
+                                 .OrderBy(file => file.LastWriteTime)
+                                 .ToList();
+
+                // 输出结果
+                Debug.Log($"文件列表（按修改时间降序排序）:");
+                foreach (var file in sortedFiles)
+                {
+                    Debug.Log($"{file.Name,-40} | 修改时间: {file.LastWriteTime}");
+                }
+
+                int num = System.Math.Min(sortedFiles.Count, count);
+                return sortedFiles.Skip(0).Take(num).ToList();
+            }
+            catch (DirectoryNotFoundException)
+            {
+                Debug.LogError("目录不存在！");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Debug.LogError("没有访问权限！");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"发生错误: {ex.Message}");
+            }
+            return null;
+        }
+
         // 播放模式
         private static eSimulationMode _simulationMode = eSimulationMode.Normal;
         public static bool IsSimulationMode(eSimulationMode InMode) { return _simulationMode == InMode; }
+        public static eSimulationMode GetSimlationMode() { return _simulationMode; }    
         public static void SetSimlationMode(eSimulationMode InMode) { _simulationMode = InMode; }
         public static int PlaybackFrameNo { get; set; }
         // 暂停/恢复模拟

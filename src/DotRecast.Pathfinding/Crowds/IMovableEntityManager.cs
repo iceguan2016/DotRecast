@@ -33,6 +33,10 @@ namespace Pathfinding.Crowds
 
             // MapCellDivs变量在构建map cell使用，表示把rect区域(min.x, min.y) - (max.x, max.y)，分割成多少等分
             public int MapCellDivs;
+
+            // 录像相关配置参数
+            public bool IsOpenRecord;
+            public string RecordRootDir;
         }
         bool Initialize(FInitializeParams inParams);
         bool UnInitialize();
@@ -40,9 +44,11 @@ namespace Pathfinding.Crowds
         void FrameBegin();
         void FrameEnd();
 
+        bool IsRecording();
         bool StartRecord(string outputDir);
         bool StopRecord();
 
+        bool IsReplaying();
         bool StartReplay(string inputFile);
         bool StopReplay();
 
@@ -65,5 +71,6 @@ namespace Pathfinding.Crowds
 
         // tick
         void Tick(FixMath.F64 inDelteTime);
+        void TickReplay(FixMath.F64 inDelteTime);
     }
 }

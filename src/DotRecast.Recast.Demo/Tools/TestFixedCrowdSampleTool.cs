@@ -19,6 +19,7 @@ using Pathfinding.Triangulation.AI;
 using Volatile;
 using FixMath.NET;
 using Pathfinding.Main;
+using System.ComponentModel.DataAnnotations;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -178,6 +179,9 @@ public class TestFixedCrowdTool : IRcToolable
                 MapBoundsMin = new FixMath.F64Vec3(FixMath.F64.FromDouble(x), MapHeight - mapYExtent / 2, FixMath.F64.FromDouble(y)),
                 MapBoundsMax = new FixMath.F64Vec3(FixMath.F64.FromDouble(x + mapWidth), MapHeight + mapYExtent / 2, FixMath.F64.FromDouble(y + mapHeight)),
                 MapCellDivs = 10,
+
+                IsOpenRecord = true,
+                RecordRootDir = Debug.RecordRootDir,
             };
 
             if (_entityManager.Initialize(param))
@@ -214,6 +218,7 @@ public class TestFixedCrowdTool : IRcToolable
         if (null != _entityManager)
         {
             _entityManager.Tick(FixMath.F64.FromDouble(inDeltaTime));
+            _entityManager.TickReplay(FixMath.F64.FromDouble(inDeltaTime));
         }
     }
     public void AddObstacle(double x, double y)
@@ -878,18 +883,17 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
 
         // 
+        int simModeIndex = (int)Debug.GetSimlationMode();
+        ImGui.RadioButton(eSimulationMode.Normal.ToString(), ref simModeIndex, (int)eSimulationMode.Normal);
+        ImGui.RadioButton(eSimulationMode.Playback.ToString(), ref simModeIndex, (int)eSimulationMode.Playback);
+        ImGui.RadioButton(eSimulationMode.Replay.ToString(), ref simModeIndex, (int)eSimulationMode.Replay);
+        Debug.SetSimlationMode((eSimulationMode)simModeIndex);
         ImGui.NewLine();
+
         if (Debug.IsSimulationMode(eSimulationMode.Normal))
         {
             // 正常模拟模式
             _tool.Layout();
-
-            if (ImGui.Button("Playback Mode"))
-            {
-                Debug.SetSimlationMode(eSimulationMode.Playback);
-            }
-
-            ImGui.NewLine();
             
             var isPaused = Debug.IsPaused();
             if (ImGui.Button(isPaused ? ">" : "||"))
@@ -908,12 +912,6 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
         else if (Debug.IsSimulationMode(eSimulationMode.Playback))
         {
-            // 回放模式
-            if (ImGui.Button("Normal Mode"))
-            {
-                Debug.SetSimlationMode(eSimulationMode.Normal);
-            }
-
             System.Func<int, eUpdatePlaybackFrameReason, int> UpdatePlaybackFrameNo = (FrameNo, Reason) =>
             {
                 if (Debug.DebugEntityId.IsValid())
@@ -1022,6 +1020,52 @@ public class TestFixedCrowdSampleTool : ISampleTool
             }
             
         }
+        else if (Debug.IsSimulationMode(eSimulationMode.Replay))
+        {
+            if (!_tool.EntityManager.IsReplaying())
+            {
+                // 列出最新的录像文件
+                var fileList = Debug.GetLatestRecordFiles(5);
+                if (fileList != null) 
+                {
+                    var CurrItemIndex = fileList.FindIndex(file => file.Name == Debug.ReplayFileName);
+
+                    if (ImGui.BeginCombo("Files", CurrItemIndex != -1? fileList[CurrItemIndex].Name : ""))
+                    {
+                        for (int n = 0; n < fileList.Count; n++)
+                        {
+                            bool is_selected = (CurrItemIndex == n);
+                            if (ImGui.Selectable(fileList[n].Name, is_selected))
+                                CurrItemIndex = n;
+                            if (is_selected)
+                                ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
+                        }
+                    }
+                    ImGui.EndCombo();
+
+                    if (CurrItemIndex != -1)
+                    {
+                        Debug.ReplayFileName = fileList[CurrItemIndex].Name;
+                    }
+                    else
+                    {
+                        Debug.ReplayFileName = "";
+                    }
+                }
+
+                if (ImGui.Button("StartReplay"))
+                { 
+                    if (Debug.ReplayFileName != "")
+                    {
+                        _tool.EntityManager.StartReplay(Debug.RecordRootDir + "/" +  Debug.ReplayFileName);
+                    }
+                }
+            }
+            else
+            {
+                
+            }
+        }
     }
 
     public void OnSampleChanged()
@@ -1046,8 +1090,12 @@ public class TestFixedCrowdSampleTool : ISampleTool
         if (null != _tool) _tool.Destroy();
 
         _tool = new TestFixedCrowdTool();
-        if (null != _tool) _tool.Start(20.0, 20.0, mapWidth, mapHeight);
+        if (mapWidth > 190 && mapHeight > 190)
+        {
+            if (null != _tool)
+                _tool.Start(0.0, 0.0, mapWidth, mapHeight);
 
-        Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
+            Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
+        }
     }
 }
