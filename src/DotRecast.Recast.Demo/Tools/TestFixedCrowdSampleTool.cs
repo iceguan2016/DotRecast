@@ -832,6 +832,32 @@ public class TestFixedCrowdSampleTool : ISampleTool
         Next,
     };
 
+    void Layout_Toggles()
+    {
+        ImGui.Checkbox("Draw Navmesh Graph", ref _tool.IsDrawNavmeshGrpah);
+        ImGui.Checkbox("Draw Physics World", ref _tool.IsDrawPhysicsWorld);
+        ImGui.Checkbox("Draw Contact Info", ref _tool.IsDrawContactInfo);
+        ImGui.Checkbox("Draw Selection Info", ref _tool.IsDrawSelectionInfo);
+    }
+
+    void Layout_TickControl()
+    {
+        var isPaused = Debug.IsPaused();
+        if (ImGui.Button(isPaused ? ">" : "||"))
+        {
+            if (isPaused)
+                Debug.Resume();
+            else
+                Debug.Pause();
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("|>"))
+        {
+            Debug.NextStep();
+        }
+        ImGui.NewLine();
+    }
+
     public void Layout()
     {
         ImGui.Text($"Test Daedalus Tool Mode");
@@ -860,28 +886,12 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
         if (Debug.IsSimulationMode(eSimulationMode.Normal))
         {
-            ImGui.Checkbox("Draw Navmesh Graph", ref _tool.IsDrawNavmeshGrpah);
-            ImGui.Checkbox("Draw Physics World", ref _tool.IsDrawPhysicsWorld);
-            ImGui.Checkbox("Draw Contact Info", ref _tool.IsDrawContactInfo);
-            ImGui.Checkbox("Draw Selection Info", ref _tool.IsDrawSelectionInfo);
+            Layout_Toggles();
 
             // 正常模拟模式
             _tool.Layout();
-            
-            var isPaused = Debug.IsPaused();
-            if (ImGui.Button(isPaused ? ">" : "||"))
-            {
-                if (isPaused)
-                    Debug.Resume();
-                else
-                    Debug.Pause();
-            }
-            ImGui.SameLine();
-            if (ImGui.Button("|>"))
-            {
-                Debug.NextStep();
-            }
-            ImGui.NewLine();
+
+            Layout_TickControl();
         }
         else if (Debug.IsSimulationMode(eSimulationMode.Playback))
         {
@@ -995,10 +1005,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
         else if (Debug.IsSimulationMode(eSimulationMode.Replay))
         {
-            ImGui.Checkbox("Draw Navmesh Graph", ref _tool.IsDrawNavmeshGrpah);
-            ImGui.Checkbox("Draw Physics World", ref _tool.IsDrawPhysicsWorld);
-            ImGui.Checkbox("Draw Contact Info", ref _tool.IsDrawContactInfo);
-            ImGui.Checkbox("Draw Selection Info", ref _tool.IsDrawSelectionInfo);
+            Layout_Toggles();
+            Layout_TickControl();
 
             if (!_tool.EntityManager.IsReplaying())
             {
