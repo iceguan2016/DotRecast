@@ -20,6 +20,7 @@ using Volatile;
 using FixMath.NET;
 using Pathfinding.Main;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json.Linq;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -147,16 +148,6 @@ public class TestFixedCrowdTool : IRcToolable
         } 
     }
 
-    // annotation
-    private EntityAnnotationServerice _annotationServerice = null;
-    public DrawInterface DrawInterface 
-    { 
-        set 
-        {
-            _annotationServerice = new EntityAnnotationServerice(value);
-        } 
-    }
-
     double RandomRange(double min, double max)
     {
         return min + rand.NextDouble() * (max - min);
@@ -279,9 +270,9 @@ public class TestFixedCrowdTool : IRcToolable
             SpawnRotation = FixMath.F64Quat.Identity,
 
             Template = MovableEntityTemplates[_templateIndex],
-            PathwayQuerier = _entityManager.Map,
-            LocalBoundaryQuerier = _entityManager.Map,
-            AnnotationService = _annotationServerice,
+            // PathwayQuerier = _entityManager.Map,
+            // LocalBoundaryQuerier = _entityManager.Map,
+            // AnnotationService = _annotationServerice,
         };
 
         return _entityManager.CreateEntity(Params);
@@ -746,7 +737,10 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
             _view = new SimpleView(_draw);
             _tool.MapHeight = FixMath.F64.FromDouble(bound_max.Y + 0.5f);
-            _tool.DrawInterface = _draw;
+            if (null != _tool.EntityManager)
+            {
+                _tool.EntityManager.AnnotationService = new EntityAnnotationServerice(_draw);
+            }
 
             _physicsWorldDrawer = new PhysicsWorldGizmosDrawer(_draw);
         }

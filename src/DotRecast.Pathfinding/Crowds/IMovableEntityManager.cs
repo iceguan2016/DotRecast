@@ -24,6 +24,8 @@ namespace Pathfinding.Crowds
 
         Map Map { get; }
 
+        IAnnotationService AnnotationService { get; set; }
+
         // initialize and uninitialized function
         public struct FInitializeParams
         {

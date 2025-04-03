@@ -7,6 +7,11 @@ namespace Pathfinding.Crowds
     public class TEntityTemplate
     {
         public FixMath.F64 Density = FixMath.F64.FromFloat(1.0f);
+
+        public override int GetHashCode()
+        {
+            return Density.GetHashCode();
+        }
     }
 
     public interface ICrowdEntityActor

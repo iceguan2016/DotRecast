@@ -40,23 +40,20 @@ namespace Pathfinding.Util
         private static StreamWriter LogWriter = null;
         private static int LogCount = 0;
 
-        //public static void LogToFile(string text)
-        //{
-        //    if (LogCount >= 5000) return;
-        //    ++LogCount;
+        public static void SyncLogToFile(string text)
+        {
+            if (null == LogWriter)
+            {
+                var Path = LogRootPath + "/" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+                LogWriter = new StreamWriter(Path);
+            }
 
-        //    if (null == LogWriter)
-        //    {
-        //        var Path = LogRootPath + "/" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
-        //        LogWriter = new StreamWriter(Path);
-        //    }
-
-        //    if (null != LogWriter) 
-        //    {
-        //        LogWriter.WriteLine(text);
-        //        LogWriter.Flush();
-        //    }
-        //}
+            if (null != LogWriter)
+            {
+                LogWriter.WriteLine(text);
+                LogWriter.Flush();
+            }
+        }
 
         public static DrawInterface drawInterface = null;
 

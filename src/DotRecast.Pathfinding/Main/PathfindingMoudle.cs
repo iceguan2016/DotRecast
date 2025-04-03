@@ -8,12 +8,12 @@ namespace Pathfinding.Main
         public static void StartupModule()
         {
             // Triangulation
-            Vertex.INC = 0;
-            Face.INC = 0;
-            Edge.INC = 0;
-            ConstraintSegment.INC = 0;
-            ConstraintShape.INC = 0;
-            Obstacle.INC = 0;
+            //Vertex.INC = 0;
+            //Face.INC = 0;
+            //Edge.INC = 0;
+            //ConstraintSegment.INC = 0;
+            //ConstraintShape.INC = 0;
+            //Obstacle.INC = 0;
 
             // 
         }

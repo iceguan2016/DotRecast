@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using FixMath;
 using Pathfinding.Crowds;
+using Pathfinding.Triangulation.Data;
 using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Database;
@@ -87,6 +88,7 @@ namespace Pathfinding.Crowds
         public Volatile.VoltWorld PhysicsWorld { get { return _physicsWorld; } }
 
         public Map Map { get { return _map; } }
+        public IAnnotationService AnnotationService { get; set; }
 
         private FInitializeParams initializeParams;
         private Recorder _recorder = null;
@@ -103,10 +105,15 @@ namespace Pathfinding.Crowds
                 _recorder.AddReplayOperation(new OperationCreateEntity(inParams));
             }
 
+            Debug.SyncLogToFile($"CreateEntity, CreateEntityParams, pos: {inParams.SpawnPosition}, rot: {inParams.SpawnRotation}, templateHashCode:{inParams.Template.GetHashCode()}");
+
             ICrowdEntityActor entityActor = null;
             if (inParams.Template is TMovableEntityTemplate)
             {
-                entityActor = new MovableEntity(this, inParams.PathwayQuerier, inParams.LocalBoundaryQuerier, inParams.AnnotationService);
+                entityActor = new MovableEntity(this, 
+                    inParams.PathwayQuerier?? _map, 
+                    inParams.LocalBoundaryQuerier?? _map, 
+                    inParams.AnnotationService?? AnnotationService);
             }
             else if (inParams.Template is TUnMovableEntityTemplate)
             {
@@ -138,7 +145,6 @@ namespace Pathfinding.Crowds
 
             entityActor.OnCreate();
             if (null != _physicsWorld) entityActor.OnCreatePhysicsState();
-
             return entityActor.ID;
         }
 
@@ -151,6 +157,8 @@ namespace Pathfinding.Crowds
             {
                 _recorder.AddReplayOperation(new OperationDeleteEntity(inEntityId));
             }
+
+            Debug.SyncLogToFile($"DeleteEntity, inEntityId:{inEntityId}");
 
             if (EntityId2Index.TryGetValue(inEntityId, out var findIndex))
 	        {
@@ -183,6 +191,15 @@ namespace Pathfinding.Crowds
             if (null != _recorder && _recorder.IsRecording)
             {
                 _recorder.AddReplayOperation(new OperationMoveEntity(inEntityId, target));
+            }
+
+            if (null != target)
+            {
+                Debug.SyncLogToFile($"MoveEntity, inEntityId:{inEntityId}, target:{target.Value}");
+            }
+            else
+            {
+                Debug.SyncLogToFile($"MoveEntity, inEntityId:{inEntityId}, target:null");
             }
 
             var entity = GetEntityById(inEntityId);
@@ -234,6 +251,15 @@ namespace Pathfinding.Crowds
 
             if (_initialized) return true;
 
+            // Triangulation
+            Vertex.INC = 0;
+            Face.INC = 0;
+            Edge.INC = 0;
+            ConstraintSegment.INC = 0;
+            ConstraintShape.INC = 0;
+            Obstacle.INC = 0;
+            //
+
             EntityId2Index = new Dictionary<UniqueId, int>();
             Entities = new List<ICrowdEntityActor>();
 
@@ -267,6 +293,8 @@ namespace Pathfinding.Crowds
                 StartRecord(inParams.RecordRootDir);
             }
 
+            Debug.SyncLogToFile($"Initialize, min:{inParams.MapBoundsMin}, max:{inParams.MapBoundsMax}");
+
             return true;
         }
 
@@ -291,6 +319,8 @@ namespace Pathfinding.Crowds
 
             _initialized = false;
 
+            Debug.SyncLogToFile($"UnInitialize");
+
             return true;
         }
 
@@ -303,6 +333,8 @@ namespace Pathfinding.Crowds
             {
                 _recorder.AddReplayOperation(new OperationFrameBegin());
             }
+
+            Debug.SyncLogToFile($"FrameBegin, FrameNo:{FrameNo}");
         }
 
         public void FrameEnd()
@@ -314,8 +346,11 @@ namespace Pathfinding.Crowds
             {
                 _recorder.AddReplayOperation(new OperationFrameBegin());
             }
+
+            Debug.SyncLogToFile($"FrameEnd, FrameNo:{FrameNo}");
         }
 
+        #region Recorder
         public bool IsRecording()
         {
             return null != _recorder && _recorder.IsRecording;
@@ -355,6 +390,7 @@ namespace Pathfinding.Crowds
             if (_recorder.StartReplay(inputFile))
             {
                 _isReplayControlMode = true;
+                Debug.SyncLogToFile($"StartReplay, File:{inputFile}");
                 return true;
             }
             return false;
@@ -391,6 +427,20 @@ namespace Pathfinding.Crowds
             } 
         }
 
+        public void TickReplay(FixMath.F64 inDelteTime)
+        {
+            if (!_isReplayControlMode)
+                return;
+            if (null == _recorder || !_recorder.IsReplaying)
+                return;
+
+            // 临时关闭_isReplayControlMode,让其能够执行逻辑
+            _isReplayControlMode = false;
+            _recorder.TickReplay();
+            _isReplayControlMode = true;
+        }
+        #endregion
+
         public void Tick(FixMath.F64 inDelteTime)
         {
             if (_isReplayControlMode)
@@ -400,6 +450,8 @@ namespace Pathfinding.Crowds
             {
                 _recorder.AddReplayOperation(new OperationTick(inDelteTime));
             }
+
+            Debug.SyncLogToFile($"Tick, _tickElapsedTime:{_tickElapsedTime}, inDelteTime:{inDelteTime}");
 
             _tickElapsedTime += inDelteTime;
 
@@ -468,19 +520,6 @@ namespace Pathfinding.Crowds
                     }
                 }
             }
-        }
-
-        public void TickReplay(FixMath.F64 inDelteTime)
-        {
-            if (!_isReplayControlMode) 
-                return;
-            if (null == _recorder || !_recorder.IsReplaying)
-                return;
-
-            // 临时关闭_isReplayControlMode,让其能够执行逻辑
-            _isReplayControlMode = false;
-            _recorder.TickReplay();
-            _isReplayControlMode = true;
         }
 
         public void ForEachEntity(System.Action<ICrowdEntityActor> InAction)

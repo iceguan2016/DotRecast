@@ -1,6 +1,7 @@
 
 using FixMath;
 using Pathfinding.Crowds.SteeringForce;
+using Pathfinding.Util;
 
 namespace Pathfinding.Crowds.MoveStrategy
 {
@@ -131,6 +132,10 @@ namespace Pathfinding.Crowds.MoveStrategy
                     }
                 }
             }
+
+            Debug.SyncLogToFile($"FollowPathMoveStrategy.OnUpdate, followPathForce:{followPathForce}, avoidIdleForce:{avoidIdleForce}" +
+                $"avoidObstacleForce:{avoidObstacleForce}, forwardMoveForce:{forwardMoveForce}" +
+                $"flockSeparationForce:{flockSeparationForce}, flockAlignmentForce:{flockAlignmentForce}, flockCohesionForce:{flockCohesionForce}");
             return followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce 
                 + flockSeparationForce + flockAlignmentForce + flockCohesionForce;
         }
