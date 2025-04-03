@@ -65,6 +65,8 @@ namespace Pathfinding.Crowds
         // 
         bool MoveEntity(UniqueId inEntityId, FixMath.F64Vec3? target);
 
+        bool SetEntityParams(UniqueId inEntityId, FixMath.F64? radius, FixMath.F64? maxSpeed, FixMath.F64? maxForce);
+
         // find entity
         ICrowdEntityActor GetEntityById(UniqueId inEntityId);
         ICrowdEntityActor[] GetEntitiesInCircle(FixMath.F64Vec3 inCenter, FixMath.F64 inRadius);

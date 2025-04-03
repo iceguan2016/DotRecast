@@ -102,7 +102,7 @@ namespace Pathfinding.Crowds
                 int op = 0;
                 op.Serialize(this);
 
-                var operation = DeserializeOperation((eRecordOperation)op);
+                var operation = IRecordOperation.DeserializeOperation((eRecordOperation)op, this);
                 if (null == operation) break;
                 _replayOperations.Enqueue(operation);
             }
@@ -114,7 +114,7 @@ namespace Pathfinding.Crowds
             int i = 0;
             while (_replayOperations.Count > 0 && i < count)
             {
-                SerilaizeOperation(_replayOperations.Dequeue());
+                IRecordOperation.SerilaizeOperation(_replayOperations.Dequeue(), this);
                 ++i;
             }
         }
@@ -208,47 +208,6 @@ namespace Pathfinding.Crowds
                     }
                 }
             }
-        }
-
-        void SerilaizeOperation(IRecordOperation operation)
-        {
-            var op = (int)operation.Operation;
-            op.Serialize(this);
-            operation.Serialize(this);
-        }
-
-        IRecordOperation DeserializeOperation(eRecordOperation type)
-        {
-            IRecordOperation operation = null;
-            switch (type)
-            {
-                case eRecordOperation.MapInitial:
-                    operation = new OperatioMapInitial();
-                    break;
-                case eRecordOperation.FrameBegin:
-                    operation = new OperationFrameBegin();
-                    break;
-                case eRecordOperation.FrameEnd:
-                    operation = new OperationFrameEnd();
-                    break;
-                case eRecordOperation.CreateEntity:
-                    operation = new OperationCreateEntity();
-                    break;
-                case eRecordOperation.DeleteEntity:
-                    operation = new OperationDeleteEntity();
-                    break;
-                case eRecordOperation.MoveEntity:
-                    operation = new OperationMoveEntity();
-                    break;
-                case eRecordOperation.Tick:
-                    operation = new OperationTick();
-                    break;
-                default:
-                    break;
-
-            }
-            operation.Serialize(this);
-            return operation;
         }
     }
 }

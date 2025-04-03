@@ -198,6 +198,27 @@ namespace Pathfinding.Crowds
             return false;
         }
 
+        public bool SetEntityParams(UniqueId inEntityId, FixMath.F64? radius, FixMath.F64? maxSpeed, FixMath.F64? maxForce)
+        {
+            if (_isReplayControlMode)
+                return false;
+
+            if (null != _recorder && _recorder.IsRecording)
+            {
+                _recorder.AddReplayOperation(new OperationSetEntityParams(inEntityId, radius, maxSpeed, maxForce));
+            }
+
+            var entity = GetEntityById(inEntityId);
+            if (entity is MovableEntity movable)
+            {
+                if (null != radius) movable.Radius = radius.Value;
+                if (null != maxSpeed) movable.MaxSpeed = maxSpeed.Value;
+                if (null != maxForce) movable.MaxForce = maxForce.Value;
+                return true;
+            }
+            return false;
+        }
+
         public ICrowdEntityActor GetEntityById(UniqueId inEntityId)
         {
             if (EntityId2Index.TryGetValue(inEntityId, out var entityIndex))

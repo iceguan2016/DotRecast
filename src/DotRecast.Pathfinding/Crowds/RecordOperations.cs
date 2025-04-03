@@ -192,6 +192,7 @@ namespace Pathfinding.Crowds
         CreateEntity,
         DeleteEntity,
         MoveEntity,
+        SetEntityParams,
         Tick,
     }
 
@@ -204,6 +205,49 @@ namespace Pathfinding.Crowds
         double ExecuteTime(Recorder recorder);
 
         void Execute(Recorder recorder);
+
+        public static void SerilaizeOperation(IRecordOperation operation, Recorder recorder)
+        {
+            var op = (int)operation.Operation;
+            op.Serialize(recorder);
+            operation.Serialize(recorder);
+        }
+        public static IRecordOperation DeserializeOperation(eRecordOperation type, Recorder recorder)
+        {
+            IRecordOperation operation = null;
+            switch (type)
+            {
+                case eRecordOperation.MapInitial:
+                    operation = new OperatioMapInitial();
+                    break;
+                case eRecordOperation.FrameBegin:
+                    operation = new OperationFrameBegin();
+                    break;
+                case eRecordOperation.FrameEnd:
+                    operation = new OperationFrameEnd();
+                    break;
+                case eRecordOperation.CreateEntity:
+                    operation = new OperationCreateEntity();
+                    break;
+                case eRecordOperation.DeleteEntity:
+                    operation = new OperationDeleteEntity();
+                    break;
+                case eRecordOperation.MoveEntity:
+                    operation = new OperationMoveEntity();
+                    break;
+                case eRecordOperation.SetEntityParams:
+                    operation = new OperationSetEntityParams();
+                    break;
+                case eRecordOperation.Tick:
+                    operation = new OperationTick();
+                    break;
+                default:
+                    break;
+
+            }
+            operation.Serialize(recorder);
+            return operation;
+        }
     }
 
     public class OperatioMapInitial : IRecordOperation
@@ -382,6 +426,76 @@ namespace Pathfinding.Crowds
                     _target = null;
                 else
                     _target = p;
+            }
+        }
+
+        public double ExecuteTime(Recorder recorder)
+        {
+            return 0.0;
+        }
+    }
+
+    public class OperationSetEntityParams : IRecordOperation
+    {
+        UniqueId _entityId;
+        FixMath.F64? _radius;
+        FixMath.F64? _maxSpeed;
+        FixMath.F64? _maxForce;
+
+        public eRecordOperation Operation => eRecordOperation.SetEntityParams;
+
+        public OperationSetEntityParams(UniqueId? entityId = null, FixMath.F64? radius = null, FixMath.F64? maxSpeed = null, FixMath.F64? maxForce = null)
+        {
+            _entityId = entityId ?? UniqueId.InvalidID;
+            _radius = radius;
+            _maxSpeed = maxSpeed;
+            _maxForce = maxForce;
+        }
+
+        public void Execute(Recorder recorder)
+        {
+            if (recorder.IsReplaying)
+            {
+                recorder.EntityManager.SetEntityParams(_entityId, _radius, _maxSpeed, _maxForce);
+            }
+        }
+
+        public void Serialize(Recorder recorder)
+        {
+            // _enetityId
+            _entityId.Serialize(recorder);
+            // _radius, _maxSpeed, _maxForce
+            if (recorder.IsRecording)
+            {
+                var r = _radius ?? FixMath.F64.MaxValue;
+                var s = _radius ?? FixMath.F64.MaxValue;
+                var f = _radius ?? FixMath.F64.MaxValue;
+                r.Serialize(recorder);
+                s.Serialize(recorder);
+                f.Serialize(recorder);
+            }
+            else
+            {
+                var r = FixMath.F64.Zero;
+                r.Serialize(recorder);
+                if (r == FixMath.F64.MaxValue)
+                    _radius = null;
+                else
+                    _radius = r;
+
+                var s = FixMath.F64.Zero;
+                s.Serialize(recorder);
+                if (s == FixMath.F64.MaxValue)
+                    _maxSpeed = null;
+                else
+                    _maxSpeed = s;
+
+                var f = FixMath.F64.Zero;
+                f.Serialize(recorder);
+                if (f == FixMath.F64.MaxValue)
+                    _maxForce = null;
+                else
+                    _maxForce = f;
             }
         }
 
