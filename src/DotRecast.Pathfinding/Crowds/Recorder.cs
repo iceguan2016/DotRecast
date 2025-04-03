@@ -202,6 +202,10 @@ namespace Pathfinding.Crowds
                         _tickElapsedTime -= executeTime;
                         _replayOperations.Dequeue().Execute(this);
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
         }

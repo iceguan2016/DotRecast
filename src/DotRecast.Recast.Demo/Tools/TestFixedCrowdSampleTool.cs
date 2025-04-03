@@ -318,7 +318,8 @@ public class TestFixedCrowdTool : IRcToolable
         {
             if (InEntity is MovableEntity entity)
             {
-                if (Debug.IsSimulationMode(eSimulationMode.Normal))
+                if (Debug.IsSimulationMode(eSimulationMode.Normal)
+                    || Debug.IsSimulationMode(eSimulationMode.Replay))
                 {
                     if (IsDrawSelectionInfo)
                     {
@@ -426,37 +427,7 @@ public class TestFixedCrowdTool : IRcToolable
 
     public void Layout()
     {
-        ImGui.Checkbox("Draw Navmesh Graph", ref IsDrawNavmeshGrpah);
-        ImGui.Checkbox("Draw Physics World", ref IsDrawPhysicsWorld);
-        ImGui.Checkbox("Draw Contact Info", ref IsDrawContactInfo);
-        ImGui.Checkbox("Draw Selection Info", ref IsDrawSelectionInfo);
-
         var propertyChanged = false;
-
-        if (ImGui.Button("Dump entity position"))
-        {
-            _entityManager.ForEachEntity((InEntity) =>
-            {
-                if (InEntity is MovableEntity entity)
-                {
-                    TestDaedalusSampleTool.Logger.Information($"id:{InEntity.ID.Id}, pos:{entity.Position}");
-                }
-            });
-        }
-
-        if (ImGui.Button("Create test entities"))
-        {
-            var testPositions = new Vector2[] 
-            {
-                
-            };
-
-            for (var i = 0; i < testPositions.Length; ++i)
-            {
-                var pos = testPositions[i];
-                AddCrowdEntity(pos.x, pos.y);
-            }
-        }
 
         var neiIndex = Debug.WatchNeighborIndex;
         if (ImGui.SliderInt($"Watch neighbor {neiIndex}", ref neiIndex, 0, 15))
@@ -889,6 +860,11 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
         if (Debug.IsSimulationMode(eSimulationMode.Normal))
         {
+            ImGui.Checkbox("Draw Navmesh Graph", ref _tool.IsDrawNavmeshGrpah);
+            ImGui.Checkbox("Draw Physics World", ref _tool.IsDrawPhysicsWorld);
+            ImGui.Checkbox("Draw Contact Info", ref _tool.IsDrawContactInfo);
+            ImGui.Checkbox("Draw Selection Info", ref _tool.IsDrawSelectionInfo);
+
             // 正常模拟模式
             _tool.Layout();
             
@@ -1019,6 +995,11 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
         else if (Debug.IsSimulationMode(eSimulationMode.Replay))
         {
+            ImGui.Checkbox("Draw Navmesh Graph", ref _tool.IsDrawNavmeshGrpah);
+            ImGui.Checkbox("Draw Physics World", ref _tool.IsDrawPhysicsWorld);
+            ImGui.Checkbox("Draw Contact Info", ref _tool.IsDrawContactInfo);
+            ImGui.Checkbox("Draw Selection Info", ref _tool.IsDrawSelectionInfo);
+
             if (!_tool.EntityManager.IsReplaying())
             {
                 // 列出最新的录像文件
