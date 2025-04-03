@@ -1063,7 +1063,25 @@ public class TestFixedCrowdSampleTool : ISampleTool
             }
             else
             {
-                
+                if (ImGui.Button("StopReplay"))
+                {
+                    _tool.EntityManager.StopReplay();
+                }
+
+                if (_tool.EntityManager.IsPauseReplay)
+                {
+                    if (ImGui.Button("ResumeReplay"))
+                    {
+                        _tool.EntityManager.IsPauseReplay = false;
+                    }
+                }
+                else
+                {
+                    if (ImGui.Button("PauseReplay"))
+                    {
+                        _tool.EntityManager.IsPauseReplay = true;
+                    }
+                }
             }
         }
     }

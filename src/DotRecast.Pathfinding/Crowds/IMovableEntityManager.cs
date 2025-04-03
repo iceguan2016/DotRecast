@@ -51,6 +51,7 @@ namespace Pathfinding.Crowds
         bool IsReplaying();
         bool StartReplay(string inputFile);
         bool StopReplay();
+        bool IsPauseReplay { get; set; }
 
         // create new entity
         UniqueId CreateEntity(CreateEntityParams inParams);

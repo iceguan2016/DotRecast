@@ -323,6 +323,8 @@ namespace Pathfinding.Crowds
         public bool StartRecord(string outputDir)
         {
             if (!_initialized) return false;
+            StopRecord();
+            StopReplay();
             _recorder = new Recorder(this);
             if (_recorder.StartRecord(outputDir))
             {
@@ -347,6 +349,8 @@ namespace Pathfinding.Crowds
         }
         public bool StartReplay(string inputFile)
         {
+            StopRecord();
+            StopReplay();
             _recorder = new Recorder(this);
             if (_recorder.StartReplay(inputFile))
             {
@@ -365,6 +369,26 @@ namespace Pathfinding.Crowds
             }
             _isReplayControlMode = false;
             return false;
+        }
+
+        public bool IsPauseReplay 
+        { 
+            get
+            {
+                if (null != _recorder && _recorder.IsReplaying)
+                {
+                    return _recorder.IsPauseReplay;
+                }
+                return false;
+            }
+
+            set 
+            {
+                if (null != _recorder && _recorder.IsReplaying)
+                {
+                    _recorder.IsPauseReplay = value;
+                }
+            } 
         }
 
         public void Tick(FixMath.F64 inDelteTime)

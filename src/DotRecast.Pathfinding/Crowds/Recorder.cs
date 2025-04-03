@@ -29,6 +29,7 @@ namespace Pathfinding.Crowds
         // replay
         public BinaryReader RecordReader { get; private set; }
         public bool IsReplaying { get { return WorkMode == eWorkMode.Replay && null != RecordReader; } }
+        public bool IsPauseReplay { get; set; }
         public FixMath.F64 ReplaySpeed { get; set; }
         internal long LastOperationExecuteTime { get; private set; }
         static int CACHE_REPLAY_OPERATION_COUNT = 100;
@@ -149,6 +150,7 @@ namespace Pathfinding.Crowds
                 // 设置基本参数
                 ReplaySpeed = FixMath.F64.One;
                 LastOperationExecuteTime = DateTime.Now.Ticks;
+                IsPauseReplay = false;
             }
             catch (Exception e)
             {
@@ -178,7 +180,7 @@ namespace Pathfinding.Crowds
 
         public void TickReplay()
         {
-            if (IsReplaying)
+            if (IsReplaying && !IsPauseReplay)
             {
                 ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
 
