@@ -403,6 +403,21 @@ namespace Pathfinding.Crowds
                 }
             } 
         }
+        public FixMath.F64 ReplaySpeed 
+        { 
+            get
+            {
+                return _recorder != null? _recorder.ReplaySpeed : FixMath.F64.Zero;
+            }
+            
+            set
+            { 
+                if (_recorder != null)
+                {
+                    _recorder.ReplaySpeed = value;
+                }
+            }
+        }
 
         public void TickReplay(FixMath.F64 inDelteTime)
         {
@@ -413,7 +428,7 @@ namespace Pathfinding.Crowds
 
             // 临时关闭_isReplayControlMode,让其能够执行逻辑
             _isReplayControlMode = false;
-            _recorder.TickReplay();
+            _recorder.TickReplay(inDelteTime);
             _isReplayControlMode = true;
         }
         #endregion

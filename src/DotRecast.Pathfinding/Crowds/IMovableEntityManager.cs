@@ -54,6 +54,7 @@ namespace Pathfinding.Crowds
         bool StartReplay(string inputFile);
         bool StopReplay();
         bool IsPauseReplay { get; set; }
+        FixMath.F64 ReplaySpeed { get; set; }
 
         // create new entity
         UniqueId CreateEntity(CreateEntityParams inParams);

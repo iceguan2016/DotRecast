@@ -31,6 +31,8 @@ namespace Pathfinding.Crowds
         public bool IsReplaying { get { return WorkMode == eWorkMode.Replay && null != RecordReader; } }
         public bool IsPauseReplay { get; set; }
         public FixMath.F64 ReplaySpeed { get; set; }
+
+        double _tickElapsedTime = 0.0;
         internal long LastOperationExecuteTime { get; private set; }
         static int CACHE_REPLAY_OPERATION_COUNT = 100;
         Queue<IRecordOperation> _replayOperations = null;
@@ -178,19 +180,30 @@ namespace Pathfinding.Crowds
             _replayOperations.Enqueue(operation);
         }
 
-        public void TickReplay()
+        public void TickReplay(FixMath.F64 inDeltaTime)
         {
             if (IsReplaying && !IsPauseReplay)
             {
-                ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
+                _tickElapsedTime += inDeltaTime.Double;
 
-                if (_replayOperations.Count <= 0) return;
-                var operation = _replayOperations.Peek();
-                if (operation == null) return;
-                if (operation.CanExecute(this))
+                while (_tickElapsedTime > 0)
                 {
-                    LastOperationExecuteTime = DateTime.Now.Ticks;
-                    _replayOperations.Dequeue().Execute(this);
+                    ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
+
+                    if (_replayOperations.Count <= 0)
+                        return;
+                    var operation = _replayOperations.Peek();
+                    if (operation == null)
+                        return;
+
+                    if (operation.CanExecute(this))
+                    {
+                        var timeSpan = new TimeSpan(DateTime.Now.Ticks - LastOperationExecuteTime);
+                        _tickElapsedTime -= timeSpan.TotalSeconds;
+
+                        LastOperationExecuteTime = DateTime.Now.Ticks;
+                        _replayOperations.Dequeue().Execute(this);
+                    }
                 }
             }
         }

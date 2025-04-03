@@ -243,7 +243,10 @@ namespace Pathfinding.Crowds
 
         public void Execute(Recorder recorder)
         {
-            
+            if (recorder.IsReplaying)
+            {
+                recorder.EntityManager.FrameBegin();
+            }
         }
 
         public void Serialize(Recorder recorder)
@@ -263,7 +266,10 @@ namespace Pathfinding.Crowds
 
         public void Execute(Recorder recorder)
         {
-
+            if (recorder.IsReplaying)
+            {
+                recorder.EntityManager.FrameEnd();
+            }
         }
 
         public void Serialize(Recorder recorder)
@@ -410,9 +416,9 @@ namespace Pathfinding.Crowds
 
         public bool CanExecute(Recorder recorder)
         {
-            var scaledDeltaTime = _deltaTime * recorder.ReplaySpeed;
-            var deltaTime = new TimeSpan(DateTime.Now.Ticks - recorder.LastOperationExecuteTime);
-            return deltaTime.TotalSeconds >= scaledDeltaTime.Double;
+            var scaledDeltaTime = _deltaTime / recorder.ReplaySpeed;
+            var timeSpan = new TimeSpan(DateTime.Now.Ticks - recorder.LastOperationExecuteTime);
+            return timeSpan.TotalSeconds >= scaledDeltaTime.Double;
         }
     }
 }
