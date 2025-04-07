@@ -56,6 +56,7 @@ namespace Pathfinding.Crowds
         // 记录单位Id到索引对象的映射
         Dictionary<UniqueId, int> EntityId2Index = null;
         List<ICrowdEntityActor> Entities = null;
+        Dictionary<UniqueId, TEntityTemplate> TemplateHashMap = null;
 
         // pointer to database used to accelerate proximity queries
         private IProximityDatabase<IVehicle> _pd;
@@ -95,10 +96,44 @@ namespace Pathfinding.Crowds
         // 标记当前是否是录像控制模式（不允许执行任何逻辑，全部由replay来驱动逻辑）
         private bool _isReplayControlMode = false;
 
+        static UniqueId DEFAULT_MOVABLE_ENITTY_TEMPLATE = UniqueId.FromName("DEFAULT_MOVABLE_ENITTY_TEMPLATE");
+
+        public bool RegisterTemplate(UniqueId tid, TEntityTemplate template)
+        {
+            if (_isReplayControlMode)
+                return false;
+
+            if (null != _recorder && _recorder.IsRecording)
+            {
+                _recorder.AddReplayOperation(new OperationRegisterTemplate(tid, template));
+            }
+
+            if (!TemplateHashMap.ContainsKey(tid))
+            {
+                TemplateHashMap.Add(tid, template);
+                return true;
+            }
+            return false;
+        }
+        public TEntityTemplate FindTemplate(UniqueId tid)
+        {
+            if (TemplateHashMap.TryGetValue(tid, out var template))
+            {
+                return template;
+            }
+            return null;
+        }
+
         public UniqueId CreateEntity(CreateEntityParams inParams)
         {
             if (_isReplayControlMode)
                 return UniqueId.InvalidID;
+
+            var template = FindTemplate(inParams.TemplateId);
+            if (null == template)
+            {
+                return UniqueId.InvalidID;
+            }
 
             if (null != _recorder && _recorder.IsRecording)
             {
@@ -106,14 +141,14 @@ namespace Pathfinding.Crowds
             }
 
             ICrowdEntityActor entityActor = null;
-            if (inParams.Template is TMovableEntityTemplate)
+            if (template is TMovableEntityTemplate)
             {
                 entityActor = new MovableEntity(this, 
                     inParams.PathwayQuerier?? _map, 
                     inParams.LocalBoundaryQuerier?? _map, 
                     inParams.AnnotationService?? AnnotationService);
             }
-            else if (inParams.Template is TUnMovableEntityTemplate)
+            else if (template is TUnMovableEntityTemplate)
             {
                 entityActor = new UnMovableEntity(this);
             }
@@ -128,7 +163,7 @@ namespace Pathfinding.Crowds
             var entityIndex = Entities.Count - 1;
             EntityId2Index.Add(entityActor.ID, entityIndex);
             // Set template
-            entityActor.Template = inParams.Template;
+            entityActor.Template = template;
 
             // position
             entityActor.SetPosition(inParams.SpawnPosition);
@@ -240,8 +275,7 @@ namespace Pathfinding.Crowds
             var createEntityParams = new CreateEntityParams() 
             {
                 SpawnPosition = inCenter,
-
-                Template = new TMovableEntityTemplate(),
+                TemplateId = DEFAULT_MOVABLE_ENITTY_TEMPLATE,
             };
             var entityId = CreateEntity(createEntityParams);
             if (!entityId.IsValid()) return null;
@@ -299,6 +333,10 @@ namespace Pathfinding.Crowds
             // initialize logic map
             _map = new Map();
             _map.SetMap(inParams.MapBoundsMin.X, inParams.MapBoundsMin.Z, size.X, size.Z);
+
+            // template map
+            TemplateHashMap = new Dictionary<UniqueId, TEntityTemplate>();
+            RegisterTemplate(DEFAULT_MOVABLE_ENITTY_TEMPLATE, new TMovableEntityTemplate());
 
             initializeParams = inParams;
             _initialized = true;

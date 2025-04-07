@@ -10,7 +10,8 @@ namespace Pathfinding.Crowds
         public FixMath.F64Vec3 SpawnPosition = FixMath.F64Vec3.Zero;
         public FixMath.F64Quat SpawnRotation = FixMath.F64Quat.Identity;
 
-        public TEntityTemplate Template = null;
+        // public TEntityTemplate Template = null;
+        public UniqueId TemplateId = UniqueId.InvalidID;
         public IPathwayQuerier PathwayQuerier = null;
         public ILocalBoundaryQuerier LocalBoundaryQuerier = null;
         public IAnnotationService AnnotationService = null;
@@ -55,6 +56,10 @@ namespace Pathfinding.Crowds
         bool StopReplay();
         bool IsPauseReplay { get; set; }
         FixMath.F64 ReplaySpeed { get; set; }
+
+        // 
+        bool RegisterTemplate(UniqueId tid, TEntityTemplate template);
+        TEntityTemplate FindTemplate(UniqueId tid);
 
         // create new entity
         UniqueId CreateEntity(CreateEntityParams inParams);

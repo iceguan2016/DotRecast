@@ -182,38 +182,9 @@ namespace Pathfinding.Crowds
         public static void Serialize(ref CreateEntityParams create, Recorder recorder)
         {
             create.EntityId.Serialize(recorder);
+            create.TemplateId.Serialize(recorder);
             create.SpawnPosition.Serialize(recorder);
             create.SpawnRotation.Serialize(recorder);
-
-            if (recorder.IsRecording)
-            {
-                if (create.Template is TMovableEntityTemplate movable)
-                {
-                    recorder.RecordWriter.Write((byte)eEntityTemplateType.Movable);
-                    Serialize(movable, recorder);
-                }
-                else if (create.Template is TUnMovableEntityTemplate unmovable)
-                {
-                    recorder.RecordWriter.Write((byte)eEntityTemplateType.UnMovable);
-                    Serialize(unmovable, recorder);
-                }
-            }
-            else if (recorder.IsReplaying)
-            {
-                var type = (eEntityTemplateType)recorder.RecordReader.ReadByte();
-                if (type == eEntityTemplateType.Movable)
-                {
-                    var movable = new TMovableEntityTemplate();
-                    Serialize(movable, recorder);
-                    create.Template = movable;
-                }
-                else if (type == eEntityTemplateType.UnMovable)
-                {
-                    var unmovable = new TUnMovableEntityTemplate();
-                    Serialize(unmovable, recorder);
-                    create.Template = unmovable;
-                }
-            }
         }
     }
 
@@ -228,6 +199,7 @@ namespace Pathfinding.Crowds
         MoveEntity,
         SetEntityParams,
         Tick,
+        RegisterTemplate,
     }
 
     public interface IRecordOperation
@@ -546,6 +518,83 @@ namespace Pathfinding.Crowds
         public double ExecuteTime(Recorder recorder)
         {
             return _deltaTime.Double;
+        }
+    }
+
+    public class OperationRegisterTemplate : IRecordOperation
+    {
+        UniqueId _tid;
+        TEntityTemplate _template;
+        public eRecordOperation Operation => eRecordOperation.RegisterTemplate;
+
+        public OperationRegisterTemplate(UniqueId? tid = null, TEntityTemplate? template = null)
+        {
+            _tid = tid?? UniqueId.InvalidID;
+            _template = template?? null;
+        }
+
+        public void Execute(Recorder recorder)
+        {
+            if (recorder.IsReplaying && _tid != UniqueId.InvalidID && _template != null)
+            {
+                recorder.EntityManager.RegisterTemplate(_tid, _template);
+            }
+        }
+
+        public void Serialize(Recorder recorder)
+        {
+            _tid.Serialize(recorder);
+            if (recorder.IsRecording)
+            {
+                if (null != _template)
+                {
+                    if (_template is TMovableEntityTemplate movable)
+                    {
+                        var flag = 1;
+                        flag.Serialize(recorder);
+                        DataSerialize.Serialize(movable, recorder);
+                    }
+                    else if (_template is TUnMovableEntityTemplate unmovable)
+                    {
+                        var flag = 2;
+                        flag.Serialize(recorder);
+                        DataSerialize.Serialize(unmovable, recorder);
+                    }
+                    else
+                    {
+                        var flag = 3;
+                        flag.Serialize(recorder);
+                    }
+                }
+                else
+                {
+                    var flag = 0;
+                    flag.Serialize(recorder);
+                }
+            }
+            else if (recorder.IsReplaying)
+            {
+                var flag = 0;
+                flag.Serialize(recorder);
+
+                if (flag == 1)
+                {
+                    var template = new TMovableEntityTemplate();
+                    DataSerialize.Serialize(template, recorder);
+                    _template = template;
+                }
+                else if (flag == 2)
+                {
+                    var template = new TUnMovableEntityTemplate();
+                    DataSerialize.Serialize(template, recorder);
+                    _template = template;
+                }
+            }
+        }
+
+        public double ExecuteTime(Recorder recorder)
+        {
+            return 0.0;
         }
     }
 }

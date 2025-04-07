@@ -596,13 +596,20 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
     // Crowd entity interface
     public UniqueId AddCrowdEntity(double x, double y)
     {
+        var template = MovableEntityTemplates[_templateIndex];
+        var tid = UniqueId.FromName($"Movable r:{template.Radius} hash:{template.GetHashCode()}");
+        if (null != _entityManager.FindTemplate(tid))
+        {
+            _entityManager.RegisterTemplate(tid, template);
+        }
+
         var Params = new CreateEntityParams() 
         {
             EntityId = UniqueId.InvalidID,
             SpawnPosition = FixMath.F64Vec3.FromDouble(x, MapHeight, y),
             SpawnRotation = FixMath.F64Quat.Identity,
 
-            Template = MovableEntityTemplates[_templateIndex],
+            TemplateId = tid,
             PathwayQuerier = this,
             LocalBoundaryQuerier = this,
             AnnotationService = _annotationServerice,

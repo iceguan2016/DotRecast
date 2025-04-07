@@ -239,12 +239,23 @@ public class TestFixedCrowdTool : IRcToolable
             HalfExtent = new FixMath.F64Vec2(xHalfSize, yHalfSize),
         };
 
+        var spawnPos = new FixMath.F64Vec3(posx, MapHeight, posy);
+        var spawnRot = rotation;
+
+        // 注册模板
+        var tid = UniqueId.FromName($"UnMovable p:{spawnPos} r:{spawnRot} hash:{template.GetHashCode()}");
+        if (null == _entityManager.FindTemplate(tid))
+        {
+            _entityManager.RegisterTemplate(tid, template);
+        }
+
+        // 创建怪物
         var param = new CreateEntityParams() 
         {
-            SpawnPosition = new FixMath.F64Vec3(posx, MapHeight, posy),
+            SpawnPosition = spawnPos,
             SpawnRotation = rotation,
 
-            Template = template,
+            TemplateId = tid,
         };
         var obstacleId = _entityManager.CreateEntity(param);
     }
@@ -265,13 +276,20 @@ public class TestFixedCrowdTool : IRcToolable
     // Crowd entity interface
     public UniqueId AddCrowdEntity(double x, double y)
     {
+        var template = MovableEntityTemplates[_templateIndex];
+        var tid = UniqueId.FromName($"Movable r:{template.Radius} hash:{template.GetHashCode()}");
+        if (null != _entityManager.FindTemplate(tid))
+        {
+            _entityManager.RegisterTemplate(tid, template);
+        }
+
         var Params = new CreateEntityParams() 
         {
             EntityId = UniqueId.InvalidID,
             SpawnPosition = FixMath.F64Vec3.FromDouble(x, MapHeight.Double, y),
             SpawnRotation = FixMath.F64Quat.Identity,
 
-            Template = MovableEntityTemplates[_templateIndex],
+            TemplateId = tid,
             // PathwayQuerier = _entityManager.Map,
             // LocalBoundaryQuerier = _entityManager.Map,
             // AnnotationService = _annotationServerice,
