@@ -1,6 +1,7 @@
 
 using FixMath;
 using Pathfinding.Crowds.AvoidStrategy;
+using Pathfinding.Crowds.SteeringForce;
 using Pathfinding.Util;
 using SharpSteer2;
 using SharpSteer2.Helpers;
@@ -63,6 +64,8 @@ namespace Pathfinding.Crowds.MoveStrategy
                 {
                     var neighbor = neighbors[i] as MovableEntity;
                     if (null == neighbor || owner.ID == neighbor.ID)
+                        continue;
+                    if (!AbstractSteeringForce.CheckGroupShouldAvoid(owner, neighbor))
                         continue;
                     if (neighbor.HasEntityState(MovableEntity.eEntityState.Moving))
                         continue;

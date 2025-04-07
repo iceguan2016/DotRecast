@@ -19,8 +19,8 @@ namespace Pathfinding.Crowds
         private Mesh _navmesh = null;
         public Mesh NavMesh { get { return _navmesh; } }
 
-        // map height
-        public FixMath.F64 MapHeight { get; set; }
+        // terrain height
+        public FixMath.F64 TerrainHeight { get; private set; }
 
         // pathfinder
         private PathFinder _pathfinder = null;
@@ -30,7 +30,7 @@ namespace Pathfinding.Crowds
         private Dictionary<Obstacle, UniqueId> _obstacles = new Dictionary<Obstacle, UniqueId>();
 
         // 地图rect范围：(x, y) - (x+width, y+height)
-        public bool SetMap(FixMath.F64 x, FixMath.F64 y, FixMath.F64 mapWidth, FixMath.F64 mapHeight)
+        public bool SetMap(FixMath.F64 x, FixMath.F64 y, FixMath.F64 mapWidth, FixMath.F64 mapHeight, FixMath.F64 terrainHeight)
         {
             // build a rectangular 2 polygons mesh of mapWidth x mapHeight
             var mesh = RectMesh.buildRectangle(x, y, mapWidth, mapHeight);
@@ -39,6 +39,7 @@ namespace Pathfinding.Crowds
                 return false;
             }
 
+            TerrainHeight = terrainHeight;
             _navmesh = mesh;
             _pathfinder = new PathFinder();
             _pathfinder.set_mesh(mesh);
@@ -233,8 +234,8 @@ namespace Pathfinding.Crowds
                     var count = Math.Min(boundaryEdges.Count, outResults.Length);
                     for (int i = 0; i < count; ++i)
                     {
-                        outResults[i].Start = boundaryEdges[i].get_originVertex()._pos.Cast(MapHeight);
-                        outResults[i].End = boundaryEdges[i].get_destinationVertex()._pos.Cast(MapHeight);
+                        outResults[i].Start = boundaryEdges[i].get_originVertex()._pos.Cast(TerrainHeight);
+                        outResults[i].End = boundaryEdges[i].get_destinationVertex()._pos.Cast(TerrainHeight);
                     }
                     return count;
                 }
@@ -266,7 +267,7 @@ namespace Pathfinding.Crowds
                 var points = new List<FixMath.F64Vec3>();
                 for (var i = 0; i < resultPath.Count; i += 2)
                 {
-                    var v = new FixMath.F64Vec3(resultPath[i], MapHeight, resultPath[i + 1]);
+                    var v = new FixMath.F64Vec3(resultPath[i], TerrainHeight, resultPath[i + 1]);
                     points.Add(v);
                 }
                 return new SharpSteer2.Pathway.PolylinePathway(points, FixMath.F64.Zero, false);

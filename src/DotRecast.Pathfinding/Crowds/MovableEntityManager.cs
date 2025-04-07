@@ -332,7 +332,8 @@ namespace Pathfinding.Crowds
 
             // initialize logic map
             _map = new Map();
-            _map.SetMap(inParams.MapBoundsMin.X, inParams.MapBoundsMin.Z, size.X, size.Z);
+            var terrainHeight = (inParams.MapBoundsMin.Y + inParams.MapBoundsMax.Y) / 2;
+            _map.SetMap(inParams.MapBoundsMin.X, inParams.MapBoundsMin.Z, size.X, size.Z, terrainHeight);
 
             // template map
             TemplateHashMap = new Dictionary<UniqueId, TEntityTemplate>();

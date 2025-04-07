@@ -25,42 +25,46 @@ namespace DotRecast.Recast.Demo.Tools;
 public class PhysicsWorldGizmosDrawer : IGizmosDrawer
 {
     private DrawInterface _draw = null;
-    private float _height = 0.0f;
 
     public PhysicsWorldGizmosDrawer(DrawInterface draw)
     {
         this._draw = draw;
-        this._height = _draw.GetMapHeight() + 0.5f;
     }
 
     public void DrawArrow(VoltVector2 start, VoltVector2 end, VoltVector2 arrowSize, float lineWidth, Volatile.Color c)
     {
+        var _height = _draw.GetMapHeight();
         _draw.DrawArrow(start.ToUnityVec3(_height), end.ToUnityVec3(_height), arrowSize.ToUnityVec2(), lineWidth, c.ToUnityColor());
     }
 
     public void DrawCircle(VoltVector2 p, float r, Volatile.Color c)
     {
+        var _height = _draw.GetMapHeight();
         _draw.DrawCircle(p.ToUnityVec3(_height), r, c.ToUnityColor());
     }
 
     public void DrawCube(VoltVector2 p, VoltVector2 size, Volatile.Color c)
     {
+        var _height = _draw.GetMapHeight();
         _draw.DrawCube(p.ToUnityVec3(_height),  size.ToUnityVec3(0.0f), c.ToUnityColor());
     }
 
     public void DrawLine(VoltVector2 a, VoltVector2 b, Volatile.Color c, float lineWidth = 1)
     {
+        var _height = _draw.GetMapHeight();
         _draw.DrawLine(a.ToUnityVec3(_height),  b.ToUnityVec3(_height), c.ToUnityColor(), lineWidth);
     }
 
     public void DrawSolidCube(VoltVector2 p, Fix64 angle, VoltVector2 size, Volatile.Color c)
     {
+        var _height = _draw.GetMapHeight();
         var rotation = UnityEngine.Quaternion.Euler(0.0f, (float)angle, 0.0f);
         _draw.DrawSolidCube(p.ToUnityVec3(_height), rotation, size.ToUnityVec3(0.0f), c.ToUnityColor());
     }
 
     public void DrawTriangle(VoltVector2 v0, VoltVector2 v1, VoltVector2 v2, Volatile.Color c)
     {
+        var _height = _draw.GetMapHeight();
         _draw.DrawTriangle(v0.ToUnityVec3(_height),  v1.ToUnityVec3(_height), v1.ToUnityVec3(_height), c.ToUnityColor());
     }
 }
@@ -74,9 +78,6 @@ public class TestFixedCrowdTool : IRcToolable
     public UnityEngine.Vector3? EndPoint { get; set; }
 
     public Face HitFace { get; set; }
-
-    // map height
-    public FixMath.F64 MapHeight { get; set; }
 
     // pathfinder
     public PathFinder Pathfinder { get; private set; }
@@ -148,6 +149,7 @@ public class TestFixedCrowdTool : IRcToolable
 
     // 
     public bool IsOpenRecord = false;
+    public float TerraintHeight = 0.0f;
 
     double RandomRange(double min, double max)
     {
@@ -159,18 +161,19 @@ public class TestFixedCrowdTool : IRcToolable
         return "Test FixedCrowd Tool";
     }
 
-    public void Start(double x, double y, double mapWidth, double mapHeight)
+    public void Start(double x, double y, double mapWidth, double mapHeight, double terrainHeight)
     {
         PathfindingMoudle.StartupModule();
 
+        var h = FixMath.F64.FromDouble(terrainHeight);
         _entityManager = new MovableEntityManager();
         if (null != _entityManager)
         {
             var mapYExtent = FixMath.F64.FromDouble(5.0f);
             var param = new IMovableEntityManager.FInitializeParams()
             {
-                MapBoundsMin = new FixMath.F64Vec3(FixMath.F64.FromDouble(x), MapHeight - mapYExtent / 2, FixMath.F64.FromDouble(y)),
-                MapBoundsMax = new FixMath.F64Vec3(FixMath.F64.FromDouble(x + mapWidth), MapHeight + mapYExtent / 2, FixMath.F64.FromDouble(y + mapHeight)),
+                MapBoundsMin = new FixMath.F64Vec3(FixMath.F64.FromDouble(x), h - mapYExtent / 2, FixMath.F64.FromDouble(y)),
+                MapBoundsMax = new FixMath.F64Vec3(FixMath.F64.FromDouble(x + mapWidth), h + mapYExtent / 2, FixMath.F64.FromDouble(y + mapHeight)),
                 MapCellDivs = 10,
 
                 IsOpenRecord = IsOpenRecord,
@@ -239,7 +242,8 @@ public class TestFixedCrowdTool : IRcToolable
             HalfExtent = new FixMath.F64Vec2(xHalfSize, yHalfSize),
         };
 
-        var spawnPos = new FixMath.F64Vec3(posx, MapHeight, posy);
+        var height = _entityManager.Map.TerrainHeight;
+        var spawnPos = new FixMath.F64Vec3(posx, height, posy);
         var spawnRot = rotation;
 
         // 注册模板
@@ -283,10 +287,11 @@ public class TestFixedCrowdTool : IRcToolable
             _entityManager.RegisterTemplate(tid, template);
         }
 
+        var terrainHeight = _entityManager.Map.TerrainHeight;
         var Params = new CreateEntityParams() 
         {
             EntityId = UniqueId.InvalidID,
-            SpawnPosition = FixMath.F64Vec3.FromDouble(x, MapHeight.Double, y),
+            SpawnPosition = FixMath.F64Vec3.FromDouble(x, terrainHeight.Double, y),
             SpawnRotation = FixMath.F64Quat.Identity,
 
             TemplateId = tid,
@@ -305,7 +310,8 @@ public class TestFixedCrowdTool : IRcToolable
 
     public UniqueId HitCrowdEntity(double x, double y)
     {
-        var hitPos = FixMath.F64Vec3.FromDouble(x, MapHeight.Double, y);
+        var terrainHeight = _entityManager.Map.TerrainHeight;
+        var hitPos = FixMath.F64Vec3.FromDouble(x, terrainHeight.Double, y);
         var hitEntityId = UniqueId.InvalidID;
         _entityManager.ForEachEntity((InEntity) =>
         {
@@ -324,7 +330,8 @@ public class TestFixedCrowdTool : IRcToolable
 
     public void MoveCrowdEntity(double x, double y)
     {
-        var Position = FixMath.F64Vec3.FromDouble(x, MapHeight.Double, y);
+        var terrainHeight = _entityManager.Map.TerrainHeight;
+        var Position = FixMath.F64Vec3.FromDouble(x, terrainHeight.Double, y);
 
         for (var i = 0; i < _selectEntities.Count; ++i)
         {
@@ -589,11 +596,12 @@ public class TestFixedCrowdSampleTool : ISampleTool
         outHitPos = new RcVec3f();
         
         var Mesh = _tool.EntityManager.Map.NavMesh;
+        var PlaneHalfSize = 1000.0f;
 
         var src = start;
         var dst = start + direction * 100.0f;
-        var bmin = new RcVec3f(0.0f, _draw.MapHeight, 0.0f);
-        var bmax = new RcVec3f(Mesh._width.Float, _draw.MapHeight, Mesh._height.Float);
+        var bmin = new RcVec3f(-PlaneHalfSize, _draw.MapHeight, -PlaneHalfSize);
+        var bmax = new RcVec3f(PlaneHalfSize, _draw.MapHeight, PlaneHalfSize);
         if (!RcIntersections.IsectSegAABB(src, dst, bmin, bmax, out var btmin, out var btmax))
         {
             return false;
@@ -724,19 +732,24 @@ public class TestFixedCrowdSampleTool : ISampleTool
         var bound_min = geom.GetMeshBoundsMin();
         var bound_max = geom.GetMeshBoundsMax();
 
-        if (_draw == null)
+        if (_draw == null && _tool.EntityManager != null)
         {
             _draw = new DrawInterfaceImplement(dd);
-            _draw.MapHeight = bound_max.Y + 0.5f;
 
             _view = new SimpleView(_draw);
-            _tool.MapHeight = FixMath.F64.FromDouble(bound_max.Y + 0.5f);
+           
             if (null != _tool.EntityManager)
             {
                 _tool.EntityManager.AnnotationService = new EntityAnnotationServerice(_draw);
             }
 
             _physicsWorldDrawer = new PhysicsWorldGizmosDrawer(_draw);
+        }
+
+        // 同步地形高度
+        if (_draw != null && _tool.EntityManager != null)
+        {
+            _draw.MapHeight = _tool.EntityManager.Map.TerrainHeight.Float;
         }
 
         // draw bounds
@@ -829,6 +842,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
 
         // draw world axes
+        if (null != _draw)
         {
             var o = Vector3.zero; o.y += 3.0f;
             var x = o + Vector3.right * 5;
@@ -888,6 +902,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
 
         ImGui.Checkbox("Open Record", ref _tool.IsOpenRecord);
+        ImGui.DragFloat("Terrain Height", ref _tool.TerraintHeight);
 
         if (ImGui.Button("Create Entity Manager"))
         {
@@ -903,7 +918,13 @@ public class TestFixedCrowdSampleTool : ISampleTool
             RandomHelpers.InitialRandom((int)DateTime.Now.Ticks);
 
             if (null != _tool)
-                _tool.Start(0.0, 0.0, mapWidth, mapHeight);
+            {
+                _tool.Start(0.0, 0.0, mapWidth, mapHeight, _tool.TerraintHeight);
+                if (null != _draw)
+                {
+                    _tool.EntityManager.AnnotationService = new EntityAnnotationServerice(_draw);
+                }
+            }
 
             Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
         }

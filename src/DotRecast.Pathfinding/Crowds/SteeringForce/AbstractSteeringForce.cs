@@ -16,7 +16,7 @@ namespace Pathfinding.Crowds.SteeringForce
 
         public FixMath.F64 Weight { get; set; }
 
-        public bool CheckGroupShouldAvoid(MovableEntity owner, MovableEntity other)
+        public static bool CheckGroupShouldAvoid(MovableEntity owner, MovableEntity other)
         {
             return owner.GroupsToAvoid > 0 && (owner.GroupsToAvoid & other.GroupMask) > 0;
         }
