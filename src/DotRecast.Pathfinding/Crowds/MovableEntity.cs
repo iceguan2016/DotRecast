@@ -64,7 +64,7 @@ namespace Pathfinding.Crowds
         public FixMath.F64 CohesionWeight = FixMath.F64.FromFloat(0.1f);
 
         // debug toggles
-        public bool[] DebugVec3Toggles = new bool[(int)eDebugVec3Item.Count];
+        public static bool[] DebugVec3Toggles = new bool[(int)eDebugVec3Item.Count];
 
         public override int GetHashCode()
         {
@@ -211,7 +211,7 @@ namespace Pathfinding.Crowds
         public FixMath.F64Vec3      Displacement { get; set; }
 
         // debug forces
-        private FixMath.F64Vec3[]   _debugVec3Items = null;
+        public FixMath.F64Vec3[]   _debugVec3Items = null;
 
         // state bits
         private uint                _stateBitsValue = 0;
@@ -557,23 +557,23 @@ namespace Pathfinding.Crowds
                 var forceRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxForce);
                 var clampRange = new FixMath.F64Vec2(FixMath.F64.Zero, Radius * 3);
 
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.Velocity]) 
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.Velocity]) 
                     drawVec3(Velocity, FixMath.F64.FromFloat(1.0f), velocityRange, clampRange, Colors.White, FixMath.F64.One);
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.ForwardMoveForce]) 
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.ForwardMoveForce]) 
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.ForwardMoveForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray10, FixMath.F64.One);
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.PathFollowForce])
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.PathFollowForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.PathFollowForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray20, FixMath.F64.One);
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.AvoidNeighborForce])
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.AvoidNeighborForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.AvoidNeighborForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray30, FixMath.F64.One);
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.AvoidObstacleForce])
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.AvoidObstacleForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.AvoidObstacleForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray40, FixMath.F64.One);
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.FlockSeparationForce])
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.FlockSeparationForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.FlockSeparationForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray50, FixMath.F64.One);
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.FlockAligmentForce])
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.FlockAligmentForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.FlockAligmentForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray60, FixMath.F64.One);
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.FlockCohesionForce])
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.FlockCohesionForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.FlockCohesionForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray70, FixMath.F64.One);
-                if (template.DebugVec3Toggles[(int)eDebugVec3Item.TotalSteerForce])
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.TotalSteerForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.TotalSteerForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray80, FixMath.F64.One);
             }
         }

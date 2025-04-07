@@ -455,6 +455,16 @@ public class TestFixedCrowdTool : IRcToolable
     public bool IsDrawContactInfo = false;
     public bool IsDrawSelectionInfo = false;
 
+    public void Layout_Toggles()
+    {
+        // debug toggles
+        for (var i = 0; i < TMovableEntityTemplate.DebugVec3Toggles.Length; ++i)
+        {
+            var type = (eDebugVec3Item)i;
+            ImGui.Checkbox(type.ToString(), ref TMovableEntityTemplate.DebugVec3Toggles[i]);
+        }
+    }
+
     public void Layout()
     {
         var propertyChanged = false;
@@ -482,14 +492,9 @@ public class TestFixedCrowdTool : IRcToolable
         ImGui.NewLine();
 
         // 模板参数
-        var currTemplate = MovableEntityTemplates[_templateIndex];
+        Layout_Toggles();
 
-        // debug toggles
-        for (var i = 0; i < currTemplate.DebugVec3Toggles.Length; ++i)
-        {
-            var type = (eDebugVec3Item)i;
-            propertyChanged |= ImGui.Checkbox(type.ToString(), ref currTemplate.DebugVec3Toggles[i]);
-        }
+        var currTemplate = MovableEntityTemplates[_templateIndex];
 
         var stopRadius = currTemplate.StopMoveRadius.Float;
         propertyChanged |= ImGui.SliderFloat("StopMoveRadius", ref stopRadius, 1.0f, 10.0f);
@@ -1168,6 +1173,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             {
                 Layout_Toggles();
                 Layout_TickControl();
+                _tool.Layout_Toggles();
                 Layout_Replay();
             }
         }

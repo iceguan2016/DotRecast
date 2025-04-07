@@ -803,10 +803,10 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         var currTemplate = MovableEntityTemplates[_templateIndex];
 
         // debug toggles
-        for (var i = 0; i < currTemplate.DebugVec3Toggles.Length; ++i)
+        for (var i = 0; i < TMovableEntityTemplate.DebugVec3Toggles.Length; ++i)
         {
             var type = (eDebugVec3Item)i;
-            propertyChanged |= ImGui.Checkbox(type.ToString(), ref currTemplate.DebugVec3Toggles[i]);
+            ImGui.Checkbox(type.ToString(), ref TMovableEntityTemplate.DebugVec3Toggles[i]);
         }
 
         var radius = currTemplate.Radius.Float;
