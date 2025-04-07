@@ -24,8 +24,13 @@ namespace Pathfinding.Crowds.SteeringForce
         {
         }
 
-        bool NeedAvoidNeighbor(MovableEntity owner, MovableEntity neighbor)
+        public bool NeedAvoidNeighbor(MovableEntity owner, MovableEntity neighbor)
         {
+            if (!CheckGroupShouldAvoid(owner, neighbor))
+            {
+                return false;
+            }
+
             // 移动方向同向的不避让，移动方向反向的需避让
             if (!neighbor.HasEntityState(MovableEntity.eEntityState.Moving))
             {

@@ -16,6 +16,10 @@ namespace Pathfinding.Crowds.SteeringForce
 
         public FixMath.F64 Weight { get; set; }
 
+        public bool CheckGroupShouldAvoid(MovableEntity owner, MovableEntity other)
+        {
+            return owner.GroupsToAvoid > 0 && (owner.GroupsToAvoid & other.GroupMask) > 0;
+        }
         public static PathIntersection CheckHitObstacle(MovableEntity owner, FixMath.F64Vec3 dir)
         {
             var q = FixMath.F64Quat.LookRotation(dir, FixMath.F64Vec3.Up);

@@ -22,6 +22,11 @@ namespace Pathfinding.Crowds.SteeringForce
 
         bool NeedAvoidNeighbor(MovableEntity owner, MovableEntity neighbor)
         {
+            if (!CheckGroupShouldAvoid(owner, neighbor))
+            {
+                return false;
+            }
+
             if (!neighbor.HasEntityState(MovableEntity.eEntityState.Moving))
             {
                 return true;
