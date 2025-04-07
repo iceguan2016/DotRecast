@@ -278,7 +278,7 @@ public class TestFixedCrowdTool : IRcToolable
     {
         var template = MovableEntityTemplates[_templateIndex];
         var tid = UniqueId.FromName($"Movable r:{template.Radius} hash:{template.GetHashCode()}");
-        if (null != _entityManager.FindTemplate(tid))
+        if (null == _entityManager.FindTemplate(tid))
         {
             _entityManager.RegisterTemplate(tid, template);
         }
@@ -973,6 +973,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             }
 
             ImGui.LabelText("ReplaySpeed", $"{_tool.EntityManager.ReplaySpeed}");
+            ImGui.LabelText("ReplayFrame", $"{_tool.EntityManager.FrameNo}");
 
             if (ImGui.Button("x0.5"))
                 _tool.EntityManager.ReplaySpeed = FixMath.F64.Half;

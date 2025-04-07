@@ -247,6 +247,9 @@ namespace Pathfinding.Crowds
                 case eRecordOperation.Tick:
                     operation = new OperationTick();
                     break;
+                case eRecordOperation.RegisterTemplate:
+                    operation = new OperationRegisterTemplate();
+                    break;
                 default:
                     break;
 
