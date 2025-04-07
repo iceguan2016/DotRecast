@@ -19,8 +19,12 @@ namespace Pathfinding.Crowds
         protected FixMath.F64 invTimeHorizon = FixMath.F64.One;
         protected bool isCheckHitObstacle = true;
 
-        static FixMath.F64 CHECK_HIT_OBSTACLE_RADIUS_SCALE = FixMath.F64.FromDouble(2.0);
+        static FixMath.F64 CHECK_HIT_OBSTACLE_RADIUS_SCALE = FixMath.F64.FromDouble(4.0);
         protected FixMath.F64 checkHitObstacleDistance = FixMath.F64.One;
+
+        // 计算VO扩展距离，防止太贴合了，物理碰撞会卡住单位
+        static FixMath.F64 RADII_EXPAND_FACTOR = FixMath.F64.FromDouble(0.1);
+        protected FixMath.F64 radiiExpand = FixMath.F64.FromDouble(0.05);
 
         public class VO
         {
@@ -142,6 +146,7 @@ namespace Pathfinding.Crowds
             this.invTimeHorizon = FixMath.F64.One / timeHorizon;
             this.isCheckHitObstacle = isCheckHitObstacle;
             this.checkHitObstacleDistance = radius * CHECK_HIT_OBSTACLE_RADIUS_SCALE;
+            this.radiiExpand = radius * RADII_EXPAND_FACTOR;
 
             this.voLists.Clear();
         }
@@ -165,7 +170,7 @@ namespace Pathfinding.Crowds
             FixMath.F64Vec2 relativePosition = otherPosition2D - ownerPosition2D;
             FixMath.F64Vec2 relativeVelocity = ownerVelocity - otherVel;
             FixMath.F64 distSq = FixMath.F64Vec2.LengthSqr(relativePosition);
-            FixMath.F64 combinedRadius = ownerRadius + otherRadius;
+            FixMath.F64 combinedRadius = ownerRadius + otherRadius + radiiExpand; // 增加扩展距离
             FixMath.F64 combinedRadiusSq = combinedRadius * combinedRadius;
 
             FixMath.F64Vec2 u = FixMath.F64Vec2.Zero;
