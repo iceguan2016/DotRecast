@@ -133,7 +133,7 @@ namespace Pathfinding.Crowds.MoveStrategy
                 }
             }
 
-            var totalForce = followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce 
+            var force = followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce 
                 + flockSeparationForce + flockAlignmentForce + flockCohesionForce;
 
             owner._debugVec3Items[(int)eDebugVec3Item.Velocity] = owner.Velocity;
@@ -144,9 +144,9 @@ namespace Pathfinding.Crowds.MoveStrategy
             owner._debugVec3Items[(int)eDebugVec3Item.FlockSeparationForce] = flockSeparationForce;
             owner._debugVec3Items[(int)eDebugVec3Item.FlockAligmentForce] = flockAlignmentForce;
             owner._debugVec3Items[(int)eDebugVec3Item.FlockCohesionForce] = flockCohesionForce;
-            owner._debugVec3Items[(int)eDebugVec3Item.TotalSteerForce] = totalForce;
+            owner._debugVec3Items[(int)eDebugVec3Item.TotalSteerForce] = force;
 
-            return totalForce;
+            return force;
         }
 
         public override void DrawGizmos(MovableEntity owner)
