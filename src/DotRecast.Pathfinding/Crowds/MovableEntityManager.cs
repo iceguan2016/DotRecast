@@ -211,7 +211,7 @@ namespace Pathfinding.Crowds
 
             if (null != _recorder && _recorder.IsRecording)
             {
-                _recorder.AddReplayOperation(new OperationSetEntityParams(inEntityId, radius, maxSpeed, maxForce));
+                _recorder.AddReplayOperation(new OperationSetEntityParams(inEntityId, radius, maxSpeed, maxForce, groupMask, groupToAvoid));
             }
 
             var entity = GetEntityById(inEntityId);
