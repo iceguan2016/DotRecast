@@ -30,6 +30,23 @@ namespace Pathfinding.Crowds
             }
         }
 
+        public static void Serialize(ref this int? i, Recorder recorder)
+        {
+            if (recorder.IsRecording)
+            {
+                var v = i ?? int.MaxValue;
+                recorder.RecordWriter.Write(v);
+            }
+            else if (recorder.IsReplaying)
+            {
+                var i32 = recorder.RecordReader.ReadInt32();
+                if (i32 == int.MaxValue)
+                    i = null;
+                else
+                    i = i32;
+            }
+        }
+
         public static void Serialize(ref this FixMath.F64 f, Recorder recorder)
         {
             if (recorder.IsRecording)
@@ -40,6 +57,23 @@ namespace Pathfinding.Crowds
             {
                 var raw = recorder.RecordReader.ReadInt64();
                 f = FixMath.F64.FromRaw(raw);
+            }
+        }
+
+        public static void Serialize(ref this FixMath.F64? f, Recorder recorder)
+        {
+            if (recorder.IsRecording) 
+            {
+                var v = f ?? FixMath.F64.MaxValue;
+                recorder.RecordWriter.Write(v.Raw);
+            }
+            else if (recorder.IsReplaying)
+            {
+                var f64 = FixMath.F64.FromRaw(recorder.RecordReader.ReadInt64());
+                if (f64 == FixMath.F64.MaxValue)
+                    f = null;
+                else
+                    f = f64;
             }
         }
 
@@ -441,62 +475,43 @@ namespace Pathfinding.Crowds
         FixMath.F64? _radius;
         FixMath.F64? _maxSpeed;
         FixMath.F64? _maxForce;
+        int? _groupMask;
+        int? _groupToAvoid;
 
         public eRecordOperation Operation => eRecordOperation.SetEntityParams;
 
-        public OperationSetEntityParams(UniqueId? entityId = null, FixMath.F64? radius = null, FixMath.F64? maxSpeed = null, FixMath.F64? maxForce = null)
+        public OperationSetEntityParams(
+            UniqueId? entityId = null, 
+            FixMath.F64? radius = null, 
+            FixMath.F64? maxSpeed = null, 
+            FixMath.F64? maxForce = null,
+            int? groupMask = null,
+            int? groupToAvoid = null)
         {
             _entityId = entityId ?? UniqueId.InvalidID;
             _radius = radius;
             _maxSpeed = maxSpeed;
             _maxForce = maxForce;
+            _groupMask = groupMask;
+            _groupToAvoid = groupToAvoid;
         }
 
         public void Execute(Recorder recorder)
         {
             if (recorder.IsReplaying)
             {
-                recorder.EntityManager.SetEntityParams(_entityId, _radius, _maxSpeed, _maxForce);
+                recorder.EntityManager.SetEntityParams(_entityId, _radius, _maxSpeed, _maxForce, _groupMask, _groupToAvoid);
             }
         }
 
         public void Serialize(Recorder recorder)
         {
-            // _enetityId
             _entityId.Serialize(recorder);
-            // _radius, _maxSpeed, _maxForce
-            if (recorder.IsRecording)
-            {
-                var r = _radius ?? FixMath.F64.MaxValue;
-                var s = _radius ?? FixMath.F64.MaxValue;
-                var f = _radius ?? FixMath.F64.MaxValue;
-                r.Serialize(recorder);
-                s.Serialize(recorder);
-                f.Serialize(recorder);
-            }
-            else
-            {
-                var r = FixMath.F64.Zero;
-                r.Serialize(recorder);
-                if (r == FixMath.F64.MaxValue)
-                    _radius = null;
-                else
-                    _radius = r;
-
-                var s = FixMath.F64.Zero;
-                s.Serialize(recorder);
-                if (s == FixMath.F64.MaxValue)
-                    _maxSpeed = null;
-                else
-                    _maxSpeed = s;
-
-                var f = FixMath.F64.Zero;
-                f.Serialize(recorder);
-                if (f == FixMath.F64.MaxValue)
-                    _maxForce = null;
-                else
-                    _maxForce = f;
-            }
+            _radius.Serialize(recorder);
+            _maxSpeed.Serialize(recorder);
+            _maxForce.Serialize(recorder);
+            _groupMask.Serialize(recorder);
+            _groupToAvoid.Serialize(recorder);
         }
 
         public double ExecuteTime(Recorder recorder)

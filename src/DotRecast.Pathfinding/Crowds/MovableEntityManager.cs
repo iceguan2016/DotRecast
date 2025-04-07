@@ -198,7 +198,13 @@ namespace Pathfinding.Crowds
             return false;
         }
 
-        public bool SetEntityParams(UniqueId inEntityId, FixMath.F64? radius, FixMath.F64? maxSpeed, FixMath.F64? maxForce)
+        public bool SetEntityParams(
+            UniqueId inEntityId, 
+            FixMath.F64? radius = null, 
+            FixMath.F64? maxSpeed = null, 
+            FixMath.F64? maxForce = null, 
+            int? groupMask = null,
+            int? groupToAvoid = null)
         {
             if (_isReplayControlMode)
                 return false;
@@ -214,6 +220,8 @@ namespace Pathfinding.Crowds
                 if (null != radius) movable.Radius = radius.Value;
                 if (null != maxSpeed) movable.MaxSpeed = maxSpeed.Value;
                 if (null != maxForce) movable.MaxForce = maxForce.Value;
+                if (null != groupMask) movable.GroupMask = groupMask.Value;
+                if (null != groupToAvoid) movable.GroupsToAvoid = groupToAvoid.Value;
                 return true;
             }
             return false;
