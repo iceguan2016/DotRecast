@@ -252,7 +252,16 @@ namespace Pathfinding.Crowds
             var entity = GetEntityById(inEntityId);
             if (entity is MovableEntity movable)
             {
-                if (null != radius) movable.Radius = radius.Value;
+                // 半径变化了需要重新创建物理体
+                if (null != radius && movable.Radius != radius.Value)
+                {
+                    movable.Radius = radius.Value;
+                    if (null != _physicsWorld)
+                    {
+                        movable.OnDestroyPhysicsState();
+                        movable.OnCreatePhysicsState();
+                    }
+                }
                 if (null != maxSpeed) movable.MaxSpeed = maxSpeed.Value;
                 if (null != maxForce) movable.MaxForce = maxForce.Value;
                 if (null != groupMask) movable.GroupMask = groupMask.Value;
