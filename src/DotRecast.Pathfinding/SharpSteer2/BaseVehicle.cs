@@ -8,6 +8,8 @@
 // you should have received as part of this distribution. The terms
 // are also available at http://www.codeplex.com/SharpSteer/Project/License.aspx.
 
+using FixMath;
+
 namespace SharpSteer2
 {
 	public abstract class BaseVehicle : LocalSpace, IVehicle
@@ -33,5 +35,7 @@ namespace SharpSteer2
         public abstract void AnnotationAvoidCloseNeighbor(IVehicle threat, FixMath.F64Vec3 avoidDirection, IVehicle.FAvoidNeighborInfo info);
         public abstract void AnnotationAvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture);
         public abstract void AnnotationAvoidNeighbor(IVehicle threat, Obstacles.PathIntersection intersection);
+
+        public abstract void AnnotationPathFollowing(F64Vec3 future, F64Vec3 onPath, F64Vec3 target, F64 outside);
     }
 }

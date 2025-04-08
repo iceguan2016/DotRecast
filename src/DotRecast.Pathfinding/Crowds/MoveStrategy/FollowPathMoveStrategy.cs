@@ -2,6 +2,7 @@
 using FixMath;
 using Pathfinding.Crowds.SteeringForce;
 using Pathfinding.Util;
+using SharpSteer2.Helpers;
 
 namespace Pathfinding.Crowds.MoveStrategy
 {
@@ -17,7 +18,8 @@ namespace Pathfinding.Crowds.MoveStrategy
         FlockCohesionForce _flockCohesionForce;
 
         FixMath.F64 _predictionAvoidIdleNeighborTime = FixMath.F64.FromDouble(0.05);
-
+        FixMath.F64 _applyTurnForceAngleCos = FixMath.F64.FromDouble(0.707);
+        FixMath.F64 _turnVelocityDurationTime = FixMath.F64.FromDouble(0.1);
         public FollowPathMoveStrategy(MovableEntity owner)
         {
             var template = owner.Template as TMovableEntityTemplate;
@@ -55,7 +57,6 @@ namespace Pathfinding.Crowds.MoveStrategy
             _flockCohesionForce.CohesionRadius = template.CohesionRadius;
             _flockCohesionForce.CohesionAngle = template.CohesionAngle;
             _flockCohesionForce.Weight = template.CohesionWeight;
-
         }
 
         public override bool Condition(MovableEntity owner)
@@ -133,10 +134,29 @@ namespace Pathfinding.Crowds.MoveStrategy
                 }
             }
 
-            var force = followPathForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce 
+            // 如果需要沿着路径走，加一个转向力，让单位尽快朝向路径移动
+            var turnVelocityForce = FixMath.F64Vec3.Zero;
+            if (followPathForce != FixMath.F64Vec3.Zero && null != owner.FollowPathLocation)
+            {
+                var dirTarget = (owner.FollowPathLocation.Value - owner.Position).SetYtoZero().GetSafeNormal();
+                var dirVelocity = owner.Velocity.GetSafeNormal();
+                var cos = dirTarget.Dot(dirVelocity);
+                if (cos <= _applyTurnForceAngleCos)
+                {
+                    var targetVelocity = dirTarget * owner.Speed;
+                    if (targetVelocity != FixMath.F64Vec3.Zero)
+                    {
+                        var accel = (targetVelocity - owner.Velocity) / _turnVelocityDurationTime;
+                        turnVelocityForce = accel * owner.Mass;
+                    }
+                }
+            }
+
+            var force = followPathForce + turnVelocityForce + avoidIdleForce + avoidObstacleForce + forwardMoveForce 
                 + flockSeparationForce + flockAlignmentForce + flockCohesionForce;
 
             owner._debugVec3Items[(int)eDebugVec3Item.Velocity] = owner.Velocity;
+            owner._debugVec3Items[(int)eDebugVec3Item.TurnVelocityForce] = turnVelocityForce;
             owner._debugVec3Items[(int)eDebugVec3Item.ForwardMoveForce] = forwardMoveForce;
             owner._debugVec3Items[(int)eDebugVec3Item.PathFollowForce] = followPathForce;
             owner._debugVec3Items[(int)eDebugVec3Item.AvoidNeighborForce] = avoidIdleForce;

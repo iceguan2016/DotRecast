@@ -9,14 +9,17 @@ using Pathfinding.Crowds;
 using Pathfinding.Util;
 using Pathfinding.Crowds.AvoidStrategy;
 using Pathfinding.Crowds.MoveStrategy;
+using System.Security.Cryptography;
 
 namespace Pathfinding.Crowds
 {
     public enum eDebugVec3Item
     { 
         Velocity = 0,
+        TurnVelocityForce,
         ForwardMoveForce,
         PathFollowForce,
+        PathFollowTarget,
         AvoidNeighborForce,
         AvoidObstacleForce,
         FlockSeparationForce,
@@ -189,6 +192,7 @@ namespace Pathfinding.Crowds
                 targetLocation = value;
             }
         }
+        internal FixMath.F64Vec3? FollowPathLocation { get; private set; }
 
         // Debug
         public MovableEntityDebuger Debuger { get; private set; }
@@ -554,7 +558,7 @@ namespace Pathfinding.Crowds
 
                 // 6. draw vectors
                 var velocityRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxSpeed);
-                var forceRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxForce);
+                var forceRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxForce / 10);
                 var clampRange = new FixMath.F64Vec2(FixMath.F64.Zero, Radius * 3);
 
                 if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.Velocity]) 
@@ -563,6 +567,8 @@ namespace Pathfinding.Crowds
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.ForwardMoveForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray10, FixMath.F64.One);
                 if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.PathFollowForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.PathFollowForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray20, FixMath.F64.One);
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.PathFollowTarget])
+                    annotation.SolidCube(_debugVec3Items[(int)eDebugVec3Item.PathFollowTarget], FixMath.F64Vec3.FromFloat(0.2f, 0.2f, 0.2f), Colors.Gray20, FixMath.F64.One);
                 if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.AvoidNeighborForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.AvoidNeighborForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray30, FixMath.F64.One);
                 if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.AvoidObstacleForce])
@@ -575,6 +581,9 @@ namespace Pathfinding.Crowds
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.FlockCohesionForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray70, FixMath.F64.One);
                 if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.TotalSteerForce])
                     drawVec3(_debugVec3Items[(int)eDebugVec3Item.TotalSteerForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray80, FixMath.F64.One);
+                if (TMovableEntityTemplate.DebugVec3Toggles[(int)eDebugVec3Item.TurnVelocityForce])
+                    drawVec3(_debugVec3Items[(int)eDebugVec3Item.TurnVelocityForce], FixMath.F64.FromFloat(0.0f), forceRange, clampRange, Colors.Gray90, FixMath.F64.One);
+
             }
         }
 
@@ -880,9 +889,14 @@ namespace Pathfinding.Crowds
         {
         }
 
-        public override void AnnotationAvoidNeighbor(IVehicle threat, SharpSteer2.Obstacles.PathIntersection intersection) 
+        public override void AnnotationAvoidNeighbor(IVehicle threat, SharpSteer2.Obstacles.PathIntersection intersection)
         {
         }
 
+        public override void AnnotationPathFollowing(FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside)
+        {
+            FollowPathLocation = target;
+            _debugVec3Items[(int)eDebugVec3Item.PathFollowTarget] = target;
+        }
     }
 }

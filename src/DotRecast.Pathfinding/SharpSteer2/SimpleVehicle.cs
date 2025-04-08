@@ -291,5 +291,6 @@ namespace SharpSteer2
         public override void AnnotationAvoidCloseNeighbor(IVehicle other, FixMath.F64 additionalDistance) { }
         public override void AnnotationAvoidNeighbor(IVehicle threat, FixMath.F64 steer, FixMath.F64Vec3 ourFuture, FixMath.F64Vec3 threatFuture) { }
         public override void AnnotationAvoidNeighbor(IVehicle threat, Obstacles.PathIntersection intersection) { }
+        public override void AnnotationPathFollowing(FixMath.F64Vec3 future, FixMath.F64Vec3 onPath, FixMath.F64Vec3 target, FixMath.F64 outside) { }
     }
 }

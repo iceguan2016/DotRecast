@@ -278,7 +278,7 @@ public class TestFixedCrowdTool : IRcToolable
     }
 
     // Crowd entity interface
-    public UniqueId AddCrowdEntity(double x, double y)
+    public UniqueId AddCrowdEntity(double x, double y, int groupId = 1)
     {
         var template = MovableEntityTemplates[_templateIndex];
         var tid = UniqueId.FromName($"Movable r:{template.Radius} hash:{template.GetHashCode()}");
@@ -300,7 +300,12 @@ public class TestFixedCrowdTool : IRcToolable
             // AnnotationService = _annotationServerice,
         };
 
-        return _entityManager.CreateEntity(Params);
+        var entityId = _entityManager.CreateEntity(Params);
+        // 设置group
+        var groupMask = 1 << groupId;
+        var groupsToAvoid = 1 << groupId;
+        _entityManager.SetEntityParams(entityId, null, null, null, groupMask, groupsToAvoid);
+        return entityId;
     }
 
     public void RemoveCrowdEntity(UniqueId InEntityId)

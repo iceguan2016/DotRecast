@@ -113,6 +113,8 @@ namespace Pathfinding.Crowds
             var onPathBoundary = future + boundaryOffset;
             Line(onPath, onPathBoundary, Colors.DarkOrange, FixMath.F64.One);
             Line(onPathBoundary, future, Colors.LightOrange, FixMath.F64.One);
+
+            vehicle.AnnotationPathFollowing(future, onPath, target, outside);
         }
 
         public void AvoidCloseNeighbor(IVehicle vehicle, IVehicle other, FixMath.F64 additionalDistance)
