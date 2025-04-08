@@ -22,6 +22,7 @@ using Pathfinding.Main;
 using System.IO;
 using System.Threading.Channels;
 using DotRecast.Recast.Demo.UI;
+using System.Collections.Immutable;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -604,6 +605,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
     private TestDaedalusToolMode m_mode = TestDaedalusToolMode.ADD_OBSTACLE;
     private int m_modeIdx = TestDaedalusToolMode.ADD_OBSTACLE.Idx;
 
+    static RcVec3f DEFAULT_TERRAIN_HALF_SIZE = new RcVec3f(50.0f, 5.0f, 50.0f);
+
     public IRcToolable GetTool()
     {
         return _tool;
@@ -752,9 +755,11 @@ public class TestFixedCrowdSampleTool : ISampleTool
     {
         var dd = renderer.GetDebugDraw();
 
-        var geom = _sample.GetInputGeom();
-        var bound_min = geom.GetMeshBoundsMin();
-        var bound_max = geom.GetMeshBoundsMax();
+        //var geom = _sample.GetInputGeom();
+        //var bound_min = geom.GetMeshBoundsMin();
+        //var bound_max = geom.GetMeshBoundsMax();
+        var bound_min = new RcVec3f(-DEFAULT_TERRAIN_HALF_SIZE.X, -DEFAULT_TERRAIN_HALF_SIZE.Y, -DEFAULT_TERRAIN_HALF_SIZE.Z);
+        var bound_max = new RcVec3f(DEFAULT_TERRAIN_HALF_SIZE.X, DEFAULT_TERRAIN_HALF_SIZE.Y, DEFAULT_TERRAIN_HALF_SIZE.Z);
 
         if (_draw == null && _tool.EntityManager != null)
         {
@@ -930,9 +935,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
         if (ImGui.Button("Create Entity Manager"))
         {
-            var geom = _sample.GetInputGeom();
-            var bound_min = geom.GetMeshBoundsMin();
-            var bound_max = geom.GetMeshBoundsMax();
+            var bound_min = new RcVec3f(-DEFAULT_TERRAIN_HALF_SIZE.X, -DEFAULT_TERRAIN_HALF_SIZE.Y, -DEFAULT_TERRAIN_HALF_SIZE.Z);
+            var bound_max = new RcVec3f(DEFAULT_TERRAIN_HALF_SIZE.X, DEFAULT_TERRAIN_HALF_SIZE.Y, DEFAULT_TERRAIN_HALF_SIZE.Z);
 
             var bound_center = (bound_min + bound_max) * 0.5f;
 
@@ -1245,5 +1249,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
         if (null != _tool) _tool.Destroy();
 
         _tool = new TestFixedCrowdTool();
+
+        // 默认不设置Mesh
+        //_sample.Update(null, ImmutableArray<RcBuilderResult>.Empty, null);
     }
 }
