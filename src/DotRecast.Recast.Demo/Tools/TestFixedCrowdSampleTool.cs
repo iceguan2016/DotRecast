@@ -190,6 +190,17 @@ public class TestFixedCrowdTool : IRcToolable
         }
     }
 
+    public void Stop() 
+    {
+        if (_entityManager != null)
+        {
+            _entityManager.UnInitialize();
+            _entityManager = null;
+        }
+
+        PathfindingMoudle.ShutdownModule();
+    }
+
     void AddRandomObstacle(int totalCount, double mapWidth, double mapHeight)
     {
         // populate mesh with many square objects
@@ -1070,8 +1081,19 @@ public class TestFixedCrowdSampleTool : ISampleTool
         ImGui.RadioButton(eSimulationMode.Normal.ToString(), ref simModeIndex, (int)eSimulationMode.Normal);
         ImGui.RadioButton(eSimulationMode.Playback.ToString(), ref simModeIndex, (int)eSimulationMode.Playback);
         ImGui.RadioButton(eSimulationMode.Replay.ToString(), ref simModeIndex, (int)eSimulationMode.Replay);
-        Debug.SetSimlationMode((eSimulationMode)simModeIndex);
+        
         ImGui.NewLine();
+
+        // 切换模式，重置EntityManager
+        if (simModeIndex != (int)Debug.GetSimlationMode())
+        {
+            if (null != _tool)
+            {
+                _tool.Stop();
+            }
+
+            Debug.SetSimlationMode((eSimulationMode)simModeIndex);
+        }
 
         if (Debug.IsSimulationMode(eSimulationMode.Normal))
         {
