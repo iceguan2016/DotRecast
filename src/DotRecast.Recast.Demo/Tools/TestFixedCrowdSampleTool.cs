@@ -19,6 +19,9 @@ using Pathfinding.Triangulation.AI;
 using Volatile;
 using FixMath.NET;
 using Pathfinding.Main;
+using System.IO;
+using System.Threading.Channels;
+using DotRecast.Recast.Demo.UI;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -945,39 +948,64 @@ public class TestFixedCrowdSampleTool : ISampleTool
         if (!_tool.EntityManager.IsReplaying())
         {
             // 列出最新的录像文件
-            var fileList = Debug.GetLatestRecordFiles(5);
-            if (fileList != null)
+            //var fileList = Debug.GetLatestRecordFiles(5);
+            //if (fileList != null)
+            //{
+            //    var CurrItemIndex = fileList.FindIndex(file => file.Name == Debug.ReplayFileName);
+
+            //    if (ImGui.BeginCombo("Files", CurrItemIndex != -1 ? fileList[CurrItemIndex].Name : ""))
+            //    {
+            //        for (int n = 0; n < fileList.Count; n++)
+            //        {
+            //            bool is_selected = (CurrItemIndex == n);
+            //            if (ImGui.Selectable(fileList[n].Name, is_selected))
+            //                CurrItemIndex = n;
+            //            if (is_selected)
+            //                ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
+            //        }
+            //    }
+            //    ImGui.EndCombo();
+
+            //    if (CurrItemIndex != -1)
+            //    {
+            //        Debug.ReplayFileName = fileList[CurrItemIndex].Name;
+            //    }
+            //    else
+            //    {
+            //        Debug.ReplayFileName = "";
+            //    }
+            //}
+
+            ImGui.Text("Input Replay File");
+            ImGui.Separator();
+
+            const string strLoadReplayFile = "Load Replay File...";
+            if (ImGui.Button(strLoadReplayFile))
             {
-                var CurrItemIndex = fileList.FindIndex(file => file.Name == Debug.ReplayFileName);
-
-                if (ImGui.BeginCombo("Files", CurrItemIndex != -1 ? fileList[CurrItemIndex].Name : ""))
-                {
-                    for (int n = 0; n < fileList.Count; n++)
-                    {
-                        bool is_selected = (CurrItemIndex == n);
-                        if (ImGui.Selectable(fileList[n].Name, is_selected))
-                            CurrItemIndex = n;
-                        if (is_selected)
-                            ImGui.SetItemDefaultFocus();   // 设置选中项为默认焦点
-                    }
-                }
-                ImGui.EndCombo();
-
-                if (CurrItemIndex != -1)
-                {
-                    Debug.ReplayFileName = fileList[CurrItemIndex].Name;
-                }
-                else
-                {
-                    Debug.ReplayFileName = "";
-                }
+                ImGui.OpenPopup(strLoadReplayFile);
             }
+
+            bool loadReplayFilePopup = true;
+            if (ImGui.BeginPopupModal(strLoadReplayFile, ref loadReplayFilePopup, ImGuiWindowFlags.NoTitleBar))
+            {
+                var picker = ImFilePicker.GetFilePicker(strLoadReplayFile, Path.Combine(Environment.CurrentDirectory), ".record");
+                if (picker.Draw())
+                {
+                    Debug.RecordRootDir = picker.CurrentFolder;
+                    Debug.ReplayFileName = picker.SelectedFile;
+                    ImFilePicker.RemoveFilePicker(strLoadReplayFile);
+                }
+
+                ImGui.EndPopup();
+            }
+
+            ImGui.LabelText("Replay File", Debug.ReplayFileName);
 
             if (ImGui.Button("StartReplay"))
             {
                 if (Debug.ReplayFileName != "")
                 {
-                    _tool.EntityManager.StartReplay(Debug.RecordRootDir + "/" + Debug.ReplayFileName);
+                    _tool.EntityManager.StartReplay(Debug.ReplayFileName);
                 }
             }
         }
