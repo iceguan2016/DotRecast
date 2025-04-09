@@ -381,7 +381,7 @@ namespace Pathfinding.Triangulation.AI
                     SearchMinHeap.Push(NextNode);
                     ++CurrSearchNodeNum;
                 }
-                else if (IsClosed)
+                else if (NextNode.IsOpen())
                 {
                     var NewF = newG + newH;
                     if (NewF < NextNode.GetFCost())
