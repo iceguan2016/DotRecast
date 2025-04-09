@@ -31,6 +31,8 @@ namespace Pathfinding.Crowds
         public bool IsReplaying { get { return WorkMode == eWorkMode.Replay && null != RecordReader; } }
         public bool IsPauseReplay { get; set; }
         public FixMath.F64 ReplaySpeed { get; set; }
+        public int CurrReplayFrame { get; private set; }
+        public int MaxReplayFrame { get; private set; }
 
         double _tickElapsedTime = 0.0;
 
@@ -82,6 +84,9 @@ namespace Pathfinding.Crowds
 
         public bool StopRecord()
         {
+            if (null != _replayOperations)
+                WriteReplayOperations(_replayOperations.Count);
+
             if (null != RecordWriter)
                 RecordWriter.Close();
             if (null != _recordStream)
@@ -104,6 +109,11 @@ namespace Pathfinding.Crowds
 
                 var operation = IRecordOperation.DeserializeOperation((eRecordOperation)op, this);
                 if (null == operation) break;
+                // 统计帧数
+                if (operation is OperationTick)
+                { 
+                    ++MaxReplayFrame;
+                }
                 _replayOperations.Enqueue(operation);
             }
         }
@@ -151,6 +161,8 @@ namespace Pathfinding.Crowds
 
                 // 设置基本参数
                 ReplaySpeed = FixMath.F64.One;
+                CurrReplayFrame = 0;
+                MaxReplayFrame = 0;
                 IsPauseReplay = false;
                 _tickElapsedTime = 0.0;
             }
@@ -163,9 +175,6 @@ namespace Pathfinding.Crowds
 
         public bool StopReplay()
         {
-            if (null != _replayOperations)
-                WriteReplayOperations(_replayOperations.Count);
-
             if (null != RecordReader)
                 RecordReader.Close();
             if (null != _recordStream)
@@ -199,6 +208,10 @@ namespace Pathfinding.Crowds
                     var executeTime = operation.ExecuteTime(this);
                     if (_tickElapsedTime >= executeTime)
                     {
+                        if (operation is OperationTick)
+                        {
+                            ++CurrReplayFrame;
+                        }
                         _tickElapsedTime -= executeTime;
                         _replayOperations.Dequeue().Execute(this);
                     }

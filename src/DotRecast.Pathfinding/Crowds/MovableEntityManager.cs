@@ -89,6 +89,8 @@ namespace Pathfinding.Crowds
         public Volatile.VoltWorld PhysicsWorld { get { return _physicsWorld; } }
 
         public Map Map { get { return _map; } }
+
+        public Recorder Recorder { get { return _recorder; } }
         public IAnnotationService AnnotationService { get; set; }
 
         private FInitializeParams initializeParams;

@@ -25,6 +25,8 @@ namespace Pathfinding.Crowds
 
         Map Map { get; }
 
+        Recorder Recorder { get; }
+
         IAnnotationService AnnotationService { get; set; }
 
         // initialize and uninitialized function

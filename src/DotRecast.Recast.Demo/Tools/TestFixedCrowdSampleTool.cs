@@ -1047,7 +1047,10 @@ public class TestFixedCrowdSampleTool : ISampleTool
             }
 
             ImGui.LabelText("ReplaySpeed", $"{_tool.EntityManager.ReplaySpeed}");
-            ImGui.LabelText("ReplayFrame", $"{_tool.EntityManager.FrameNo}");
+
+            var currFrame = _tool.EntityManager.Recorder.CurrReplayFrame;
+            var maxFrame = _tool.EntityManager.Recorder.MaxReplayFrame;
+            ImGui.LabelText("ReplayFrame", $"{currFrame}/{maxFrame}");
 
             if (ImGui.Button("x0.5"))
                 _tool.EntityManager.ReplaySpeed = FixMath.F64.Half;
