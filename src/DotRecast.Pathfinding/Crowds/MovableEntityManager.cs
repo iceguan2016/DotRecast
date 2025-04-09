@@ -364,8 +364,8 @@ namespace Pathfinding.Crowds
 
         public bool UnInitialize()
         {
-            if (_isReplayControlMode)
-                return false;
+            //if (_isReplayControlMode)
+            //    return false;
 
             if (!_initialized) return true;
 

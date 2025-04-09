@@ -10,6 +10,7 @@ using Pathfinding.Util;
 using Pathfinding.Crowds.AvoidStrategy;
 using Pathfinding.Crowds.MoveStrategy;
 using System.Security.Cryptography;
+using System.Linq;
 
 namespace Pathfinding.Crowds
 {
@@ -200,7 +201,10 @@ namespace Pathfinding.Crowds
 
         // route for path following (waypoints and legs)
         public PolylinePathway Pathway { get; private set; }
-        
+        private FixMath.F64  _elpasedTimeSinceLastFindPath = FixMath.F64.Zero;
+        static FixMath.F64 CHECK_REPLANE_PATH_TIME_INTERVEL = FixMath.F64.FromDouble(0.5f);
+        static FixMath.F64 CHECK_REPLANE_PATH_DISTANCE = FixMath.F64.FromDouble(3.0f);
+
         // local boundary
         public static readonly int  MaxBoundarySegmentNum = 10;
         private BoundarySegement[]  _boundarySegements = null;
@@ -422,6 +426,23 @@ namespace Pathfinding.Crowds
             // 更新移动策略
             updateMoveStrategy();
 
+            var isPathDirty = false;
+            _elpasedTimeSinceLastFindPath += inDeltaTime;
+            // 检查路径的合理性(可能出生点就是非法的，导致寻路无效)
+            if (_elpasedTimeSinceLastFindPath >= CHECK_REPLANE_PATH_TIME_INTERVEL)
+            {
+                if (null == Pathway)
+                {
+                    isPathDirty = true;
+                }
+                else if (Pathway.PointCount > 0)
+                {
+                    var last = Pathway.Points.Last();                    
+                    var distance = FixMath.F64Vec3.DistanceFast(last, targetLocation.Value);
+                    isPathDirty = distance >= CHECK_REPLANE_PATH_DISTANCE;
+                }
+            }
+
             // check if you are too far from the path
             if (null != Pathway)
             {
@@ -439,9 +460,10 @@ namespace Pathfinding.Crowds
             }
 
             // update pathway, check destination still valid?
-            if (isTargetDirty && null != PathwayQuerier && null != TargetLocation)
+            if ((isTargetDirty || isPathDirty) && null != PathwayQuerier && null != TargetLocation)
             {
                 isTargetDirty = false;
+                _elpasedTimeSinceLastFindPath = FixMath.F64.Zero;
                 Pathway = PathwayQuerier.FindPath(this, targetLocation.Value);
             }
 

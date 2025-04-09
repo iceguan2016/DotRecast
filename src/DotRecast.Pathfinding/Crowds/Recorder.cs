@@ -83,7 +83,8 @@ namespace Pathfinding.Crowds
         }
 
         public bool StopRecord()
-        {
+        { 
+            if (!IsRecording) return false;
             if (null != _replayOperations)
                 WriteReplayOperations(_replayOperations.Count);
 
@@ -175,6 +176,7 @@ namespace Pathfinding.Crowds
 
         public bool StopReplay()
         {
+            if (!IsReplaying) return false;
             if (null != RecordReader)
                 RecordReader.Close();
             if (null != _recordStream)

@@ -199,6 +199,8 @@ public class TestFixedCrowdTool : IRcToolable
     {
         if (_entityManager != null)
         {
+            _entityManager.StopRecord();
+            _entityManager.StopReplay();
             _entityManager.UnInitialize();
             _entityManager = null;
         }
