@@ -228,46 +228,46 @@ namespace Pathfinding.Triangulation.AI
             private List<SearchNode> HeapNodes = new List<SearchNode>();
         }
 
-        private List<SearchNode> UsedNodeList = new List<SearchNode>();
-        private Dictionary<Face, SearchNode> SearchNodeMap = new Dictionary<Face, SearchNode>();
-        private Stack SearchNodeCache = new Stack();
-        private int SearchState = 0;
-        private int MaxSearchNodeNum = 1024;
-        private int CurrSearchNodeNum = 0;
-        private SearchNode StartNode = null;
-        private SearchNode GoalNode = null;
-        private SearchNode MinNode = null;
-        private FixMath.F64Vec2 StartPoint = FixMath.F64Vec2.Zero;
-        private FixMath.F64Vec2 GoalPoint = FixMath.F64Vec2.Zero;
+        private List<SearchNode> _usedNodeList = new List<SearchNode>();
+        private Dictionary<Face, SearchNode> _searchNodeMap = new Dictionary<Face, SearchNode>();
+        private Stack _searchNodeCache = new Stack();
+        private int _searchState = 0;
+        private int _maxSearchNodeNum = 1024;
+        private int _currSearchNodeNum = 0;
+        private SearchNode _startNode = null;
+        private SearchNode _goalNode = null;
+        private SearchNode _minNode = null;
+        private FixMath.F64Vec2 _startPoint = FixMath.F64Vec2.Zero;
+        private FixMath.F64Vec2 _goalPoint = FixMath.F64Vec2.Zero;
 
-        private SearchHeap SearchMinHeap = new SearchHeap();
+        private SearchHeap _searchMinHeap = new SearchHeap();
 
         // 归还所有当前在使用的Node
         void freeAllSearchNode()
         {
-            for (int i = 0; i < UsedNodeList.Count; ++i)
+            for (int i = 0; i < _usedNodeList.Count; ++i)
             {
-                SearchNodeCache.Push(UsedNodeList[i]);
+                _searchNodeCache.Push(_usedNodeList[i]);
             }
 
-            UsedNodeList.Clear();
-            SearchNodeMap.Clear();
+            _usedNodeList.Clear();
+            _searchNodeMap.Clear();
         }
 
         SearchNode findOrCreateSearchNode(Face face)
         {
             // 优先在HashTable中查找
             SearchNode node = null;
-            if (SearchNodeMap.TryGetValue(face, out node))
+            if (_searchNodeMap.TryGetValue(face, out node))
             { 
                 return node;
             }
             else
             {
                 // 检查Cache中是否有空闲的Node
-                if (SearchNodeCache.Count > 0)
+                if (_searchNodeCache.Count > 0)
                 {
-                    node = SearchNodeCache.Pop() as SearchNode;
+                    node = _searchNodeCache.Pop() as SearchNode;
                 }
                 else
                 {
@@ -282,53 +282,53 @@ namespace Pathfinding.Triangulation.AI
                 node.SetHeapIndex(-1);
                 node.SetFace(face);
 
-                UsedNodeList.Add(node);
-                SearchNodeMap.Add(face, node);
+                _usedNodeList.Add(node);
+                _searchNodeMap.Add(face, node);
             }
             return node;
         }
 
         void updateNode(
-            SearchNode InNextNode,
-            SearchNode InPrevNode,
+            SearchNode nextNode,
+            SearchNode prevNode,
             FixMath.F64 newG,
             FixMath.F64 newH)
         {
-            InNextNode.SetPrevNode(InPrevNode);
-            InNextNode.SetHCost(newH);
-            InNextNode.SetGCost(newG);
-            InNextNode.SetFCost(newG + newH);
-            InNextNode.SetSearchState(SearchState | (int)NodeSearchState.NODE_STATE_OPEN);
+            nextNode.SetPrevNode(prevNode);
+            nextNode.SetHCost(newH);
+            nextNode.SetGCost(newG);
+            nextNode.SetFCost(newG + newH);
+            nextNode.SetSearchState(_searchState | (int)NodeSearchState.NODE_STATE_OPEN);
         }
 
-        SearchNode IterateNodes()
+        SearchNode iterateNodes()
         {
-            var CurNode = SearchMinHeap.Pop();
-            CurNode.SetSearchState(SearchState | (int)NodeSearchState.NODE_STATE_CLOSE);
+            var curNode = _searchMinHeap.Pop();
+            curNode.SetSearchState(_searchState | (int)NodeSearchState.NODE_STATE_CLOSE);
 
-            if (CurNode == GoalNode)
+            if (curNode == _goalNode)
             {
-                MinNode = CurNode;
-                return CurNode;
+                _minNode = curNode;
+                return curNode;
             }
 
             // 检查是否超过最大搜索节点数目
-            if (CurrSearchNodeNum >= MaxSearchNodeNum)
+            if (_currSearchNodeNum >= _maxSearchNodeNum)
             {
-                return CurNode;
+                return curNode;
             }
 
-            if (CurNode.GetHCost() < MinNode.GetHCost())
+            if (curNode.GetHCost() < _minNode.GetHCost())
             {
-                MinNode = CurNode;
+                _minNode = curNode;
             }
 
-            IterateNodeNeighbors(CurNode);
+            iterateNodeNeighbors(curNode);
 
-            return CurNode;
+            return curNode;
         }
 
-        void IterateNodeNeighbors(SearchNode InCurNode)
+        void iterateNodeNeighbors(SearchNode InCurNode)
         {
             Edge innerEdge;
             Face neighbourFace;
@@ -350,11 +350,11 @@ namespace Pathfinding.Triangulation.AI
                     continue;
                 }
 
-                var NextNode = findOrCreateSearchNode(neighbourFace);
+                var nextNode = findOrCreateSearchNode(neighbourFace);
 
-                bool IsCurrent = NextNode.GetSearchState() >= SearchState;
-                bool IsClosed = NextNode.IsClose();
-                bool IsTarget = NextNode == GoalNode;
+                bool isCurrent = nextNode.GetSearchState() >= _searchState;
+                bool isClosed = nextNode.IsClose();
+                bool isTarget = nextNode == _goalNode;
 
                 // If we found an unexplored node, add it to the open list.
                 // Otherwise, if the new cost is lower, refresh the cost of the node 
@@ -367,34 +367,34 @@ namespace Pathfinding.Triangulation.AI
                 var newG = InCurNode.GetGCost() + FixMath.F64Vec2.LengthFast(distancePoint);
 
                 var newH = FixMath.F64.Zero;
-                if (!IsTarget)
+                if (!isTarget)
                 {
-                    distancePoint = GoalPoint - midPoint;
+                    distancePoint = _goalPoint - midPoint;
                     newH = FixMath.F64Vec2.LengthFast(distancePoint);
                 }
 
                 var fillDatas = false;
-                if (!IsCurrent)
+                if (!isCurrent)
                 {
                     fillDatas = true;
-                    updateNode(NextNode, InCurNode, newG, newH);
-                    SearchMinHeap.Push(NextNode);
-                    ++CurrSearchNodeNum;
+                    updateNode(nextNode, InCurNode, newG, newH);
+                    _searchMinHeap.Push(nextNode);
+                    ++_currSearchNodeNum;
                 }
-                else if (NextNode.IsOpen())
+                else if (nextNode.IsOpen())
                 {
                     var NewF = newG + newH;
-                    if (NewF < NextNode.GetFCost())
+                    if (NewF < nextNode.GetFCost())
                     {
                         fillDatas = true;
-                        updateNode(NextNode, InCurNode, newG, newH);
+                        updateNode(nextNode, InCurNode, newG, newH);
                     }
                 }
 
                 if (fillDatas)
                 {
-                    NextNode.EntryEdge = innerEdge;
-                    NextNode.EntryPoint = midPoint;
+                    nextNode.EntryEdge = innerEdge;
+                    nextNode.EntryPoint = midPoint;
                 }
             }
         }
@@ -412,10 +412,6 @@ namespace Pathfinding.Triangulation.AI
             Intersection loc;
             Edge locEdge;
             Vertex locVertex;
-            FixMath.F64 distance;
-            FixMath.F64Vec2 p1;
-            FixMath.F64Vec2 p2;
-            FixMath.F64Vec2 p3;
             //
             loc = Geom2D.locatePosition(fromX, fromY, _mesh);
             {
@@ -458,66 +454,66 @@ namespace Pathfinding.Triangulation.AI
             // 清理上一次使用的所有节点
             freeAllSearchNode();
 
-            CurrSearchNodeNum = 0;
-            MaxSearchNodeNum = maxSearchNodes;
-            SearchMinHeap.Reset();
-            SearchState += (int)NodeSearchState.NODE_STATE_SEQUENCE;
+            _currSearchNodeNum = 0;
+            _maxSearchNodeNum = maxSearchNodes;
+            _searchMinHeap.Reset();
+            _searchState += (int)NodeSearchState.NODE_STATE_SEQUENCE;
 
-            this.StartNode = findOrCreateSearchNode(fromFace);
-            this.GoalNode = findOrCreateSearchNode(toFace);
-            if (StartNode == null || GoalNode == null)
+            this._startNode = findOrCreateSearchNode(fromFace);
+            this._goalNode = findOrCreateSearchNode(toFace);
+            if (_startNode == null || _goalNode == null)
             {
                 return;
             }
 
-            StartNode.EntryEdge = null;
-            StartNode.EntryPoint = new FixMath.F64Vec2(fromX, fromY);
+            _startNode.EntryEdge = null;
+            _startNode.EntryPoint = new FixMath.F64Vec2(fromX, fromY);
 
             var dist = FixMath.F64.Sqrt((toX - fromX) * (toX - fromX) + (toY - fromY) * (toY - fromY));
             // 压入开始Node到Heap中，并初始化
-            StartNode.SetHCost(dist);
-            StartNode.SetFCost(dist);
-            StartNode.SetSearchState(SearchState | (int)NodeSearchState.NODE_STATE_OPEN);
-            SearchMinHeap.Push(StartNode);
+            _startNode.SetHCost(dist);
+            _startNode.SetFCost(dist);
+            _startNode.SetSearchState(_searchState | (int)NodeSearchState.NODE_STATE_OPEN);
+            _searchMinHeap.Push(_startNode);
 
             // 初始化当前最小的节点
-            MinNode = StartNode;
-            StartPoint = new FixMath.F64Vec2(fromX, fromY);
-            GoalPoint = new FixMath.F64Vec2(toX, toY);
+            _minNode = _startNode;
+            _startPoint = new FixMath.F64Vec2(fromX, fromY);
+            _goalPoint = new FixMath.F64Vec2(toX, toY);
 
-            var HasFullPath = false;
-            var HasPartPath = false;
-            var LoopCount = 0;
-            const int MaxLoopCount = 5000;
-            while (!SearchMinHeap.IsEmpty())
+            var hasFullPath = false;
+            var hasPartPath = false;
+            var loopCount = 0;
+            const int maxLoopCount = 5000;
+            while (!_searchMinHeap.IsEmpty())
             {
-                if (++LoopCount >= MaxLoopCount)
+                if (++loopCount >= maxLoopCount)
                 {
-                    Debug.Assert(false, string.Format("FindPath LoopCount:{0}", LoopCount));
+                    Debug.Assert(false, string.Format("FindPath LoopCount:{0}", loopCount));
                     break;
                 }
 
-                if (CurrSearchNodeNum >= MaxSearchNodeNum)
+                if (_currSearchNodeNum >= _maxSearchNodeNum)
                 {
                     break;
                 }
 
-                var CurNode = IterateNodes();
+                var CurNode = iterateNodes();
 
-                HasFullPath = CurNode == GoalNode;
-                HasPartPath = MinNode != StartNode;
+                hasFullPath = CurNode == _goalNode;
+                hasPartPath = _minNode != _startNode;
 
-                if (HasFullPath)
+                if (hasFullPath)
                 {
                     break;
                 }
             }
 
-            if (MinNode == null)
+            if (_minNode == null)
                 return;  // else we build the path  ;
-            isPartial = MinNode.GetFace() != toFace;
+            isPartial = _minNode.GetFace() != toFace;
 
-            var curNode = MinNode;
+            var curNode = _minNode;
             resultListFaces.Add(curNode.GetFace());
             while (curNode.GetFace() != fromFace)
             {
@@ -539,193 +535,6 @@ namespace Pathfinding.Triangulation.AI
         {
             return EFindPathResult.Failed;
         }
-
-        //public void findPath(FixMath.F64 fromX, FixMath.F64 fromY
-        //                    , FixMath.F64 toX, FixMath.F64 toY
-        //                    , int iterMaxTimes     // 最大迭代次数
-        //                    , List<Face> resultListFaces
-        //                    , List<Edge> resultListEdges
-        //                    , out bool isPartial) 
-        //{
-        //    //Debug.trace("findPath");
-        //    isPartial = false;
-        //    closedFaces = new Dictionary<Face, bool>();
-        //    sortedOpenedFaces = new List<Face>();
-        //    openedFaces = new Dictionary<Face, bool>();
-        //    entryEdges = new Dictionary<Face, Edge>();
-        //    entryX = new Dictionary<Face, FixMath.F64>();
-        //    entryY = new Dictionary<Face, FixMath.F64>();
-        //    scoreF = new Dictionary<Face, FixMath.F64>();
-        //    scoreG = new Dictionary<Face, FixMath.F64>();
-        //    scoreH = new Dictionary<Face, FixMath.F64>();
-        //    predecessor = new Dictionary<Face, Face>();
-        
-        //    Intersection loc;
-        //    Edge locEdge;
-        //    Vertex locVertex;
-        //    FixMath.F64 distance;
-        //    FixMath.F64Vec2 p1;
-        //    FixMath.F64Vec2 p2;
-        //    FixMath.F64Vec2 p3;
-        //    //
-        //    loc = Geom2D.locatePosition(fromX, fromY, _mesh);
-        //    {
-        //        if (loc is Intersection_EVertex v0)
-        //        {
-        //            locVertex = v0.vertex;
-        //            return;
-        //        }
-        //        else if (loc is Intersection_EEdge e0)
-        //        {
-        //            locEdge = e0.edge;
-        //            return;
-        //        }
-        //        else if (loc is Intersection_EFace f0)
-        //        {
-        //            fromFace = f0.face;
-        //        }
-        //    }
-            
-
-        //    loc = Geom2D.locatePosition(toX, toY, _mesh);
-        //    {
-        //        if (loc is Intersection_EVertex v1)
-        //        {
-        //            locVertex = v1.vertex;
-        //            toFace = locVertex._edge.get_leftFace();
-        //        }
-        //        else if (loc is Intersection_EEdge e1)
-        //        {
-        //            locEdge = e1.edge;
-        //            toFace = locEdge.get_leftFace();
-        //        }
-        //        else if (loc is Intersection_EFace f1)
-        //        {
-        //            toFace = f1.face;
-        //        }
-        //    }
-
-        //    /*
-        //    fromFace.colorDebug = 0xFF0000;
-        //    toFace.colorDebug = 0xFF0000;
-        //    Debug.trace( "from face: " + fromFace );
-        //    Debug.trace( "to face: " + toFace );
-        //    */
-
-        //    var iterTimes = 0;
-        //    sortedOpenedFaces.Add(fromFace);
-        //    entryEdges[fromFace] = null;
-        //    entryX[fromFace] = fromX;
-        //    entryY[fromFace] = fromY;
-        //    scoreG[fromFace] = FixMath.F64.Zero;
-        //    var dist = FixMath.F64.Sqrt((toX - fromX) * (toX - fromX) + (toY - fromY) * (toY - fromY));
-        //    scoreH[fromFace] = dist;
-        //    scoreF[fromFace] = dist;
-
-        //    Edge innerEdge;
-        //    Face neighbourFace;
-        //    var f = FixMath.F64.Zero;
-        //    var g = FixMath.F64.Zero;
-        //    var h = FixMath.F64.Zero;
-        //    var fromPoint = FixMath.F64Vec2.Zero;
-        //    var entryPoint = FixMath.F64Vec2.Zero;
-        //    var distancePoint = FixMath.F64Vec2.Zero;
-        //    var fillDatas = false;
-        //    while (true)
-        //    {
-        //        ++iterTimes;
-        //        // no path found
-        //        if (sortedOpenedFaces.Count == 0 || iterTimes >= iterMaxTimes)
-        //        {
-        //            //Debug.trace("AStar no path found");
-        //            //curFace = null;
-        //            break;
-        //        }  // we reached the target face  
-
-        //        curFace = sortedOpenedFaces[0];
-        //        sortedOpenedFaces.RemoveAt(0);
-        //        if (curFace == toFace)
-        //            break;
-        //        // we continue the search  
-        //        iterEdge.set_fromFace(curFace);
-        //        while ((innerEdge = iterEdge.next()) != null)
-        //        {
-        //            if (innerEdge._isConstrained)
-        //                continue;
-        //            neighbourFace = innerEdge.get_rightFace();
-        //            if (!closedFaces.TryGetValue(neighbourFace, out var closed) || !closed)
-        //            {
-        //                if (curFace != fromFace && _radius > 0 && !isWalkableByRadius(entryEdges[curFace], curFace, innerEdge))
-        //                {
-        //                    //                            Debug.trace("- NOT WALKABLE -");
-        //                    //                            Debug.trace( "from ", hxDaedalusEdge(__entryEdges[__curFace]).originVertex.id, hxDaedalusEdge(__entryEdges[__curFace]).destinationVertex.id );
-        //                    //                            Debug.trace( "to", innerEdge.originVertex.id, innerEdge.destinationVertex.id );
-        //                    //                            Debug.trace("----------------");
-        //                    continue;
-        //                }
-
-        //                fromPoint.X = entryX[curFace];
-        //                fromPoint.Y = entryY[curFace];
-        //                entryPoint.X = (innerEdge.get_originVertex()._pos.X + innerEdge.get_destinationVertex()._pos.X) / 2;
-        //                entryPoint.Y = (innerEdge.get_originVertex()._pos.Y + innerEdge.get_destinationVertex()._pos.Y) / 2;
-        //                distancePoint.X = entryPoint.X - toX;
-        //                distancePoint.Y = entryPoint.Y - toY;
-        //                h = FixMath.F64Vec2.LengthFast(distancePoint);
-        //                distancePoint.X = fromPoint.X - entryPoint.X;
-        //                distancePoint.Y = fromPoint.Y - entryPoint.Y;
-        //                g = scoreG[curFace] + FixMath.F64Vec2.LengthFast(distancePoint);
-        //                f = h + g;
-        //                fillDatas = false;
-        //                if (!openedFaces.TryGetValue(neighbourFace, out var open) || !open)
-        //                {
-        //                    sortedOpenedFaces.Add(neighbourFace);
-        //                    openedFaces[neighbourFace] = true;
-        //                    fillDatas = true;
-        //                }
-        //                else if (scoreF[neighbourFace] > f)
-        //                {
-        //                    fillDatas = true;
-        //                }
-        //                if (fillDatas)
-        //                {
-        //                    entryEdges[neighbourFace] = innerEdge;
-        //                    entryX[neighbourFace] = entryPoint.X;
-        //                    entryY[neighbourFace] = entryPoint.Y;
-        //                    scoreF[neighbourFace] = f;
-        //                    scoreG[neighbourFace] = g;
-        //                    scoreH[neighbourFace] = h;
-        //                    predecessor[neighbourFace] = curFace;
-        //                }
-        //            }
-        //        }  //  
-
-        //        openedFaces[curFace] = false;
-        //        closedFaces[curFace] = true;
-        //        sortedOpenedFaces.Sort(sortingFaces);
-        //    }  // if we didn't find a path  
-
-        //    if (curFace == null)
-        //        return;  // else we build the path  ;
-        //    isPartial = curFace != toFace;
-
-        //    resultListFaces.Add(curFace);
-        //    //curFace.colorDebug = 0x0000FF;
-        //    while (curFace != fromFace)
-        //    {
-        //        resultListEdges.Insert(0, entryEdges[curFace]);
-        //        //entryEdges[__curFace].colorDebug = 0xFFFF00;
-        //        //entryEdges[__curFace].oppositeEdge.colorDebug = 0xFFFF00;
-        //        curFace = predecessor[curFace];
-        //        //curFace.colorDebug = 0x0000FF;
-        //        resultListFaces.Insert(0, curFace);
-        //    }
-        //}
-
-        //// faces with low distance value are at the end of the array
-        //int sortingFaces(Face a, Face b)
-        //{
-        //    return scoreF[a].CompareTo(scoreG[b]);
-        //}
 
         bool isWalkableByRadius(Edge fromEdge, Face throughFace, Edge toEdge) 
         {

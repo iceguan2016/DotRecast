@@ -187,7 +187,7 @@ public class TestFixedCrowdTool : IRcToolable
 
             if (_entityManager.Initialize(param))
             {
-                AddRandomObstacle(10, param.MapBoundsMin, param.MapBoundsMax);
+                AddRandomObstacle(30, param.MapBoundsMin, param.MapBoundsMax);
 
                 _pathfinder = new PathFinder();
                 _pathfinder.set_mesh(_entityManager.Map.NavMesh);
