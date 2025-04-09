@@ -187,7 +187,7 @@ public class TestFixedCrowdTool : IRcToolable
 
             if (_entityManager.Initialize(param))
             {
-                AddRandomObstacle(1, mapWidth, mapHeight);
+                AddRandomObstacle(10, param.MapBoundsMin, param.MapBoundsMax);
 
                 _pathfinder = new PathFinder();
                 _pathfinder.set_mesh(_entityManager.Map.NavMesh);
@@ -206,13 +206,13 @@ public class TestFixedCrowdTool : IRcToolable
         PathfindingMoudle.ShutdownModule();
     }
 
-    void AddRandomObstacle(int totalCount, double mapWidth, double mapHeight)
+    void AddRandomObstacle(int totalCount, FixMath.F64Vec3 boundsMin, FixMath.F64Vec3 boundsMax)
     {
         // populate mesh with many square objects
         for (int i = 0; i < totalCount; ++i)
         {
-            var x = RandomRange(50, 600) / 600.0f * mapWidth;
-            var y = RandomRange(50, 600) / 600.0f * mapHeight;
+            var x = RandomRange(boundsMin.X.Double, boundsMax.X.Double);
+            var y = RandomRange(boundsMin.Z.Double, boundsMax.Z.Double);
 
             AddObstacle(x, y);
         }  // show result mesh on screen
@@ -1124,6 +1124,17 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
     }
 
+    void Layout_TestFindPath()
+    {
+        if (ImGui.InputInt("MaxIterTimes", ref _tool.TestPathIterTimes, 1, 10))
+        {
+            if (null != _tool.StartPoint && null != _tool.EndPoint)
+            {
+                _tool.TestFindPath(_tool.StartPoint.Value.x, _tool.StartPoint.Value.z, _tool.EndPoint.Value.x, _tool.EndPoint.Value.z, 0.5);
+            }
+        }
+    }
+
     public void Layout()
     {
         ImGui.Text($"Test Daedalus Tool Mode");
@@ -1159,6 +1170,11 @@ public class TestFixedCrowdSampleTool : ISampleTool
             }
 
             Debug.SetSimlationMode((eSimulationMode)simModeIndex);
+        }
+
+        if (m_mode == TestDaedalusToolMode.PATH_FINDER)
+        {
+            Layout_TestFindPath();
         }
 
         if (Debug.IsSimulationMode(eSimulationMode.Normal))
