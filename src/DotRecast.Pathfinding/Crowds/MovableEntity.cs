@@ -432,6 +432,11 @@ namespace Pathfinding.Crowds
                     isTargetDirty = true;
                 }
             }
+            else
+            {
+                // 直接朝向目标点移动
+                FollowPathLocation = targetLocation.Value;
+            }
 
             // update pathway, check destination still valid?
             if (isTargetDirty && null != PathwayQuerier && null != TargetLocation)
