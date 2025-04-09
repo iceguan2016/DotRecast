@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using System.Drawing;
 using Pathfinding.Triangulation.Data;
 using Pathfinding.Triangulation.Iterators;
 using Pathfinding.Util;
@@ -283,6 +284,70 @@ namespace Pathfinding.Triangulation.Math
             }
 
             return objectContainer;
+        }
+
+        public static Face nearestFace(FixMath.F64 x, FixMath.F64 y, Mesh mesh)
+        {
+            var loc = locatePosition(x, y, mesh);
+            return null;
+        }
+
+        public static FixMath.F64Vec2 closestPointOnSegment(FixMath.F64Vec2 point, FixMath.F64Vec2 start, FixMath.F64Vec2 end)
+        {
+            var ab = end - start;
+            var ap = point - start;
+            var dot_product_ab_ap = FixMath.F64Vec2.Dot(ab, ap);
+            var square_length_ab = FixMath.F64Vec2.LengthSqr(ab);
+            var t = dot_product_ab_ap / FixMath.F64.Max(square_length_ab, FixMath.F64.Epsilon);
+
+            if (t <= FixMath.F64.Zero)
+            {
+                return start; // 最近点是A
+            }
+            else if (t >= FixMath.F64.One)
+            {
+                return end; // 最近点是B
+            }
+            else
+            {
+                // 最近点在线段AB之间
+                return FixMath.F64Vec2.Lerp(start, end, t);
+            }
+        }
+
+        public static FixMath.F64Vec2 closestPointToFace(FixMath.F64 x, FixMath.F64 y, Face face)
+        {
+            var point = new FixMath.F64Vec2(x, y);
+            if (isInFace(point.X, point.Y, face) != null)
+            {
+                // 点在三角形内部
+                return point;
+            }
+
+            var minDist = FixMath.F64.MaxValue;
+            var closestPoint = point;
+            FromFaceToInnerEdges iterEdge = new FromFaceToInnerEdges();
+            iterEdge.set_fromFace(face);
+            while (true)
+            {
+                var innerEdge = iterEdge.next();
+                if (innerEdge == null)
+                {
+                    break;
+                }
+
+                var v0 = innerEdge.get_originVertex();
+                var v1 = innerEdge.get_destinationVertex();
+
+                var closest = closestPointOnSegment(point, v0.get_pos(), v1.get_pos());
+                var dist = FixMath.F64Vec2.LengthSqr(point - closest);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closestPoint = closest;
+                }
+            }
+            return closestPoint;
         }
 
         public static bool isCircleIntersectingAnyConstraint(FixMath.F64 x, FixMath.F64 y, FixMath.F64 radius, Mesh mesh)

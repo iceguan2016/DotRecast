@@ -544,8 +544,6 @@ namespace Pathfinding.Triangulation.AI
                         }
                     }  // tangent from last-1 point to end point  
 
-
-
                     var pathLength = pathPoints.Count;
                     adjustWithTangents(pathPoints[pathLength - 2], true, pathPoints[pathLength - 1], false, pointSides, pointSuccessor, newPath, adjustedPoints);
                 }

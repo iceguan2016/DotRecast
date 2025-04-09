@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using System.Linq;
 using Pathfinding.Triangulation.Data;
 using Pathfinding.Triangulation.Math;
 
@@ -29,6 +30,8 @@ namespace Pathfinding.Triangulation.AI
 
         public List<Edge> listEdges;
 
+        public bool isPartial;
+
         public virtual void dispose()
         {
             this._mesh = null;
@@ -38,6 +41,7 @@ namespace Pathfinding.Triangulation.AI
             this.funnel = null;
             this.listEdges = null;
             this.listFaces = null;
+            this.isPartial = false;
         }
 
 
@@ -68,14 +72,24 @@ namespace Pathfinding.Triangulation.AI
 
             listFaces.Clear();
             listEdges.Clear();
-            astar.findPath(fromX, fromY, toX, toY, iterMaxTimes, listFaces, listEdges);
+            isPartial = false;
+            astar.findPath(fromX, fromY, toX, toY, iterMaxTimes, listFaces, listEdges, out isPartial);
             if (listFaces.Count == 0)
             {
                 // Debug.trace("PathFinder listFaces.length == 0");
                 return;
             }
 
-            funnel.findPath(fromX, fromY, toX, toY, listFaces, listEdges, resultPath);
+            if (isPartial)
+            {
+                // 修正(toX, toY)
+                var closest = Geom2D.closestPointToFace(toX, toY, listFaces.Last());
+                funnel.findPath(fromX, fromY, closest.X, closest.Y, listFaces, listEdges, resultPath);
+            }
+            else
+            {
+                funnel.findPath(fromX, fromY, toX, toY, listFaces, listEdges, resultPath);
+            }
         }
     }
 }

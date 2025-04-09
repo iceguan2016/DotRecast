@@ -96,9 +96,11 @@ namespace Pathfinding.Triangulation.AI
                             , FixMath.F64 toX, FixMath.F64 toY
                             , int iterMaxTimes     // 最大迭代次数
                             , List<Face> resultListFaces
-                            , List<Edge> resultListEdges) 
+                            , List<Edge> resultListEdges
+                            , out bool isPartial) 
         {
             //Debug.trace("findPath");
+            isPartial = false;
             closedFaces = new Dictionary<Face, bool>();
             sortedOpenedFaces = new List<Face>();
             openedFaces = new Dictionary<Face, bool>();
@@ -256,6 +258,7 @@ namespace Pathfinding.Triangulation.AI
 
             if (curFace == null)
                 return;  // else we build the path  ;
+            isPartial = curFace != toFace;
 
             resultListFaces.Add(curFace);
             //curFace.colorDebug = 0x0000FF;
