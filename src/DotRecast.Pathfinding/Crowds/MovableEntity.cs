@@ -566,7 +566,22 @@ namespace Pathfinding.Crowds
                     _moveStrategies[_moveStrategyIndex].DrawGizmos(this);
                 }
 
-                // 6. draw vectors
+                // 6. draw target location
+                if (null != targetLocation)
+                {
+                    Draw.drawBoxOutline(
+                        annotation, 
+                        targetLocation.Value, 
+                        FixMath.F64Quat.Identity, 
+                        FixMath.F64Vec3.FromDouble(0.1, 1.0, 0.1),
+                        Colors.Red,
+                        FixMath.F64.One);
+
+                    var headPosition = Position + FixMath.F64Vec3.FromDouble(0.0, 0.5, 0.0);
+                    Draw.drawLine(annotation, headPosition, targetLocation.Value, Colors.Red);
+                }
+
+                // 7. draw vectors
                 var velocityRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxSpeed);
                 var forceRange = new FixMath.F64Vec2(FixMath.F64.Zero, MaxForce / 10);
                 var clampRange = new FixMath.F64Vec2(FixMath.F64.Zero, Radius * 3);
