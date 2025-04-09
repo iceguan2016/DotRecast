@@ -84,7 +84,8 @@ public class TestFixedCrowdTool : IRcToolable
     public Face HitFace { get; set; }
 
     // pathfinder
-    public PathFinder Pathfinder { get; private set; }
+    private PathFinder _pathfinder = null;
+    public PathFinder Pathfinder { get { return _pathfinder; } }
 
     // obstacles
     private List<Obstacle> _obstacles = new List<Obstacle>();
@@ -186,7 +187,10 @@ public class TestFixedCrowdTool : IRcToolable
 
             if (_entityManager.Initialize(param))
             {
-                AddRandomObstacle(30, mapWidth, mapHeight);
+                AddRandomObstacle(1, mapWidth, mapHeight);
+
+                _pathfinder = new PathFinder();
+                _pathfinder.set_mesh(_entityManager.Map.NavMesh);
             }
         }
     }
@@ -392,6 +396,64 @@ public class TestFixedCrowdTool : IRcToolable
         });
     }
     // End
+
+    // Pathfind test
+    public int TestPathIterTimes = 1024;
+    private List<FixMath.F64> _path = new List<FixMath.F64>(); 
+    public void TestFindPath(double fromX, double fromY, double toX, double toY, double radius)
+    {
+        if (null == _pathfinder)
+        {
+            return;
+        }
+
+        _path.Clear();
+        _pathfinder.findPath(
+            FixMath.F64.FromDouble(fromX),
+            FixMath.F64.FromDouble(fromY),
+            FixMath.F64.FromDouble(toX),
+            FixMath.F64.FromDouble(toY),
+            FixMath.F64.FromDouble(radius),
+            TestPathIterTimes,
+            _path);
+    }
+
+    public void DrawTestFindPath(DrawInterfaceImplement draw, SimpleView view)
+    {
+        if (null == _pathfinder)
+        {
+            return;
+        }
+
+        var old = draw.MapHeight;
+
+        // draw visited faces
+        draw.MapHeight += 0.5f;
+        for (var i=0; i<_pathfinder.listFaces.Count; ++i)
+        {
+            var face = _pathfinder.listFaces[i];
+            DrawFace(face, view);
+        }
+
+        // draw path
+        draw.MapHeight += 0.1f;
+        if (_path.Count > 0)
+        {
+            var v0 = new UnityEngine.Vector3(_path[0].Float, draw.MapHeight, _path[1].Float);
+            var PointSize = UnityEngine.Vector3.one * 0.2f;
+            draw.DrawCube(v0, PointSize, UnityEngine.Color.red);
+            for (var i = 2; i < _path.Count; i += 2)
+            {
+                var v1 = new UnityEngine.Vector3(_path[i].Float, draw.MapHeight, _path[i + 1].Float);
+                draw.DrawLine(v0, v1, UnityEngine.Color.green);
+                draw.DrawCube(v1, PointSize, UnityEngine.Color.red);
+                v0 = v1;
+            }
+        }
+
+        draw.MapHeight = old;
+    }
+    // end
 
     public void DrawFace(Face face, SimpleView view)
     {
@@ -690,12 +752,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
                     _tool.StartPoint = _tool.EndPoint;
                 _tool.EndPoint = new UnityEngine.Vector3(hitPos.X, hitPos.Y, hitPos.Z);
 
-                //_tool.EntityAI.x = _tool.StartPoint.Value.x;
-                //_tool.EntityAI.y = _tool.StartPoint.Value.z;
-                //_tool.EntityAI._x = _tool.EntityAI.x;
-                //_tool.EntityAI._y = _tool.EntityAI.y;
-
-                //_tool.Pathfinder.findPath(_tool.EndPoint.Value.x, _tool.EndPoint.Value.z, _tool.Path);
+                _tool.TestFindPath(_tool.StartPoint.Value.x, _tool.StartPoint.Value.z, _tool.EndPoint.Value.x, _tool.EndPoint.Value.z, 0.5);
 
                 //Logger.Information($"HandleClickRay, findPath length:{_tool.Path.length}");
             }
@@ -815,6 +872,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
             //        v0 = v1;
             //    }
             //}
+
+            _tool.DrawTestFindPath(_draw, _view);
 
             // draw face
             _tool.DrawFace(_tool.HitFace, _view);

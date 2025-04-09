@@ -246,6 +246,7 @@ namespace Pathfinding.Crowds
         #endregion
 
         #region IPathwayQuerier
+        static int FIND_PATH_MAX_ITERATION_TIMES = 1024;
         public PolylinePathway FindPath(IVehicle vehicle, F64Vec3 target)
         {
             var pathfinder = Pathfinder;
@@ -259,7 +260,7 @@ namespace Pathfinding.Crowds
 
             // 2.Set pathfinder params
             var resultPath = new List<FixMath.F64>();
-            pathfinder.findPath(start.X, start.Z, target.X, target.Z, radius, resultPath);
+            pathfinder.findPath(start.X, start.Z, target.X, target.Z, radius, FIND_PATH_MAX_ITERATION_TIMES, resultPath);
 
             // 3.Convert to PolylinePathway 
             if (resultPath.Count > 0)

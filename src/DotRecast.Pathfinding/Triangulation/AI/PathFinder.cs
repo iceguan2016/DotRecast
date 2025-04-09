@@ -54,7 +54,7 @@ namespace Pathfinding.Triangulation.AI
             return mesh;
         }
 
-        public void findPath(FixMath.F64 fromX, FixMath.F64 fromY, FixMath.F64 toX, FixMath.F64 toY, FixMath.F64 radius, List<FixMath.F64> resultPath)
+        public void findPath(FixMath.F64 fromX, FixMath.F64 fromY, FixMath.F64 toX, FixMath.F64 toY, FixMath.F64 radius, int iterMaxTimes, List<FixMath.F64> resultPath)
         {
             resultPath.Clear();
             //Debug.assertFalse(_mesh == null, "Mesh missing");
@@ -68,7 +68,7 @@ namespace Pathfinding.Triangulation.AI
 
             listFaces.Clear();
             listEdges.Clear();
-            astar.findPath(fromX, fromY, toX, toY, listFaces, listEdges);
+            astar.findPath(fromX, fromY, toX, toY, iterMaxTimes, listFaces, listEdges);
             if (listFaces.Count == 0)
             {
                 // Debug.trace("PathFinder listFaces.length == 0");

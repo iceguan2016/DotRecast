@@ -94,6 +94,7 @@ namespace Pathfinding.Triangulation.AI
 
         public void findPath(FixMath.F64 fromX, FixMath.F64 fromY
                             , FixMath.F64 toX, FixMath.F64 toY
+                            , int iterMaxTimes     // 最大迭代次数
                             , List<Face> resultListFaces
                             , List<Edge> resultListEdges) 
         {
@@ -161,6 +162,7 @@ namespace Pathfinding.Triangulation.AI
             Debug.trace( "to face: " + toFace );
             */
 
+            var iterTimes = 0;
             sortedOpenedFaces.Add(fromFace);
             entryEdges[fromFace] = null;
             entryX[fromFace] = fromX;
@@ -181,11 +183,12 @@ namespace Pathfinding.Triangulation.AI
             var fillDatas = false;
             while (true)
             {
+                ++iterTimes;
                 // no path found
-                if (sortedOpenedFaces.Count == 0)
+                if (sortedOpenedFaces.Count == 0 || iterTimes >= iterMaxTimes)
                 {
                     //Debug.trace("AStar no path found");
-                    curFace = null;
+                    //curFace = null;
                     break;
                 }  // we reached the target face  
 
@@ -251,12 +254,8 @@ namespace Pathfinding.Triangulation.AI
                 sortedOpenedFaces.Sort(sortingFaces);
             }  // if we didn't find a path  
 
-
-
             if (curFace == null)
                 return;  // else we build the path  ;
-
-
 
             resultListFaces.Add(curFace);
             //curFace.colorDebug = 0x0000FF;
