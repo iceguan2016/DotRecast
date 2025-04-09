@@ -394,6 +394,11 @@ namespace Pathfinding.Crowds
 
         public virtual void OnUpdate(FixMath.F64 inDeltaTime)
         {
+            if (HasEntityState(eEntityState.Selected))
+            {
+                int stop = 0;
+            }
+
             if (null == targetLocation) return;
 
             var template = Template as TMovableEntityTemplate;
@@ -508,6 +513,11 @@ namespace Pathfinding.Crowds
                 Util.Draw.drawArrow(annotation, start, end, FixMath.F64Vec2.FromFloat(0.0f, 0.2f), FixMath.F64.FromFloat(2.0f), color);
                 return true;
             }; 
+
+            if (selected)
+                SetEntityState(eEntityState.Selected);
+            else
+                ClearEntityState(eEntityState.Selected);
 
             // draw vehicle
             Draw.drawBasic2dCircularVehicle(annotation, this, selected? Colors.Red : Colors.Gray50);
