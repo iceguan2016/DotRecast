@@ -1,5 +1,6 @@
 
 
+using System.Collections.Generic;
 using Pathfinding.Triangulation.Data;
 using Pathfinding.Triangulation.Iterators;
 using Pathfinding.Util;
@@ -77,6 +78,57 @@ namespace Pathfinding.Triangulation.View
             {
                 var edge = edges[i];
                 drawEdge(edge, edge.get_isConstrained() ? UnityEngine.Color.red : UnityEngine.Color.blue);
+            }
+        }
+
+        public void drawObstacleFaces(Mesh mesh, bool expand = false)
+        {
+            var obstacles = mesh._objects;
+
+            var queue = new Queue<Face>();
+            var visitedFaces = new HashSet<Face>();
+            for (var i = 0; i < obstacles.Count; ++i)
+            {
+                var shape = obstacles[i]._constraintShape;
+                var segments = shape.segments;
+                for (var j = 0; j < segments.Count; ++j)
+                {
+                    var edges = segments[j]._edges;
+                    for (var k = 0; k < edges.Count; ++k)
+                    {
+                        var face = edges[k].get_rightFace();
+                        if (visitedFaces.Add(face))
+                            queue.Enqueue(face);
+                    }
+                }
+            }
+
+            if (expand)
+            {
+                var iterEdge = new FromFaceToInnerEdges();
+                while (queue.Count > 0)
+                {
+                    var face = queue.Dequeue();
+
+                    // 遍历邻接face
+                    Edge innerEdge = null;
+                    iterEdge.set_fromFace(face);
+                    while ((innerEdge = iterEdge.next()) != null)
+                    {
+                        if (innerEdge._isConstrained)
+                            continue;
+                        var neighbourFace = innerEdge.get_rightFace();
+                        if (visitedFaces.Add(neighbourFace))
+                            queue.Enqueue(neighbourFace);
+                    }
+                }
+            }
+
+            // draw all faces
+            var color = new UnityEngine.Color(1, 0, 0, 0.3f);
+            foreach (var face in visitedFaces)
+            { 
+                drawFace(face, color);
             }
         }
     }

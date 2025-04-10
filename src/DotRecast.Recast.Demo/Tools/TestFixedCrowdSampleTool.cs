@@ -187,7 +187,7 @@ public class TestFixedCrowdTool : IRcToolable
 
             if (_entityManager.Initialize(param))
             {
-                AddRandomObstacle(30, param.MapBoundsMin, param.MapBoundsMax);
+                // AddRandomObstacle(30, param.MapBoundsMin, param.MapBoundsMax);
 
                 _pathfinder = new PathFinder();
                 _pathfinder.set_mesh(_entityManager.Map.NavMesh);
@@ -850,6 +850,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         if (_tool.IsDrawNavmeshGrpah && null != _tool.Mesh) 
         {
             _view.drawMesh(_tool.Mesh);
+            _view.drawObstacleFaces(_tool.Mesh, true);
         }
 
         if (m_mode == TestDaedalusToolMode.PATH_FINDER)
