@@ -276,16 +276,24 @@ namespace Pathfinding.Crowds
 
         public void OnTemplatePropertyChanged()
         {
-            var template = Template as TMovableEntityTemplate; 
-            Radius = template.Radius;
+            // 刷新模板参数
+            var template = Template as TMovableEntityTemplate;
+            if (Radius != template.Radius)
+            {
+                // 半径变化了，重新创建物理体
+                Radius = template.Radius;
+                OnDestroyPhysicsState();
+                OnCreatePhysicsState();
+            }
 
-            // 重新创建移动策略
-            _moveStrategyIndex = -1;
-            _moveStrategies = new IMoveStrategy[] {
-                new IdleMoveStrategy(this),
-                new FollowPathMoveStrategy(this),
-                new AttackMoveStrategy(this),
-            };
+            // 刷新移动策略参数
+            if (null != _moveStrategies)
+            {
+                for (var i = 0; i < _moveStrategies.Length; ++i)
+                {
+                    _moveStrategies[i].OnTemplateChanged(this);
+                }
+            }
         }
 
         public virtual void OnCreate()

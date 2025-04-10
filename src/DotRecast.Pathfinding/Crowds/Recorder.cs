@@ -33,6 +33,7 @@ namespace Pathfinding.Crowds
         public FixMath.F64 ReplaySpeed { get; set; }
         public int CurrReplayFrame { get; private set; }
         public int MaxReplayFrame { get; private set; }
+        public int ReplayTargetFrame { get; set; }
 
         double _tickElapsedTime = 0.0;
 
@@ -142,7 +143,7 @@ namespace Pathfinding.Crowds
                     return false;
                 }
 
-                _recordStream = File.Open(inputFile, FileMode.Open);
+                _recordStream = File.OpenRead(inputFile);
                 RecordReader = new BinaryReader(_recordStream);
 
                 WorkMode = eWorkMode.Replay;
@@ -162,6 +163,7 @@ namespace Pathfinding.Crowds
 
                 // 设置基本参数
                 ReplaySpeed = FixMath.F64.One;
+                ReplayTargetFrame = -1;
                 CurrReplayFrame = 0;
                 MaxReplayFrame = 0;
                 IsPauseReplay = false;
@@ -197,7 +199,8 @@ namespace Pathfinding.Crowds
             {
                 _tickElapsedTime += inDeltaTime.Double * ReplaySpeed.Double;
 
-                while (_tickElapsedTime > 0)
+                var stopLoop = false;
+                while (!stopLoop && _tickElapsedTime > 0)
                 {
                     ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
 
@@ -213,6 +216,12 @@ namespace Pathfinding.Crowds
                         if (operation is OperationTick)
                         {
                             ++CurrReplayFrame;
+                            // 检查目标帧号
+                            if (ReplayTargetFrame > 0 && CurrReplayFrame == ReplayTargetFrame)
+                            {
+                                IsPauseReplay = true;
+                                stopLoop = true;
+                            }
                         }
                         _tickElapsedTime -= executeTime;
                         _replayOperations.Dequeue().Execute(this);

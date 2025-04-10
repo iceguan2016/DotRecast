@@ -85,6 +85,8 @@ namespace Pathfinding.Crowds.MoveStrategy
             return FixMath.F64Vec3.Zero;
         }
 
+        public abstract void OnTemplateChanged(MovableEntity owner);
+
         public virtual void DrawGizmos(MovableEntity owner)
         {
             

@@ -20,6 +20,9 @@ namespace Pathfinding.Crowds.AvoidStrategy
         void OnOverlapBegin(MovableEntity owner, MovableEntity other);
         void OnOverlapEnd(MovableEntity owner, MovableEntity other);
 
+        // 编辑
+        void OnTemplateChanged(MovableEntity owner);
+
         // 调试
         void DrawGizmos(MovableEntity owner);
     }

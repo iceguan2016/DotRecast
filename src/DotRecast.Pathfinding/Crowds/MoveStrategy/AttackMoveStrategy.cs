@@ -10,6 +10,11 @@ namespace Pathfinding.Crowds.MoveStrategy
         { 
         }
 
+        public override void OnTemplateChanged(MovableEntity owner)
+        {
+
+        }
+
         public override bool Condition(MovableEntity owner)
         {
             if (owner.HasEntityState(MovableEntity.eEntityState.Attack))

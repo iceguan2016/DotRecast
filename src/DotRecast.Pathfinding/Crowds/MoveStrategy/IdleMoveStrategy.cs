@@ -15,15 +15,21 @@ namespace Pathfinding.Crowds.MoveStrategy
 
         public IdleMoveStrategy(MovableEntity owner)
         {
+            _holdTargetForce = new ArriveTargetForce();
+            _separationForce = new FlockSeparationForce();
+            _cohesionForce = new FlockCohesionForce();
+
+            OnTemplateChanged(owner);
+        }
+
+        public override void OnTemplateChanged(MovableEntity owner)
+        {
             var template = owner.Template as TMovableEntityTemplate;
 
-            _holdTargetForce = new ArriveTargetForce();
             _holdTargetForce.Weight = FixMath.F64.FromDouble(1.0f);
 
-            _separationForce = new FlockSeparationForce();
             _separationForce.Weight = FixMath.F64.FromDouble(1.0f);
 
-            _cohesionForce = new FlockCohesionForce();
             _cohesionForce.Weight = FixMath.F64.FromDouble(1.0f);
 
             _stopMoveRadius = template.StopMoveRadius;

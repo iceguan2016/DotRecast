@@ -22,38 +22,44 @@ namespace Pathfinding.Crowds.MoveStrategy
         FixMath.F64 _turnVelocityDurationTime = FixMath.F64.FromDouble(0.1);
         public FollowPathMoveStrategy(MovableEntity owner)
         {
+            _followPathForce = new FollowPathForce();
+            _avoidIdleNeighborForce = new AvoidIdleNeighborForce();
+            _avoidObstacleForce = new AvoidObstacleForce();
+            _forwadMoveForce = new ForwardMoveForce();
+            _flockSeparationForce = new FlockSeparationForce();
+            _flockAlignmentForce = new FlockAlignmentForce();
+            _flockCohesionForce = new FlockCohesionForce();
+
+            OnTemplateChanged(owner);
+        }
+
+        public override void OnTemplateChanged(MovableEntity owner)
+        {
             var template = owner.Template as TMovableEntityTemplate;
 
-            _followPathForce = new FollowPathForce();
             _followPathForce.FollowPathAheadTime = template.FollowPathAheadTime;
             _followPathForce.Weight = template.FollowPathWeight;
 
-            _avoidIdleNeighborForce = new AvoidIdleNeighborForce();
             _avoidIdleNeighborForce.AvoidNeighborAheadTime = template.AvoidNeighborAheadTime;
             _avoidIdleNeighborForce.CheckResetAvoidInfoDistance = template.Radius * 6;
             _avoidIdleNeighborForce.Weight = template.AvoidNeighborWeight;
 
             _predictionAvoidIdleNeighborTime = template.PredictionAvoidIdleNeighborTime;
 
-            _avoidObstacleForce = new AvoidObstacleForce();
             _avoidObstacleForce.AvoidObstacleAheadTime = template.AvoidObstacleAheadTime;
             _avoidObstacleForce.CheckResetAvoidInfoDistance = template.Radius * 6;
             _avoidObstacleForce.Weight = template.AvoidObstacleWeight;
 
-            _forwadMoveForce = new ForwardMoveForce();
             _forwadMoveForce.Weight = template.ForwardMoveWeight;
 
-            _flockSeparationForce = new FlockSeparationForce();
             _flockSeparationForce.SeparationRadius = template.SeparationRadius;
             _flockSeparationForce.SeparationAngle = template.SeparationAngle;
             _flockSeparationForce.Weight = template.SeparationWeight;
 
-            _flockAlignmentForce = new FlockAlignmentForce();
             _flockAlignmentForce.AlignmentRadius = template.AlignmentRadius;
             _flockAlignmentForce.AlignmentAngle = template.AlignmentAngle;
             _flockAlignmentForce.Weight = template.AlignmentWeight;
 
-            _flockCohesionForce = new FlockCohesionForce();
             _flockCohesionForce.CohesionRadius = template.CohesionRadius;
             _flockCohesionForce.CohesionAngle = template.CohesionAngle;
             _flockCohesionForce.Weight = template.CohesionWeight;
