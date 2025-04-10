@@ -258,7 +258,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
         } 
     }
 
-    double RandomRange(double min, double max)
+    public double RandomRange(double min, double max)
     {
         return min + rand.NextDouble() * (max - min);
     }

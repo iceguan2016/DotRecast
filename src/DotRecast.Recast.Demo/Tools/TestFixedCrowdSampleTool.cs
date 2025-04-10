@@ -160,7 +160,7 @@ public class TestFixedCrowdTool : IRcToolable
     public bool IsOpenRecord = false;
     public float TerraintHeight = 0.0f;
 
-    double RandomRange(double min, double max)
+    public double RandomRange(double min, double max)
     {
         return min + rand.NextDouble() * (max - min);
     }
@@ -191,7 +191,12 @@ public class TestFixedCrowdTool : IRcToolable
 
             if (_entityManager.Initialize(param))
             {
-                AddRandomObstacle(20, param.MapBoundsMin, param.MapBoundsMax);
+                // AddRandomObstacle(20, param.MapBoundsMin, param.MapBoundsMax);
+
+                var px = (param.MapBoundsMin.X + param.MapBoundsMax.X) / 2;
+                var py = param.MapBoundsMin.Y;
+                var scale = FixMath.F64.FromDouble(10.0);
+                AddObstacle(px, py, scale, scale, FixMath.F64.Zero);
 
                 _pathfinder = new PathFinder();
                 _pathfinder.set_mesh(_entityManager.Map.NavMesh);
@@ -214,13 +219,21 @@ public class TestFixedCrowdTool : IRcToolable
 
     void AddRandomObstacle(int totalCount, FixMath.F64Vec3 boundsMin, FixMath.F64Vec3 boundsMax)
     {
+        if (null == Mesh) return;
+
         // populate mesh with many square objects
         for (int i = 0; i < totalCount; ++i)
         {
             var x = RandomRange(boundsMin.X.Double, boundsMax.X.Double);
             var y = RandomRange(boundsMin.Z.Double, boundsMax.Z.Double);
 
-            AddObstacle(x, y);
+            var scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * Mesh._width.Float);
+            var scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * Mesh._height.Float);
+            var angle = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
+            var posx = FixMath.F64.FromDouble(x);
+            var posy = FixMath.F64.FromDouble(y);
+
+            AddObstacle(posx, posy, scaleX, scaleY, angle);
         }  // show result mesh on screen
     }
 
@@ -245,16 +258,10 @@ public class TestFixedCrowdTool : IRcToolable
             _entityManager.TickReplay(FixMath.F64.FromDouble(inDeltaTime));
         }
     }
-    public void AddObstacle(double x, double y)
+    public void AddObstacle(FixMath.F64 posx, FixMath.F64 posy, FixMath.F64 scaleX, FixMath.F64 scaleY, FixMath.F64 angle)
     {
         if (null == Mesh)
             return;
-        
-        var scaleX = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * Mesh._width.Float);
-        var scaleY = FixMath.F64.FromDouble(RandomRange(10, 40) / 600.0f * Mesh._height.Float);
-        var angle = FixMath.F64.FromDouble((RandomRange(0, 1000) / 1000) * Math.PI / 2);
-        var posx = FixMath.F64.FromDouble(x);
-        var posy = FixMath.F64.FromDouble(y);
 
         // 创建阻挡物实体对向
         var rotation = FixMath.F64Quat.FromYawPitchRoll(angle, FixMath.F64.Zero, FixMath.F64.Zero);
@@ -767,7 +774,13 @@ public class TestFixedCrowdSampleTool : ISampleTool
             else
             {
                 // Add
-                _tool.AddObstacle(hitPos.X, hitPos.Z);
+                var scaleX = FixMath.F64.FromDouble(_tool.RandomRange(10, 40) / 600.0f * Mesh._width.Float);
+                var scaleY = FixMath.F64.FromDouble(_tool.RandomRange(10, 40) / 600.0f * Mesh._height.Float);
+                var angle = FixMath.F64.FromDouble((_tool.RandomRange(0, 1000) / 1000) * Math.PI / 2);
+                var posx = FixMath.F64.FromDouble(hitPos.X);
+                var posy = FixMath.F64.FromDouble(hitPos.Z);
+
+                _tool.AddObstacle(posx, posy, scaleX, scaleY, angle);
             }
         }
         else if (m_mode == TestDaedalusToolMode.PATH_FINDER)
