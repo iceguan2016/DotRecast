@@ -539,6 +539,8 @@ public class TestFixedCrowdTool : IRcToolable
     }
 
     public bool IsDrawNavmeshGrpah = false;
+    public bool IsDrawObsatcleFace = false;
+    public bool IsDrawObsatcleFaceWithExpand = false;
     public bool IsDrawPhysicsWorld = true;
     public bool IsDrawContactInfo = false;
     public bool IsDrawSelectionInfo = false;
@@ -865,10 +867,10 @@ public class TestFixedCrowdSampleTool : ISampleTool
             DebugDraw.DuRGBA(255, 255, 255, 128), 1.0f);
 
         // draw graph mesh
-        if (_tool.IsDrawNavmeshGrpah && null != _tool.Mesh) 
+        if (null != _tool.Mesh) 
         {
-            _view.drawMesh(_tool.Mesh);
-            _view.drawObstacleFaces(_tool.Mesh, true);
+            if (_tool.IsDrawNavmeshGrpah) _view.drawMesh(_tool.Mesh);
+            if (_tool.IsDrawObsatcleFace) _view.drawObstacleFaces(_tool.Mesh, _tool.IsDrawObsatcleFaceWithExpand);
         }
 
         if (m_mode == TestDaedalusToolMode.PATH_FINDER)
@@ -981,6 +983,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
     void Layout_Toggles()
     {
         ImGui.Checkbox("Draw Navmesh Graph", ref _tool.IsDrawNavmeshGrpah);
+        ImGui.Checkbox("Draw Obstacle Faces", ref _tool.IsDrawObsatcleFace);
+        ImGui.Checkbox("Draw Obstacle Faces Expand", ref _tool.IsDrawObsatcleFaceWithExpand);
         ImGui.Checkbox("Draw Physics World", ref _tool.IsDrawPhysicsWorld);
         ImGui.Checkbox("Draw Contact Info", ref _tool.IsDrawContactInfo);
         ImGui.Checkbox("Draw Selection Info", ref _tool.IsDrawSelectionInfo);
