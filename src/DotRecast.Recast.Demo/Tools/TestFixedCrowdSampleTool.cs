@@ -102,7 +102,7 @@ public class TestFixedCrowdTool : IRcToolable
             MaxForce = FixMath.F64.FromFloat(27.0f),
         
             //
-            FollowPathAheadTime = FixMath.F64.FromFloat(1.2f),
+            FollowPathAheadTime = FixMath.F64.FromFloat(3.0f),
             FollowPathWeight = FixMath.F64.FromFloat(1.0f),
 
             AvoidObstacleAheadTime = FixMath.F64.FromFloat(1.0f),
@@ -121,11 +121,11 @@ public class TestFixedCrowdTool : IRcToolable
             MaxForce = FixMath.F64.FromFloat(54.0f),
         
             //
-            FollowPathAheadTime = FixMath.F64.FromFloat(1.2f),
+            FollowPathAheadTime = FixMath.F64.FromFloat(5.0f),
             FollowPathWeight = FixMath.F64.FromFloat(1.0f),
 
             AvoidObstacleAheadTime = FixMath.F64.FromFloat(2.0f),
-            AvoidObstacleWeight = FixMath.F64.FromFloat(0.3f),
+            AvoidObstacleWeight = FixMath.F64.FromFloat(1.0f),
 
             PredictionAvoidIdleNeighborTime = FixMath.F64.FromFloat(0.2f),
             AvoidNeighborAheadTime = FixMath.F64.FromFloat(2.0f),
@@ -191,7 +191,7 @@ public class TestFixedCrowdTool : IRcToolable
 
             if (_entityManager.Initialize(param))
             {
-                AddRandomObstacle(20, param.MapBoundsMin, param.MapBoundsMax);
+                // AddRandomObstacle(30, param.MapBoundsMin, param.MapBoundsMax);
 
                 _pathfinder = new PathFinder();
                 _pathfinder.set_mesh(_entityManager.Map.NavMesh);
@@ -463,8 +463,6 @@ public class TestFixedCrowdTool : IRcToolable
 
     public void DrawFace(Face face, SimpleView view)
     {
-        if (null == Mesh) return;
-
         for (var i = 0; i < Mesh._faces.Count; ++i)
         {
             var f = Mesh._faces[i];
@@ -587,10 +585,6 @@ public class TestFixedCrowdTool : IRcToolable
         var followPathAheadTime = template.FollowPathAheadTime.Float;
         propertyChanged |= ImGui.SliderFloat("FollowPathAheadTime", ref followPathAheadTime, 0.1f, 5.0f);
         template.FollowPathAheadTime = FixMath.F64.FromFloat(followPathAheadTime);
-
-        var turnVelocityDurationTime = template.TurnVelocityDurationTime.Float;
-        propertyChanged |= ImGui.SliderFloat("TurnVelocityDurationTime", ref turnVelocityDurationTime, 0.1f, 1.5f);
-        template.TurnVelocityDurationTime = FixMath.F64.FromFloat(turnVelocityDurationTime);
 
         var followPathWeight = template.FollowPathWeight.Float;
         propertyChanged |= ImGui.SliderFloat("FollowPathWeight", ref followPathWeight, 0.0f, 5.0f);

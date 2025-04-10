@@ -46,8 +46,6 @@ namespace Pathfinding.Crowds
 
         public FixMath.F64 FollowPathAheadTime = FixMath.F64.FromFloat(3.0f);
         public FixMath.F64 FollowPathWeight = FixMath.F64.FromFloat(1.0f);
-        // 路径跟随将速度调整到路径跟随方向平滑时间
-        public FixMath.F64 TurnVelocityDurationTime = FixMath.F64.FromFloat(0.5f);
 
         public FixMath.F64 AvoidObstacleAheadTime = FixMath.F64.FromFloat(0.1f);
         public FixMath.F64 AvoidObstacleWeight = FixMath.F64.FromFloat(0.3f);

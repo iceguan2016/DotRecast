@@ -19,7 +19,7 @@ namespace Pathfinding.Crowds.MoveStrategy
 
         FixMath.F64 _predictionAvoidIdleNeighborTime = FixMath.F64.FromDouble(0.05);
         FixMath.F64 _applyTurnForceAngleCos = FixMath.F64.FromDouble(0.707);
-        FixMath.F64 _turnVelocityDurationTime = FixMath.F64.FromDouble(0.5);
+        FixMath.F64 _turnVelocityDurationTime = FixMath.F64.FromDouble(0.1);
         public FollowPathMoveStrategy(MovableEntity owner)
         {
             _followPathForce = new FollowPathForce();
@@ -39,7 +39,6 @@ namespace Pathfinding.Crowds.MoveStrategy
 
             _followPathForce.FollowPathAheadTime = template.FollowPathAheadTime;
             _followPathForce.Weight = template.FollowPathWeight;
-            _turnVelocityDurationTime = template.TurnVelocityDurationTime;
 
             _avoidIdleNeighborForce.AvoidNeighborAheadTime = template.AvoidNeighborAheadTime;
             _avoidIdleNeighborForce.CheckResetAvoidInfoDistance = template.Radius * 6;
