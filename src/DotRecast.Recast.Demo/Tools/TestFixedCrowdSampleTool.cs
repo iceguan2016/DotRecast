@@ -563,17 +563,18 @@ public class TestFixedCrowdTool : IRcToolable
         propertyChanged |= ImGui.SliderFloat("StopMoveRadius", ref stopRadius, 1.0f, 10.0f);
         template.StopMoveRadius = FixMath.F64.FromFloat(stopRadius);
 
-        var radius = template.Radius.Float;
-        propertyChanged |= ImGui.SliderFloat("Radius", ref radius, 0.1f, 5.0f);
-        template.Radius = FixMath.F64.FromFloat(radius);
+        // Replay模式：Radius, MaxSpeed, MaxForce参数是走SetEntityParams动态设置的，这里不允许修改
+        //var radius = template.Radius.Float;
+        //propertyChanged |= ImGui.SliderFloat("Radius", ref radius, 0.1f, 5.0f);
+        //template.Radius = FixMath.F64.FromFloat(radius);
 
-        var maxSpeed = template.MaxSpeed.Float;
-        propertyChanged |= ImGui.SliderFloat("MaxSpeed", ref maxSpeed, 1.0f, 10.0f);
-        template.MaxSpeed = FixMath.F64.FromFloat(maxSpeed);
+        //var maxSpeed = template.MaxSpeed.Float;
+        //propertyChanged |= ImGui.SliderFloat("MaxSpeed", ref maxSpeed, 1.0f, 10.0f);
+        //template.MaxSpeed = FixMath.F64.FromFloat(maxSpeed);
 
-        var maxForce = template.MaxForce.Float;
-        propertyChanged |= ImGui.SliderFloat("MaxForce", ref maxForce, 10.0f, 100.0f);
-        template.MaxForce = FixMath.F64.FromFloat(maxForce);
+        //var maxForce = template.MaxForce.Float;
+        //propertyChanged |= ImGui.SliderFloat("MaxForce", ref maxForce, 10.0f, 100.0f);
+        //template.MaxForce = FixMath.F64.FromFloat(maxForce);
 
         var forwardMoveWeight = template.ForwardMoveWeight.Float;
         propertyChanged |= ImGui.SliderFloat("ForwardMoveWeight", ref forwardMoveWeight, 0.0f, 10.0f);
