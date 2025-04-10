@@ -144,6 +144,11 @@ namespace Pathfinding.Triangulation.Data
             this.__centerVertex = null;
         }
 
+        public bool isOutsideBounds(FixMath.F64 x, FixMath.F64 y)
+        {
+            return x < (_xmin - Constants.EPSILON) || y < (_ymin - Constants.EPSILON)
+                || x > (_xmax + Constants.EPSILON) || y > (_ymax + Constants.EPSILON);
+        }
 
         public List<ConstraintShape> get_constraintShapes()
         {
@@ -200,10 +205,19 @@ namespace Pathfinding.Triangulation.Data
                 transfx2 = m.transformX(x2, y2);
                 transfy2 = m.transformY(x2, y2);
 
+                var dir = new FixMath.F64Vec2(transfx2 - transfx1, transfy2 - transfy1);
                 segment = insertConstraintSegment(transfx1, transfy1, transfx2, transfy2);
                 if (segment != null)
                 {
                     segment.fromShape = shape;
+                    // 标记该edge是否被翻转
+                    for (var e = 0; e < segment._edges.Count; ++e)
+                    {
+                        var edge = segment._edges[e];
+                        var edgeDir = edge.get_destinationVertex()._pos - edge.get_originVertex()._pos;
+                        edge._isReversed = FixMath.F64Vec2.Dot(dir, edgeDir) < 0;
+                    }
+
                     shape.segments.Add(segment);
                 }
                 i += 4;
@@ -890,12 +904,7 @@ namespace Pathfinding.Triangulation.Data
 
         public Vertex insertVertex(FixMath.F64 x, FixMath.F64 y)
         {
-            var xmin = _xoffset;
-            var ymin = _yoffset;
-            var xmax = _xoffset + _width;
-            var ymax = _yoffset + _height;
-
-            if (x < xmin || y < ymin || x > xmax || y > ymax)
+            if (isOutsideBounds(x, y))
             {
                 return null;
             }
@@ -1744,11 +1753,7 @@ namespace Pathfinding.Triangulation.Data
 
         public bool vertexIsInsideAABB(Vertex vertex, Mesh mesh)
         {
-            var xmin = _xoffset;
-            var ymin = _yoffset;
-            var xmax = _xoffset + _width;
-            var ymax = _yoffset + _height;
-            return !(vertex._pos.X < xmin || vertex._pos.X > xmax || vertex._pos.Y < ymin || vertex._pos.Y > ymax);
+            return !isOutsideBounds(vertex._pos.X, vertex._pos.Y);
         }
     }
 }

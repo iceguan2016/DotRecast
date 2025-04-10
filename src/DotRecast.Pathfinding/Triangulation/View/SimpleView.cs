@@ -77,7 +77,8 @@ namespace Pathfinding.Triangulation.View
             for (var i = 0; i < edges.Count; ++i)
             {
                 var edge = edges[i];
-                drawEdge(edge, edge.get_isConstrained() ? UnityEngine.Color.red : UnityEngine.Color.blue);
+                
+                drawEdge(edge, edge.get_isConstrained() ? (edge._isReversed? UnityEngine.Color.green : UnityEngine.Color.red) : UnityEngine.Color.blue);
             }
         }
 
@@ -97,7 +98,7 @@ namespace Pathfinding.Triangulation.View
                     var edges = segments[j]._edges;
                     for (var k = 0; k < edges.Count; ++k)
                     {
-                        var face = edges[k].get_rightFace();
+                        var face = edges[k]._isReversed? edges[k].get_leftFace() : edges[k].get_rightFace();
                         if (visitedFaces.Add(face))
                         {
                             queue.Enqueue(face);
