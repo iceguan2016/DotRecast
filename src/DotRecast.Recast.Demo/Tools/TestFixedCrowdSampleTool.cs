@@ -547,6 +547,8 @@ public class TestFixedCrowdTool : IRcToolable
     public bool IsDrawContactInfo = false;
     public bool IsDrawSelectionInfo = false;
 
+    public int DrawObstacleFaceDepth = 1;
+
     public void Layout_Toggles()
     {
         // debug toggles
@@ -876,7 +878,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         if (null != _tool.Mesh) 
         {
             if (_tool.IsDrawNavmeshGrpah) _view.drawMesh(_tool.Mesh);
-            if (_tool.IsDrawObsatcleFace) _view.drawObstacleFaces(_tool.Mesh, _tool.IsDrawObsatcleFaceWithExpand);
+            if (_tool.IsDrawObsatcleFace) _view.drawObstacleFaces(_tool.Mesh, _tool.DrawObstacleFaceDepth,  _tool.IsDrawObsatcleFaceWithExpand);
         }
 
         if (m_mode == TestDaedalusToolMode.PATH_FINDER)
@@ -991,6 +993,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         ImGui.Checkbox("Draw Navmesh Graph", ref _tool.IsDrawNavmeshGrpah);
         ImGui.Checkbox("Draw Obstacle Faces", ref _tool.IsDrawObsatcleFace);
         ImGui.Checkbox("Draw Obstacle Faces Expand", ref _tool.IsDrawObsatcleFaceWithExpand);
+        ImGui.InputInt("Draw Obstacle Face Depth", ref _tool.DrawObstacleFaceDepth);
         ImGui.Checkbox("Draw Physics World", ref _tool.IsDrawPhysicsWorld);
         ImGui.Checkbox("Draw Contact Info", ref _tool.IsDrawContactInfo);
         ImGui.Checkbox("Draw Selection Info", ref _tool.IsDrawSelectionInfo);

@@ -81,12 +81,13 @@ namespace Pathfinding.Triangulation.View
             }
         }
 
-        public void drawObstacleFaces(Mesh mesh, bool expand = false)
+        public void drawObstacleFaces(Mesh mesh, int maxDepth, bool expand = false)
         {
             var obstacles = mesh._objects;
 
             var queue = new Queue<Face>();
             var visitedFaces = new HashSet<Face>();
+            var depthMap = new Dictionary<Face, int>();
             for (var i = 0; i < obstacles.Count; ++i)
             {
                 var shape = obstacles[i]._constraintShape;
@@ -98,7 +99,10 @@ namespace Pathfinding.Triangulation.View
                     {
                         var face = edges[k].get_rightFace();
                         if (visitedFaces.Add(face))
+                        {
                             queue.Enqueue(face);
+                            depthMap.Add(face, 0);
+                        }
                     }
                 }
             }
@@ -109,6 +113,8 @@ namespace Pathfinding.Triangulation.View
                 while (queue.Count > 0)
                 {
                     var face = queue.Dequeue();
+                    var depth = depthMap[face];
+                    if (depth >= maxDepth) continue;
 
                     // 遍历邻接face
                     Edge innerEdge = null;
@@ -119,7 +125,10 @@ namespace Pathfinding.Triangulation.View
                             continue;
                         var neighbourFace = innerEdge.get_rightFace();
                         if (visitedFaces.Add(neighbourFace))
+                        {
                             queue.Enqueue(neighbourFace);
+                            depthMap.Add(neighbourFace, depth+1);
+                        }
                     }
                 }
             }
