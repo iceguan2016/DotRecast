@@ -328,12 +328,12 @@ namespace Pathfinding.Triangulation.AI
             return curNode;
         }
 
-        void iterateNodeNeighbors(SearchNode InCurNode)
+        void iterateNodeNeighbors(SearchNode curNode)
         {
             Edge innerEdge;
             Face neighbourFace;
 
-            Face curFace = InCurNode.GetFace();
+            Face curFace = curNode.GetFace();
             iterEdge.set_fromFace(curFace);
             while ((innerEdge = iterEdge.next()) != null)
             {
@@ -341,7 +341,7 @@ namespace Pathfinding.Triangulation.AI
                     continue;
                 neighbourFace = innerEdge.get_rightFace();
 
-                if (curFace != fromFace && _radius > 0 && !isWalkableByRadius(InCurNode.EntryEdge, curFace, innerEdge))
+                if (curFace != fromFace && _radius > 0 && !isWalkableByRadius(curNode.EntryEdge, curFace, innerEdge))
                 {
                     //                            Debug.trace("- NOT WALKABLE -");
                     //                            Debug.trace( "from ", hxDaedalusEdge(__entryEdges[__curFace]).originVertex.id, hxDaedalusEdge(__entryEdges[__curFace]).destinationVertex.id );
@@ -359,17 +359,19 @@ namespace Pathfinding.Triangulation.AI
                 // If we found an unexplored node, add it to the open list.
                 // Otherwise, if the new cost is lower, refresh the cost of the node 
                 // as we just found a shorter path.
-                var midPoint = FixMath.F64Vec2.Zero;
-                midPoint.X = (innerEdge.get_originVertex()._pos.X + innerEdge.get_destinationVertex()._pos.X) / 2;
-                midPoint.Y = (innerEdge.get_originVertex()._pos.Y + innerEdge.get_destinationVertex()._pos.Y) / 2;
+                //var midPoint = FixMath.F64Vec2.Zero;
+                //midPoint.X = (innerEdge.get_originVertex()._pos.X + innerEdge.get_destinationVertex()._pos.X) / 2;
+                //midPoint.Y = (innerEdge.get_originVertex()._pos.Y + innerEdge.get_destinationVertex()._pos.Y) / 2;
 
-                var distancePoint = InCurNode.EntryPoint - midPoint;
-                var newG = InCurNode.GetGCost() + FixMath.F64Vec2.LengthFast(distancePoint);
+                var nearestPoint = Geom2D.closestPointOnSegment(curNode.EntryPoint, innerEdge.get_originVertex()._pos, innerEdge.get_destinationVertex()._pos);
+
+                var distancePoint = curNode.EntryPoint - nearestPoint;
+                var newG = curNode.GetGCost() + FixMath.F64Vec2.LengthFast(distancePoint);
 
                 var newH = FixMath.F64.Zero;
                 if (!isTarget)
                 {
-                    distancePoint = _goalPoint - midPoint;
+                    distancePoint = _goalPoint - nearestPoint;
                     newH = FixMath.F64Vec2.LengthFast(distancePoint);
                 }
 
@@ -377,7 +379,7 @@ namespace Pathfinding.Triangulation.AI
                 if (!isCurrent)
                 {
                     fillDatas = true;
-                    updateNode(nextNode, InCurNode, newG, newH);
+                    updateNode(nextNode, curNode, newG, newH);
                     _searchMinHeap.Push(nextNode);
                     ++_currSearchNodeNum;
                 }
@@ -387,14 +389,14 @@ namespace Pathfinding.Triangulation.AI
                     if (NewF < nextNode.GetFCost())
                     {
                         fillDatas = true;
-                        updateNode(nextNode, InCurNode, newG, newH);
+                        updateNode(nextNode, curNode, newG, newH);
                     }
                 }
 
                 if (fillDatas)
                 {
                     nextNode.EntryEdge = innerEdge;
-                    nextNode.EntryPoint = midPoint;
+                    nextNode.EntryPoint = nearestPoint;
                 }
             }
         }
