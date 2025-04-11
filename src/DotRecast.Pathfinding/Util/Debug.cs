@@ -5,6 +5,7 @@ using System.Linq;
 using Pathfinding.Crowds;
 using UnityEngine;
 using static System.Net.WebRequestMethods;
+using static Pathfinding.Triangulation.Math.Geom2D;
 
 namespace Pathfinding.Util
 {
@@ -76,13 +77,15 @@ namespace Pathfinding.Util
 
         }
 
+        // 调试LocatePositionProcedure
+        public static LocatePositionProcedure locatePosition = new LocatePositionProcedure();
+
         // 测试单个neighbor
         public static int _drawVOIndex = 10;
-        private static int _watchNeighborIndex = 0;
-        public static int WatchNeighborIndex { get { return _watchNeighborIndex; } set { _watchNeighborIndex = value; } }
-        public static bool IsWatchingNeighborIndex(int neiCount, int neiIndex)
+        public static int WatchIndex = 0;
+        public static bool IsWatchingIndex(int count, int index)
         {
-            return (WatchNeighborIndex % neiCount) == neiIndex;
+            return (WatchIndex % count) == index;
         }
 
         public static string RecordRootDir = "H:/0.Gitbub/DotRecast/record";

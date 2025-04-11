@@ -202,6 +202,12 @@ namespace Pathfinding.Crowds
                 var stopLoop = false;
                 while (!stopLoop && _tickElapsedTime > 0)
                 {
+                    if (Debug.locatePosition.isError)
+                    {
+                        IsPauseReplay = true;
+                        stopLoop = true;
+                    }
+
                     ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
 
                     if (_replayOperations.Count <= 0)

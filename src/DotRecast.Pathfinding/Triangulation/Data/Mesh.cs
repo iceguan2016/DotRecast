@@ -146,8 +146,8 @@ namespace Pathfinding.Triangulation.Data
 
         public bool isOutsideBounds(FixMath.F64 x, FixMath.F64 y)
         {
-            return x < (_xmin - Constants.EPSILON) || y < (_ymin - Constants.EPSILON)
-                || x > (_xmax + Constants.EPSILON) || y > (_ymax + Constants.EPSILON);
+            return x < (_xmin - Constants.EPSILON_SQUARED) || y < (_ymin - Constants.EPSILON_SQUARED)
+                || x > (_xmax + Constants.EPSILON_SQUARED) || y > (_ymax + Constants.EPSILON_SQUARED);
         }
 
         public List<ConstraintShape> get_constraintShapes()
@@ -207,6 +207,12 @@ namespace Pathfinding.Triangulation.Data
 
                 var dir = new FixMath.F64Vec2(transfx2 - transfx1, transfy2 - transfy1);
                 segment = insertConstraintSegment(transfx1, transfy1, transfx2, transfy2);
+
+                if (Debug.locatePosition.isError)
+                {
+                    return;
+                }
+
                 if (segment != null)
                 {
                     segment.fromShape = shape;
@@ -547,7 +553,13 @@ namespace Pathfinding.Triangulation.Data
                     newX2 = intersectPoint.X;
                     newY2 = intersectPoint.Y;
                 }
-            }  // we check the vertices insertions  
+            }  // we check the vertices insertions
+
+            // clip to bounds
+            newX1 = FixMath.F64.Clamp(newX1, _xmin, _xmax);
+            newY1 = FixMath.F64.Clamp(newY1, _ymin, _ymax);
+            newX2 = FixMath.F64.Clamp(newX2, _xmin, _xmax);
+            newY2 = FixMath.F64.Clamp(newY2, _ymin, _ymax);
 
             var vertexDown = insertVertex(newX1, newY1);
             if (vertexDown == null)

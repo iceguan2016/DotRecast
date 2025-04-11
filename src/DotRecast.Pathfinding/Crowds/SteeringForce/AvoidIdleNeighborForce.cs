@@ -113,7 +113,7 @@ namespace Pathfinding.Crowds.SteeringForce
             var neighbors = owner.Neighbors;
             for (var i = 0; i < neighbors.Count; ++i)
             {
-                if (Debug.IsWatchingNeighborIndex(neighbors.Count, i))
+                if (Debug.IsWatchingIndex(neighbors.Count, i))
                 {
                     var boxSize = FixMath.F64Vec3.FromFloat(0.1f, 2.0f, 0.1f);
                     Draw.drawBoxOutline(annotation, neighbors[i].Position, FixMath.F64Quat.Identity, boxSize, Colors.Green, FixMath.F64.One);

@@ -179,6 +179,26 @@ namespace Pathfinding.Triangulation.Math
 
         public static FixMath.F64Vec2 __circumcenter;
 
+
+        public class LocatePositionProcedure
+        {
+            public bool isError = false;
+            public FixMath.F64Vec2 inputPosition = FixMath.F64Vec2.Zero;
+            public Vertex closedVertex = null;
+            public int numIter  = 0;
+            public int maxIter = 50;
+            public List<Face> visitedFaces = new List<Face>();
+
+            public void reset()
+            {
+                isError = false;
+                inputPosition = FixMath.F64Vec2.Zero;
+                closedVertex = null;
+                numIter = 0;
+                visitedFaces.Clear();
+            }
+        }
+
         // return one the following, in priority order:
         // - an existant vertex (if (x, y) lies on this vertex)
         // or
@@ -191,6 +211,11 @@ namespace Pathfinding.Triangulation.Math
         public static Intersection locatePosition(FixMath.F64 x, FixMath.F64 y, Mesh mesh)
         {
             // jump and walk algorithm
+
+            if (null != Debug.locatePosition) 
+                Debug.locatePosition?.reset();
+            if (null != Debug.locatePosition)
+                Debug.locatePosition.inputPosition = new FixMath.F64Vec2(x, y);
 
             if (_randGen == null)
                 _randGen = new RandGenerator();
@@ -228,6 +253,9 @@ namespace Pathfinding.Triangulation.Math
                 }
             }
 
+            if (null != Debug.locatePosition)
+                Debug.locatePosition.closedVertex = closedVertex;
+
             Face currFace;
             var iterFace = new FromVertexToHoldingFaces();
             iterFace.set_fromVertex(closedVertex);
@@ -242,8 +270,8 @@ namespace Pathfinding.Triangulation.Math
             //while ( faceVisited[ currFace ] || !(objectContainer = isInFace(x, y, currFace)) )
             while (true)
             {
-                bool tmp = false;
-                if (!faceVisited.Contains(currFace))
+                bool tmp;
+                if (faceVisited.Add(currFace))
                 {
                     objectContainer = Geom2D.isInFace(x, y, currFace);
                     tmp = objectContainer == null;
@@ -258,12 +286,23 @@ namespace Pathfinding.Triangulation.Math
                     break;
                 }
 
-                faceVisited.Add(currFace);
+                if (numIter >= Debug.locatePosition.maxIter)
+                {
+                    break;
+                }
+
+                if (null != Debug.locatePosition)
+                {
+                    Debug.locatePosition.numIter++;
+                    Debug.locatePosition.visitedFaces.Add(currFace);
+                }
 
                 numIter++;
                 if (numIter == 50)
                 {
                     Debug.LogError("WALK TAKE MORE THAN 50 LOOP");
+                    Debug.locatePosition.isError = true;
+                    break;
                 }
 
                 // 迭代face的innerEdge找到(x, y)在该edge右侧的方向才停止

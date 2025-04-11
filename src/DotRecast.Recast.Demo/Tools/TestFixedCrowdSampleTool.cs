@@ -644,10 +644,10 @@ public class TestFixedCrowdTool : IRcToolable
     {
         var propertyChanged = false;
 
-        var neiIndex = Debug.WatchNeighborIndex;
+        var neiIndex = Debug.WatchIndex;
         if (ImGui.SliderInt($"Watch neighbor {neiIndex}", ref neiIndex, 0, 15))
         {
-            Debug.WatchNeighborIndex = neiIndex;
+            Debug.WatchIndex = neiIndex;
         }
 
         ImGui.SliderInt($"Draw vo step {Debug._drawVOIndex}", ref Debug._drawVOIndex, 0, 15);
@@ -973,6 +973,38 @@ public class TestFixedCrowdSampleTool : ISampleTool
             });
         }
 
+        // draw locatePosition infos
+        if (Debug.locatePosition.isError)
+        { 
+            var pos = Debug.locatePosition.inputPosition;
+            _draw.DrawCube(
+                new UnityEngine.Vector3(pos.X.Float, _draw.MapHeight, pos.Y.Float), 
+                new UnityEngine.Vector3(0.1f, 5.0f, 0.1f), 
+                UnityEngine.Color.red);
+
+            var n = Debug.locatePosition.visitedFaces.Count;
+            for (var i = 0; i < n; ++i)
+            {
+                if (Debug.IsWatchingIndex(n, i))
+                {
+                    var face = Debug.locatePosition.visitedFaces[i];
+                    _view.drawFace(face, UnityEngine.Color.green);
+
+                    // neighbor
+                    Edge innerEdge;
+                    var iterEdge = new FromFaceToInnerEdges();
+                    iterEdge.set_fromFace(face);
+                    while ((innerEdge = iterEdge.next()) != null)
+                    {
+                        if (innerEdge._isConstrained)
+                            continue;
+                        var neighbourFace = innerEdge.get_rightFace();
+                        _view.drawFace(neighbourFace, UnityEngine.Color.cyan);
+                    } 
+                }
+            }
+        }
+
         // draw world axes
         if (null != _draw)
         {
@@ -1027,6 +1059,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
         {
             Debug.NextStep();
         }
+
+        ImGui.InputInt("Watch Index", ref Debug.WatchIndex, 1, 3);
         ImGui.NewLine();
     }
 
