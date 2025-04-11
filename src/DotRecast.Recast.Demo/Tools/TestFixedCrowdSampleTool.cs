@@ -1098,6 +1098,12 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
     }
 
+    void Layout_DebugInsertObject()
+    {
+        ImGui.Checkbox("Is Step Create Entity", ref Debug.recorderDebugParams.isStepCreateEntity);
+        ImGui.InputInt("Watch Entity Index", ref Debug.recorderDebugParams.watchEntityIndex);
+    }
+
     void Layout_Replay()
     {
         if (!_tool.EntityManager.IsReplaying())
@@ -1166,6 +1172,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
         else
         {
+            Layout_DebugInsertObject();
+
             if (ImGui.Button("StopReplay"))
             {
                 _tool.EntityManager.StopReplay();

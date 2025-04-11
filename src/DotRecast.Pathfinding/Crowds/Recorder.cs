@@ -7,6 +7,29 @@ using System.Collections.Generic;
 namespace Pathfinding.Crowds
 {
     // 录像模块，方便回放定位一些偶现问题
+    public class RecorderDebugParams
+    {
+        // 单步添加障碍物
+        public bool isStepCreateEntity = true;
+        // 当前添加EntityId
+        public UniqueId curEntityId = UniqueId.InvalidID;
+        // 当前添加Entity数量
+        public int addEntityNum = 0;
+        // 调试Entity索引
+        public int watchEntityIndex = -1;
+
+        public bool isWatchNextEntity()
+        {
+            return watchEntityIndex > 0 && watchEntityIndex == addEntityNum;
+        }
+
+        public void reset()
+        {
+            curEntityId = UniqueId.InvalidID;
+            addEntityNum = 0;
+        }
+    }
+
     public class Recorder
     {
         public enum eWorkMode
@@ -168,6 +191,8 @@ namespace Pathfinding.Crowds
                 MaxReplayFrame = 0;
                 IsPauseReplay = false;
                 _tickElapsedTime = 0.0;
+
+                Debug.recorderDebugParams.reset();
             }
             catch (Exception e)
             {
@@ -219,6 +244,9 @@ namespace Pathfinding.Crowds
                     var executeTime = operation.ExecuteTime(this);
                     if (_tickElapsedTime >= executeTime)
                     {
+                        _tickElapsedTime -= executeTime;
+                        _replayOperations.Dequeue().Execute(this);
+
                         if (operation is OperationTick)
                         {
                             ++CurrReplayFrame;
@@ -229,8 +257,17 @@ namespace Pathfinding.Crowds
                                 stopLoop = true;
                             }
                         }
-                        _tickElapsedTime -= executeTime;
-                        _replayOperations.Dequeue().Execute(this);
+
+                        // 单步调试添加Entity
+                        if (operation is OperationCreateEntity)
+                        {
+                            Debug.recorderDebugParams.addEntityNum++;
+                            if (Debug.recorderDebugParams.isStepCreateEntity)
+                            {
+                                IsPauseReplay = true;
+                                stopLoop = true;
+                            }
+                        }
                     }
                     else
                     {

@@ -351,7 +351,10 @@ namespace Pathfinding.Crowds
         {
             if (recorder.IsReplaying)
             {
-                recorder.EntityManager.CreateEntity(_param);
+                Debug.insertObject.isWatchInsertSegment = Debug.recorderDebugParams.isWatchNextEntity();
+                var enityId = recorder.EntityManager.CreateEntity(_param);
+                Debug.recorderDebugParams.curEntityId = enityId;
+                Debug.insertObject.isWatchInsertSegment = false;
             }
         }
 

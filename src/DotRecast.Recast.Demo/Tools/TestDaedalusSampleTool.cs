@@ -1340,7 +1340,7 @@ public class TestDaedalusSampleTool : ISampleTool
         _tool = new TestDaedalusTool();
         if (null != _tool) _tool.Start(mapWidth, mapHeight);
 
-        _tool.BuildGraphMesh(0, 0, mapWidth, mapHeight);
+        _tool.BuildGraphMesh(0, 0, 300, 150);
 
         Logger.Information($"init graph mesh, mapWidth:{mapWidth}, mapHeight:{mapHeight}");
     }

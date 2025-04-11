@@ -5,6 +5,7 @@ using System.Linq;
 using Pathfinding.Crowds;
 using UnityEngine;
 using static System.Net.WebRequestMethods;
+using static Pathfinding.Triangulation.Data.Mesh;
 using static Pathfinding.Triangulation.Math.Geom2D;
 
 namespace Pathfinding.Util
@@ -76,9 +77,12 @@ namespace Pathfinding.Util
         {
 
         }
-
+        
+        public static RecorderDebugParams recorderDebugParams = new RecorderDebugParams();
         // 调试LocatePositionProcedure
         public static LocatePositionProcedure locatePosition = new LocatePositionProcedure();
+        // 调试InsertObject
+        public static InsertObjectParams insertObject = new InsertObjectParams();
 
         // 测试单个neighbor
         public static int _drawVOIndex = 10;

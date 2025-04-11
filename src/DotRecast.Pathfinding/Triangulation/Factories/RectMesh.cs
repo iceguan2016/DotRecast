@@ -58,7 +58,12 @@ namespace Pathfinding.Triangulation.Factories
             var xmax = x + width;
             var ymax = y + height;
 
+            // 这里动态计算offset，防止边界出现那种特别长的face，新增edge和其计算
+            // 交点会有精度误差
             var offset = Constants.EPSILON * 1000;
+            //var maxLength = FixMath.F64.Max(width, height);
+            //var tan = FixMath.F64.Tan(FixMath.F64.FromDouble(0.262)); // 15度角
+            //var offset = maxLength * tan;
             vTL._pos = new FixMath.F64Vec2(xmin - offset, ymin - offset);
             vTR._pos = new FixMath.F64Vec2(xmax + offset, ymin - offset);
             vBR._pos = new FixMath.F64Vec2(xmax + offset, ymax + offset);
@@ -118,10 +123,14 @@ namespace Pathfinding.Triangulation.Factories
 
             mesh._constraintShapes.Add(boundShape);
             var securityRect = new List<FixMath.F64>();
-            securityRect.AddRange(new FixMath.F64[] { xmin, ymin, xmax, ymin });
-            securityRect.AddRange(new FixMath.F64[] { xmax, ymin, xmax, ymax });
-            securityRect.AddRange(new FixMath.F64[] { xmax, ymax, xmin, ymax });
-            securityRect.AddRange(new FixMath.F64[] { xmin, ymax, xmin, ymin });
+            var left    = xmin - offset;
+            var right   = xmax + offset;
+            var bottom  = ymin - offset;
+            var top     = ymax + offset;
+            securityRect.AddRange(new FixMath.F64[] { left, bottom, right, bottom });
+            securityRect.AddRange(new FixMath.F64[] { right, bottom, right, top });
+            securityRect.AddRange(new FixMath.F64[] { right, top, left, top });
+            securityRect.AddRange(new FixMath.F64[] { left, top, left, bottom });
 
 
             mesh.set_clipping(false);

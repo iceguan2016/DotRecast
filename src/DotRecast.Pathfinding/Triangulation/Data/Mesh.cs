@@ -171,7 +171,10 @@ namespace Pathfinding.Triangulation.Data
             }
         }
 
-
+        public class InsertObjectParams
+        {
+            public bool isWatchInsertSegment = false;
+        }
         public void insertObject(Obstacle object_)
         {
             if (object_._constraintShape != null)
@@ -196,6 +199,14 @@ namespace Pathfinding.Triangulation.Data
             var i = 0;
             while (i < coordinates.Count)
             {
+                var isWatch = Debug.insertObject.isWatchInsertSegment &&
+                    Debug.IsWatchingIndex(coordinates.Count / 4, i / 4);
+
+                if (isWatch)
+                {
+                    int stop = 0;
+                }
+
                 x1 = coordinates[i];
                 y1 = coordinates[i + 1];
                 x2 = coordinates[i + 2];
@@ -226,6 +237,13 @@ namespace Pathfinding.Triangulation.Data
 
                     shape.segments.Add(segment);
                 }
+
+                // 调试指定Segment
+                if (isWatch)
+                {
+                    break;
+                }
+
                 i += 4;
             }
 
