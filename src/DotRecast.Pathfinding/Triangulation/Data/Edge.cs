@@ -6,7 +6,7 @@ namespace Pathfinding.Triangulation.Data
     // https://jerryyin.info/geometry-processing-algorithms/half-edge/
     // face对应edge按逆时针方向走，leftEdge是对应face的innerEdge
 
-    // _isReal : 标记edge是否是原始输入数据的edge（false表示是后面生成新增的edge）
+    // _isReal : 标记edge是否是原始输入数据的edge（false表示是虚edge，只是保证逻辑正确用的）
     // _isConstrained : 标记顶点是否是约束边
     // _originVertex : edge的起始顶点
     // _oppositeEdge : edge对象边

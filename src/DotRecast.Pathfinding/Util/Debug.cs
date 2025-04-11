@@ -84,6 +84,8 @@ namespace Pathfinding.Util
         // 调试InsertObject
         public static InsertObjectParams insertObject = new InsertObjectParams();
 
+        public static int WatchFaceID = -1;
+
         // 测试单个neighbor
         public static int _drawVOIndex = 10;
         public static int WatchIndex = 0;

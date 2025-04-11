@@ -1005,6 +1005,23 @@ public class TestFixedCrowdSampleTool : ISampleTool
             }
         }
 
+        // draw watch face
+        if (Debug.WatchFaceID > 0)
+        {
+            var mesh = _tool.Mesh;
+            if (null != mesh)
+            {
+                for (var i = 0; i < mesh._faces.Count; ++i)
+                {
+                    var face = mesh._faces[i];
+                    if (face.get_id() == Debug.WatchFaceID)
+                    {
+                        _view.drawFace(face, UnityEngine.Color.yellow);
+                    }
+                }
+            }
+        }
+
         // draw world axes
         if (null != _draw)
         {
@@ -1061,6 +1078,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
 
         ImGui.InputInt("Watch Index", ref Debug.WatchIndex, 1, 3);
+        ImGui.InputInt("Face ID", ref Debug.WatchFaceID);
         ImGui.NewLine();
     }
 

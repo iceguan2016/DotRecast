@@ -74,6 +74,19 @@ namespace Pathfinding.Triangulation.Factories
             vBR.setDatas(eBR_BL);
             vBL.setDatas(eBL_TL);
 
+            /*
+               TL
+                 ----+-----+ TR
+            \   |    /|
+            \   |   / |
+            \   |  /  |
+            \   | /   |
+            \   |/    |
+            \   +-----+ BR
+            \  BL     \
+            \----------
+            */
+
             eTL_TR.setDatas(vTL, eTR_TL, eTR_BR, fTL_TR_BR, true, true);
             eTR_TL.setDatas(vTR, eTL_TR, eTL_BL, fTL_BL_TR, true, true);
             eTR_BR.setDatas(vTR, eBR_TR, eBR_TL, fTL_TR_BR, true, true);
@@ -123,10 +136,10 @@ namespace Pathfinding.Triangulation.Factories
 
             mesh._constraintShapes.Add(boundShape);
             var securityRect = new List<FixMath.F64>();
-            var left    = xmin - offset;
-            var right   = xmax + offset;
-            var bottom  = ymin - offset;
-            var top     = ymax + offset;
+            var left    = xmin;
+            var right   = xmax;
+            var bottom  = ymin;
+            var top     = ymax;
             securityRect.AddRange(new FixMath.F64[] { left, bottom, right, bottom });
             securityRect.AddRange(new FixMath.F64[] { right, bottom, right, top });
             securityRect.AddRange(new FixMath.F64[] { right, top, left, top });
