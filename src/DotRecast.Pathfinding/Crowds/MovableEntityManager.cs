@@ -237,6 +237,8 @@ namespace Pathfinding.Crowds
 
         public bool SetEntityParams(
             UniqueId inEntityId, 
+            FixMath.F64Vec3? pos = null,
+            FixMath.F64Quat? rot = null,
             FixMath.F64? radius = null, 
             FixMath.F64? maxSpeed = null, 
             FixMath.F64? maxForce = null, 
@@ -248,12 +250,14 @@ namespace Pathfinding.Crowds
 
             if (null != _recorder && _recorder.IsRecording)
             {
-                _recorder.AddReplayOperation(new OperationSetEntityParams(inEntityId, radius, maxSpeed, maxForce, groupMask, groupToAvoid));
+                _recorder.AddReplayOperation(new OperationSetEntityParams(inEntityId, pos, rot, radius, maxSpeed, maxForce, groupMask, groupToAvoid));
             }
 
             var entity = GetEntityById(inEntityId);
             if (entity is MovableEntity movable)
             {
+                if (null != pos) movable.Position = pos.Value;
+                if (null != rot) movable.SetRotation(rot.Value);
                 // 半径变化了需要重新创建物理体
                 if (null != radius && movable.Radius != radius.Value)
                 {

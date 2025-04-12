@@ -16,7 +16,7 @@ namespace Pathfinding.Crowds
             Replay,
         }
 
-        static int VERSION_NO = 2;
+        static int VERSION_NO = 3;
 
         public eWorkMode WorkMode { get; private set; }
         public IMovableEntityManager EntityManager { get; private set; }

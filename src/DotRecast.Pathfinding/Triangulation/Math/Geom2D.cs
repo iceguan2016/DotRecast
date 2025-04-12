@@ -264,6 +264,7 @@ namespace Pathfinding.Triangulation.Math
                 if (numIter == 50)
                 {
                     Debug.LogError("WALK TAKE MORE THAN 50 LOOP");
+                    break;
                 }
 
                 // 迭代face的innerEdge找到(x, y)在该edge右侧的方向才停止

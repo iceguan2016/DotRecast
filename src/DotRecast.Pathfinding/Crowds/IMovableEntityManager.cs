@@ -74,6 +74,8 @@ namespace Pathfinding.Crowds
 
         bool SetEntityParams(
             UniqueId inEntityId, 
+            FixMath.F64Vec3? pos = null,
+            FixMath.F64Quat? rot = null,
             FixMath.F64? radius = null, 
             FixMath.F64? maxSpeed = null,
             FixMath.F64? maxForce = null, 

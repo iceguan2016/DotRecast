@@ -77,6 +77,7 @@ namespace Pathfinding.Crowds
             }
         }
 
+        static FixMath.F64Vec2 INVLAID_VEC2 = new FixMath.F64Vec2(FixMath.F64.MaxValue, FixMath.F64.MaxValue);
         public static void Serialize(ref this FixMath.F64Vec2 v, Recorder recorder)
         {
             var x = v.X;
@@ -87,6 +88,25 @@ namespace Pathfinding.Crowds
             v.Y = y;
         }
 
+        public static void Serialize(ref this FixMath.F64Vec2? v, Recorder recorder)
+        {
+            if (recorder.IsRecording) 
+            {
+                var v2 = v?? INVLAID_VEC2;
+                v2.Serialize(recorder);
+            }
+            else if (recorder.IsReplaying)
+            {
+                var v2 = FixMath.F64Vec2.Zero;
+                v2.Serialize(recorder);
+                if (v2 == INVLAID_VEC2)
+                    v = null;
+                else
+                    v = v2;
+            }
+        }
+
+        static FixMath.F64Vec3 INVLAID_VEC3 = new FixMath.F64Vec3(FixMath.F64.MaxValue, FixMath.F64.MaxValue, FixMath.F64.MaxValue);
         public static void Serialize(ref this FixMath.F64Vec3 v, Recorder recorder)
         {
             var x = v.X;
@@ -99,6 +119,26 @@ namespace Pathfinding.Crowds
             Serialize(ref z, recorder);
             v.Z = z;
         }
+
+        public static void Serialize(ref this FixMath.F64Vec3? v, Recorder recorder)
+        {
+            if (recorder.IsRecording) 
+            {
+                var v3 = v?? INVLAID_VEC3;
+                v3.Serialize(recorder);
+            }
+            else if (recorder.IsReplaying)
+            {
+                var v3 = FixMath.F64Vec3.Zero;
+                v3.Serialize(recorder);
+                if (v3 == INVLAID_VEC3)
+                    v = null;
+                else
+                    v = v3;
+            }
+        }
+
+        static FixMath.F64Quat INVLAID_QUAT = new FixMath.F64Quat(FixMath.F64.MaxValue, FixMath.F64.MaxValue, FixMath.F64.MaxValue, FixMath.F64.MaxValue);
 
         public static void Serialize(ref this FixMath.F64Quat q, Recorder recorder)
         {
@@ -114,6 +154,24 @@ namespace Pathfinding.Crowds
             var w = q.W;
             Serialize(ref w, recorder);
             q.W = w;
+        }
+
+        public static void Serialize(ref this FixMath.F64Quat? q, Recorder recorder)
+        {
+            if (recorder.IsRecording) 
+            {
+                var q4 = q?? INVLAID_QUAT;
+                q4.Serialize(recorder);
+            }
+            else if (recorder.IsReplaying)
+            {
+                var q4 = FixMath.F64Quat.Identity;
+                q4.Serialize(recorder);
+                if (q4 == INVLAID_QUAT)
+                    q = null;
+                else
+                    q = q4;
+            }
         }
 
         public static void Serialize(ref this UniqueId id, Recorder recorder)
@@ -447,6 +505,8 @@ namespace Pathfinding.Crowds
     public class OperationSetEntityParams : IRecordOperation
     {
         UniqueId _entityId;
+        FixMath.F64Vec3? _pos;
+        FixMath.F64Quat? _rot;
         FixMath.F64? _radius;
         FixMath.F64? _maxSpeed;
         FixMath.F64? _maxForce;
@@ -457,6 +517,8 @@ namespace Pathfinding.Crowds
 
         public OperationSetEntityParams(
             UniqueId? entityId = null, 
+            FixMath.F64Vec3? pos = null,
+            FixMath.F64Quat? rot = null,
             FixMath.F64? radius = null, 
             FixMath.F64? maxSpeed = null, 
             FixMath.F64? maxForce = null,
@@ -464,6 +526,8 @@ namespace Pathfinding.Crowds
             int? groupToAvoid = null)
         {
             _entityId = entityId ?? UniqueId.InvalidID;
+            _pos = pos;
+            _rot = rot;
             _radius = radius;
             _maxSpeed = maxSpeed;
             _maxForce = maxForce;
@@ -475,13 +539,15 @@ namespace Pathfinding.Crowds
         {
             if (recorder.IsReplaying)
             {
-                recorder.EntityManager.SetEntityParams(_entityId, _radius, _maxSpeed, _maxForce, _groupMask, _groupToAvoid);
+                recorder.EntityManager.SetEntityParams(_entityId, _pos, _rot, _radius, _maxSpeed, _maxForce, _groupMask, _groupToAvoid);
             }
         }
 
         public void Serialize(Recorder recorder)
         {
             _entityId.Serialize(recorder);
+            _pos.Serialize(recorder);
+            _rot.Serialize(recorder);
             _radius.Serialize(recorder);
             _maxSpeed.Serialize(recorder);
             _maxForce.Serialize(recorder);
