@@ -329,7 +329,7 @@ public class TestFixedCrowdTool : IRcToolable
         // 设置group
         var groupMask = 1 << groupId;
         var groupsToAvoid = 1 << groupId;
-        _entityManager.SetEntityParams(entityId, null, null, null, groupMask, groupsToAvoid);
+        _entityManager.SetEntityParams(entityId, null, null, null, null, null, groupMask, groupsToAvoid);
         return entityId;
     }
 
