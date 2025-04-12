@@ -373,11 +373,11 @@ namespace Pathfinding.Crowds
 
             if (!_initialized) return true;
 
-            var PendingDeleteEntities = new List<ICrowdEntityActor>(Entities);
-            for (var i = 0; i < PendingDeleteEntities.Count; ++i)
-            {
-                DeleteEntity(PendingDeleteEntities[i].ID);
-            }
+            //var PendingDeleteEntities = new List<ICrowdEntityActor>(Entities);
+            //for (var i = 0; i < PendingDeleteEntities.Count; ++i)
+            //{
+            //    DeleteEntity(PendingDeleteEntities[i].ID);
+            //}
 
             Entities.Clear();
             EntityId2Index.Clear();
