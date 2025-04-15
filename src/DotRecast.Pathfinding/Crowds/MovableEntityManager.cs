@@ -272,6 +272,8 @@ namespace Pathfinding.Crowds
                 if (null != maxForce) movable.MaxForce = maxForce.Value;
                 if (null != groupMask) movable.GroupMask = groupMask.Value;
                 if (null != groupToAvoid) movable.GroupsToAvoid = groupToAvoid.Value;
+
+                movable.OnTemplatePropertyChanged();
                 return true;
             }
             return false;

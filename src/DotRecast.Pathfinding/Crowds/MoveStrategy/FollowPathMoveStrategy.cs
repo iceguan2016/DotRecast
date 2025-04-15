@@ -21,7 +21,9 @@ namespace Pathfinding.Crowds.MoveStrategy
         FixMath.F64 _predictionAvoidIdleNeighborTime = FixMath.F64.FromDouble(0.05);
         FixMath.F64 _applyTurnForceAngleCos = FixMath.F64.FromDouble(0.707);
         FixMath.F64 _turnVelocityDurationTime = FixMath.F64.FromDouble(0.5);
+        bool _applyForwardForceNoAvoid = false;
         FixMath.F64 _applyForwardForceDistance = FixMath.F64.FromDouble(4.0f);
+        FixMath.F64 _applyTurnForceDistance = FixMath.F64.FromDouble(4.0f);
 
         public FollowPathMoveStrategy(MovableEntity owner)
         {
@@ -68,7 +70,9 @@ namespace Pathfinding.Crowds.MoveStrategy
             _flockCohesionForce.CohesionAngle = template.CohesionAngle;
             _flockCohesionForce.Weight = template.CohesionWeight;
 
-            _applyForwardForceDistance = template.Radius * 6;
+            _applyForwardForceNoAvoid = template.ApplyForwardForceNoAvoid;
+            _applyForwardForceDistance = template.MaxSpeed * FixMath.F64.FromDouble(1.0);
+            _applyTurnForceDistance = owner.MaxSpeed *  _turnVelocityDurationTime;
         }
 
         public override bool Condition(MovableEntity owner)
@@ -104,6 +108,8 @@ namespace Pathfinding.Crowds.MoveStrategy
 
             _avoidObstacleForce.UpdateAvoidObstacleInfo(owner, _avoidIdleNeighborForce.AvoidNeighborInfo);
             var avoidObstacleForce = _avoidObstacleForce.GetSteeringForce(owner);
+
+            var distanceToTarget = FixMath.F64.Zero;
 
             var forwardMoveForce = FixMath.F64Vec3.Zero;
             var flockSeparationForce = FixMath.F64Vec3.Zero;
@@ -142,10 +148,10 @@ namespace Pathfinding.Crowds.MoveStrategy
                             followPathForce = FixMath.F64Vec3.Zero;
                             flockCohesionForce = FixMath.F64Vec3.Zero;
                         }
-                        else if (null != owner.TargetLocation)
+                        else if (_applyForwardForceNoAvoid && null != owner.TargetLocation)
                         {
-                            var distance = FixMath.F64Vec3.DistanceFast(owner.Position, owner.TargetLocation.Value);
-                            if (distance >= _applyForwardForceDistance)
+                            distanceToTarget = FixMath.F64Vec3.DistanceFast(owner.Position, owner.TargetLocation.Value);
+                            if (distanceToTarget >= _applyForwardForceDistance)
                             {
                                 // 应用前驱力
                                 forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
@@ -167,8 +173,19 @@ namespace Pathfinding.Crowds.MoveStrategy
                     var targetVelocity = dirTarget * owner.Speed;
                     if (targetVelocity != FixMath.F64Vec3.Zero)
                     {
-                        var accel = (targetVelocity - owner.Velocity) / _turnVelocityDurationTime;
-                        turnVelocityForce = accel * owner.Mass;
+                        // 距离越近，转向加速度越大
+                        if (distanceToTarget == FixMath.F64.Zero)
+                            distanceToTarget = FixMath.F64Vec3.DistanceFast(owner.Position, owner.TargetLocation.Value);
+
+                        if (distanceToTarget > _applyTurnForceDistance)
+                        {
+                            var accel = (targetVelocity - owner.Velocity) / _turnVelocityDurationTime;
+                            turnVelocityForce = accel * owner.Mass;
+                        }
+                        else
+                        {
+                            turnVelocityForce = targetVelocity.GetSafeNormal() * owner.MaxForce;
+                        }
                     }
                 }
             }
