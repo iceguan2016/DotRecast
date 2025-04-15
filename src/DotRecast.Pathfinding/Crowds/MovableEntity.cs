@@ -43,7 +43,6 @@ namespace Pathfinding.Crowds
 
         //
         public FixMath.F64 ForwardMoveWeight = FixMath.F64.FromFloat(1.0f);
-        public bool ApplyForwardForceNoAvoid = false;
 
         public FixMath.F64 FollowPathAheadTime = FixMath.F64.FromFloat(3.0f);
         public FixMath.F64 FollowPathWeight = FixMath.F64.FromFloat(1.0f);

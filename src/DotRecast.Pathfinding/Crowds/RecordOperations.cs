@@ -213,11 +213,6 @@ namespace Pathfinding.Crowds
             template.Radius.Serialize(recorder);
             template.MaxSpeed.Serialize(recorder);
             template.MaxForce.Serialize(recorder);
-
-            var applyForwardForceNoAvoid = template.ApplyForwardForceNoAvoid? 1 : 0;
-            applyForwardForceNoAvoid.Serialize(recorder);
-            template.ApplyForwardForceNoAvoid = applyForwardForceNoAvoid == 1;
-
             template.ForwardMoveWeight.Serialize(recorder);
             template.FollowPathAheadTime.Serialize(recorder);
             template.FollowPathWeight.Serialize(recorder);
