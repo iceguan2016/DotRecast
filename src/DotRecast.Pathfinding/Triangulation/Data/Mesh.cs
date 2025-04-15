@@ -1090,12 +1090,12 @@ namespace Pathfinding.Triangulation.Data
             // set the new vertex, edge and face references for the new 8 center crossing edges
             eCenter_Top.setDatas(vCenter, eTop_Center, eTop_Left, fTopLeft, fTop._isReal);
             eTop_Center.setDatas(vTop, eCenter_Top, eCenter_Right, fTopRight, fTop._isReal);
-            eCenter_Left.setDatas(vCenter, eLeft_Center, eLeft_Bot, fBotLeft, edge._isReal, edge._isConstrained);
-            eLeft_Center.setDatas(vLeft, eCenter_Left, eCenter_Top, fTopLeft, edge._isReal, edge._isConstrained);
+            eCenter_Left.setDatas(vCenter, eLeft_Center, eLeft_Bot, fBotLeft, eRight_Left._isReal, eRight_Left._isConstrained);
+            eLeft_Center.setDatas(vLeft, eCenter_Left, eCenter_Top, fTopLeft, eLeft_Right._isReal, eLeft_Right._isConstrained);
             eCenter_Bot.setDatas(vCenter, eBot_Center, eBot_Right, fBotRight, fBot._isReal);
             eBot_Center.setDatas(vBot, eCenter_Bot, eCenter_Left, fBotLeft, fBot._isReal);
-            eCenter_Right.setDatas(vCenter, eRight_Center, eRight_Top, fTopRight, edge._isReal, edge._isConstrained);
-            eRight_Center.setDatas(vRight, eCenter_Right, eCenter_Bot, fBotRight, edge._isReal, edge._isConstrained);
+            eCenter_Right.setDatas(vCenter, eRight_Center, eRight_Top, fTopRight, eLeft_Right._isReal, eLeft_Right._isConstrained);
+            eRight_Center.setDatas(vRight, eCenter_Right, eCenter_Bot, fBotRight, eRight_Left._isReal, eRight_Left._isConstrained);
 
             // set the new edge references for the new 4 faces
             fTopLeft.setDatas(eCenter_Top, fTop._isReal);
