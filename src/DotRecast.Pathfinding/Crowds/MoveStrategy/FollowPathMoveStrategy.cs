@@ -1,4 +1,5 @@
 
+using System;
 using FixMath;
 using Pathfinding.Crowds.SteeringForce;
 using Pathfinding.Util;
@@ -20,6 +21,8 @@ namespace Pathfinding.Crowds.MoveStrategy
         FixMath.F64 _predictionAvoidIdleNeighborTime = FixMath.F64.FromDouble(0.05);
         FixMath.F64 _applyTurnForceAngleCos = FixMath.F64.FromDouble(0.707);
         FixMath.F64 _turnVelocityDurationTime = FixMath.F64.FromDouble(0.5);
+        FixMath.F64 _applyForwardForceDistance = FixMath.F64.FromDouble(4.0f);
+
         public FollowPathMoveStrategy(MovableEntity owner)
         {
             _followPathForce = new FollowPathForce();
@@ -64,6 +67,8 @@ namespace Pathfinding.Crowds.MoveStrategy
             _flockCohesionForce.CohesionRadius = template.CohesionRadius;
             _flockCohesionForce.CohesionAngle = template.CohesionAngle;
             _flockCohesionForce.Weight = template.CohesionWeight;
+
+            _applyForwardForceDistance = template.Radius * 6;
         }
 
         public override bool Condition(MovableEntity owner)
@@ -130,13 +135,22 @@ namespace Pathfinding.Crowds.MoveStrategy
                         var predictionAvoidIdleForce = PredictionAvoidIdleNeighborsFoce(owner, totalForce, _predictionAvoidIdleNeighborTime, _avoidIdleNeighborForce.AvoidNeighborAheadTime);
                         if (predictionAvoidIdleForce != FixMath.F64Vec3.Zero)
                         {
+                            // 应用前驱力
+                            forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
+
                             // 不应用路径跟随力和聚集力
                             followPathForce = FixMath.F64Vec3.Zero;
                             flockCohesionForce = FixMath.F64Vec3.Zero;
                         }
-
-                        // 应用前驱力
-                        forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
+                        else if (null != owner.TargetLocation)
+                        {
+                            var distance = FixMath.F64Vec3.DistanceFast(owner.Position, owner.TargetLocation.Value);
+                            if (distance >= _applyForwardForceDistance)
+                            {
+                                // 应用前驱力
+                                forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
+                            }
+                        }
                     }
                 }
             }
