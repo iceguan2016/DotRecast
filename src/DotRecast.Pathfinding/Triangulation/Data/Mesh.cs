@@ -1154,10 +1154,9 @@ namespace Pathfinding.Triangulation.Data
                 }
 
                 vCenter.set_fromConstraintSegments(fromSegments.Skip(0).Take(fromSegments.Count).ToList());
-            }  // remove the old LEFT-RIGHT and RIGHT-LEFT edges  
-
-
-
+            }
+            
+            // remove the old LEFT-RIGHT and RIGHT-LEFT edges  
             eLeft_Right.dispose();
             eRight_Left.dispose();
             _edges.RemoveAt(_edges.IndexOf(eLeft_Right));
