@@ -130,13 +130,13 @@ namespace Pathfinding.Crowds.MoveStrategy
                         var predictionAvoidIdleForce = PredictionAvoidIdleNeighborsFoce(owner, totalForce, _predictionAvoidIdleNeighborTime, _avoidIdleNeighborForce.AvoidNeighborAheadTime);
                         if (predictionAvoidIdleForce != FixMath.F64Vec3.Zero)
                         {
-                            // 应用前驱力
-                            forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
-
                             // 不应用路径跟随力和聚集力
                             followPathForce = FixMath.F64Vec3.Zero;
                             flockCohesionForce = FixMath.F64Vec3.Zero;
                         }
+
+                        // 应用前驱力
+                        forwardMoveForce = _forwadMoveForce.GetSteeringForce(owner);
                     }
                 }
             }
