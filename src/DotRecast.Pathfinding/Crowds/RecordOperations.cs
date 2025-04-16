@@ -512,6 +512,8 @@ namespace Pathfinding.Crowds
         FixMath.F64? _maxForce;
         int? _groupMask;
         int? _groupToAvoid;
+        int? _setEntityStates;
+        int? _clearEntityStates;
 
         public eRecordOperation Operation => eRecordOperation.SetEntityParams;
 
@@ -523,7 +525,9 @@ namespace Pathfinding.Crowds
             FixMath.F64? maxSpeed = null, 
             FixMath.F64? maxForce = null,
             int? groupMask = null,
-            int? groupToAvoid = null)
+            int? groupToAvoid = null,
+            int? setEntityStates = null,
+            int? clearEntityStates = null)
         {
             _entityId = entityId ?? UniqueId.InvalidID;
             _pos = pos;
@@ -533,13 +537,15 @@ namespace Pathfinding.Crowds
             _maxForce = maxForce;
             _groupMask = groupMask;
             _groupToAvoid = groupToAvoid;
+            _setEntityStates = setEntityStates;
+            _clearEntityStates = clearEntityStates;
         }
 
         public void Execute(Recorder recorder)
         {
             if (recorder.IsReplaying)
             {
-                recorder.EntityManager.SetEntityParams(_entityId, _pos, _rot, _radius, _maxSpeed, _maxForce, _groupMask, _groupToAvoid);
+                recorder.EntityManager.SetEntityParams(_entityId, _pos, _rot, _radius, _maxSpeed, _maxForce, _groupMask, _groupToAvoid, _setEntityStates, _clearEntityStates);
             }
         }
 
@@ -553,6 +559,8 @@ namespace Pathfinding.Crowds
             _maxForce.Serialize(recorder);
             _groupMask.Serialize(recorder);
             _groupToAvoid.Serialize(recorder);
+            _setEntityStates.Serialize(recorder);
+            _clearEntityStates.Serialize(recorder);
         }
 
         public double ExecuteTime(Recorder recorder)

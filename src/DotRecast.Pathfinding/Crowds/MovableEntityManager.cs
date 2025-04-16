@@ -243,7 +243,9 @@ namespace Pathfinding.Crowds
             FixMath.F64? maxSpeed = null, 
             FixMath.F64? maxForce = null, 
             int? groupMask = null,
-            int? groupToAvoid = null)
+            int? groupToAvoid = null,
+            int? setEntityStates = null,
+            int? clearEntityStates = null)
         {
             if (_isReplayControlMode)
                 return false;
@@ -272,6 +274,8 @@ namespace Pathfinding.Crowds
                 if (null != maxForce) movable.MaxForce = maxForce.Value;
                 if (null != groupMask) movable.GroupMask = groupMask.Value;
                 if (null != groupToAvoid) movable.GroupsToAvoid = groupToAvoid.Value;
+                if (null != setEntityStates) movable.SetEntityStateBits(setEntityStates.Value);
+                if (null != clearEntityStates) movable.ClearEntityStateBits(clearEntityStates.Value);
 
                 movable.OnTemplatePropertyChanged();
                 return true;

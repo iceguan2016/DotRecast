@@ -127,6 +127,7 @@ namespace Pathfinding.Crowds
         public enum  eEntityState
         {
 	        Moving = 0,
+            PauseMove,     // 暂停移动
             Attack,
 
             Selected,
@@ -232,6 +233,8 @@ namespace Pathfinding.Crowds
 
         public void SetEntityState(eEntityState inState) { _stateBitsValue |= (uint)(1 << (int)inState); }
         public void ClearEntityState(eEntityState inState) { _stateBitsValue &= ~(uint)(1 << (int)inState); }
+        public void SetEntityStateBits(int inStateBits) { _stateBitsValue |= (uint)inStateBits; }
+        public void ClearEntityStateBits(int inStateBits) { _stateBitsValue &= ~(uint)inStateBits; }
         public bool HasEntityState(eEntityState inState) { return (_stateBitsValue & (uint)(1 << (int)inState)) > 0; }
 
         // constructor
@@ -414,6 +417,7 @@ namespace Pathfinding.Crowds
             }
 
             if (null == targetLocation) return;
+            if (HasEntityState(eEntityState.PauseMove)) return;
 
             var template = Template as TMovableEntityTemplate;
 

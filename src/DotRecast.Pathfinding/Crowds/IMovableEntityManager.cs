@@ -80,7 +80,9 @@ namespace Pathfinding.Crowds
             FixMath.F64? maxSpeed = null,
             FixMath.F64? maxForce = null, 
             int? groupMask = null,
-            int? groupToAvoid = null);
+            int? groupToAvoid = null,
+            int? setEntityStates = null,
+            int? clearEntityStates = null);
 
         // find entity
         ICrowdEntityActor GetEntityById(UniqueId inEntityId);
