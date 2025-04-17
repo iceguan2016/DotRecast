@@ -1022,6 +1022,13 @@ public class TestFixedCrowdSampleTool : ISampleTool
             }
         }
 
+        {
+            var old = _draw.MapHeight;
+            _draw.MapHeight = old + 0.3f;
+            Debug.insertConstraintSegmentProcedure.draw(_draw);
+            _draw.MapHeight = old;
+        }
+
         // draw world axes
         if (null != _draw)
         {
@@ -1118,8 +1125,15 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
     void Layout_DebugInsertObject()
     {
+        ImGui.Text("Debug Insert Object");
         ImGui.Checkbox("Is Step Create Entity", ref Debug.recorderDebugParams.isStepCreateEntity);
         ImGui.InputInt("Watch Entity Index", ref Debug.recorderDebugParams.watchEntityIndex);
+    }
+
+    void Layout_DebugInsertConstraintSegment()
+    {
+        ImGui.Text("Debug Insert Constraint Segment");
+        ImGui.InputInt("Watch Step Index", ref Debug.insertConstraintSegmentProcedure.watchStepIndex);
     }
 
     void Layout_Replay()
@@ -1191,6 +1205,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         else
         {
             Layout_DebugInsertObject();
+            Layout_DebugInsertConstraintSegment();
 
             if (ImGui.Button("StopReplay"))
             {

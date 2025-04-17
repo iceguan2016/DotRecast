@@ -14,6 +14,8 @@ namespace Pathfinding.Util
     {
         float GetMapHeight();
 
+        Vector3 ToVec3(FixMath.F64Vec2 v);
+
         void DrawLine(Vector3 a, Vector3 b, Color c, float lineWidth=1.0f);
 
         void DrawArrow(Vector3 start, Vector3 end, Vector2 arrowSize, float lineWidth, Color c);
@@ -83,6 +85,7 @@ namespace Pathfinding.Util
         public static LocatePositionProcedure locatePosition = new LocatePositionProcedure();
         // 调试InsertObject
         public static InsertObjectParams insertObject = new InsertObjectParams();
+        public static InsertConstraintSegmentProcedure insertConstraintSegmentProcedure = new InsertConstraintSegmentProcedure();
 
         public static int WatchFaceID = -1;
 

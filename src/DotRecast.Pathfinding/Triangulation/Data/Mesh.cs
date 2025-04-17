@@ -216,6 +216,7 @@ namespace Pathfinding.Triangulation.Data
                 transfx2 = m.transformX(x2, y2);
                 transfy2 = m.transformY(x2, y2);
 
+                Debug.insertConstraintSegmentProcedure.isWatch = isWatch;
                 var dir = new FixMath.F64Vec2(transfx2 - transfx1, transfy2 - transfy1);
                 segment = insertConstraintSegment(transfx1, transfy1, transfx2, transfy2);
 
@@ -328,6 +329,90 @@ namespace Pathfinding.Triangulation.Data
             _constraintShapes.Remove(shape);
         }
 
+
+        public class InsertConstraintSegmentProcedure
+        {
+            // 是否监控
+            public bool isWatch = false;
+            // 调试Entity索引
+            public int watchStepIndex = -1;
+
+            public class LoopProcedure
+            {
+                public Intersection currObject = null;
+                public Vertex downVertex = null;
+
+                public List<Edge> intersectedEdges = new List<Edge>();
+                public List<Edge> leftBoundingEdges = new List<Edge>();
+                public List<Edge> rightBoundingEdges = new List<Edge>();
+            }
+
+            public Vertex downVertex = null;
+            public Vertex upVertex = null;
+
+            public List<LoopProcedure> loopProcedures = new List<LoopProcedure>();
+
+            public void reset()
+            {
+                downVertex = null;
+                upVertex = null;
+                loopProcedures.Clear();
+            }
+
+            public void draw(DrawInterface drawInterface)
+            {
+                if (drawInterface == null) return;
+                if (watchStepIndex < 0 || loopProcedures.Count <= 0) return;
+
+                var index = watchStepIndex % loopProcedures.Count;
+                var loop = loopProcedures[index];
+
+                // draw segment
+                var p0 = drawInterface.ToVec3(downVertex.get_pos());
+                var p1 = drawInterface.ToVec3(upVertex.get_pos());
+                drawInterface.DrawArrow(p0, p1, new UnityEngine.Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.red);
+
+                // draw currObject
+                if (loop.currObject is Intersection_EVertex v)
+                {
+                    var vertex = v.vertex;
+                    p0 = drawInterface.ToVec3(vertex.get_pos());
+                    drawInterface.DrawCircle(p0, 0.2f, UnityEngine.Color.red);
+                }
+                else if (loop.currObject is Intersection_EEdge e)
+                { 
+                    var edge = e.edge;
+                    p0 = drawInterface.ToVec3(edge.get_originVertex().get_pos());
+                    p1 = drawInterface.ToVec3(edge.get_destinationVertex().get_pos());
+                    drawInterface.DrawArrow(p0, p1, new UnityEngine.Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.red);
+                }
+
+                // draw intersection
+                for (var i = 0; i < loop.intersectedEdges.Count; ++i)
+                {
+                    var edge = loop.intersectedEdges[i];
+                    p0 = drawInterface.ToVec3(edge.get_originVertex().get_pos());
+                    p1 = drawInterface.ToVec3(edge.get_destinationVertex().get_pos());
+                    drawInterface.DrawArrow(p0, p1, new UnityEngine.Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.yellow);
+                }
+
+                // draw boundary
+                for (var i = 0; i < loop.leftBoundingEdges.Count; ++i)
+                {
+                    var edge = loop.leftBoundingEdges[i];
+                    p0 = drawInterface.ToVec3(edge.get_originVertex().get_pos());
+                    p1 = drawInterface.ToVec3(edge.get_destinationVertex().get_pos());
+                    drawInterface.DrawArrow(p0, p1, new UnityEngine.Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.magenta);
+                }
+                for (var i = 0; i < loop.rightBoundingEdges.Count; ++i)
+                {
+                    var edge = loop.rightBoundingEdges[i];
+                    p0 = drawInterface.ToVec3(edge.get_originVertex().get_pos());
+                    p1 = drawInterface.ToVec3(edge.get_destinationVertex().get_pos());
+                    drawInterface.DrawArrow(p0, p1, new UnityEngine.Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.white);
+                }
+            }
+        }
 
         public ConstraintSegment insertConstraintSegment(FixMath.F64 x1, FixMath.F64 y1, FixMath.F64 x2, FixMath.F64 y2)
         {
@@ -587,6 +672,15 @@ namespace Pathfinding.Triangulation.Data
                 return null;
             if (vertexDown == vertexUp)
                 return null;
+
+            var procedure = Debug.insertConstraintSegmentProcedure;
+            if (procedure.isWatch)
+            {
+                procedure.reset();
+                procedure.downVertex = vertexDown;
+                procedure.upVertex = vertexUp;
+            }
+
             // useful    //Debug.trace("vertices " + vertexDown.id + " " + vertexUp.id)  
             var iterVertexToOutEdges = new FromVertexToOutgoingEdges();
             Vertex currVertex;
@@ -620,6 +714,20 @@ namespace Pathfinding.Triangulation.Data
                 {
                     Debug.LogError($"insertConstraintSegment loop too many times! loopTimes:{loopTimes}");
                     break;
+                }
+
+                // 记录迭代信息
+                if (procedure.isWatch)
+                {
+                    var loopProcedure = new InsertConstraintSegmentProcedure.LoopProcedure();
+                    procedure.loopProcedures.Add(loopProcedure);
+
+                    loopProcedure.currObject = currObjet;
+                    loopProcedure.downVertex = vertexDown;
+
+                    loopProcedure.intersectedEdges = new List<Edge>(intersectedEdges);
+                    loopProcedure.leftBoundingEdges = new List<Edge>(leftBoundingEdges);
+                    loopProcedure.rightBoundingEdges = new List<Edge>(rightBoundingEdges);
                 }
 
                 done = false;
@@ -1462,8 +1570,6 @@ namespace Pathfinding.Triangulation.Data
                 triangulate(boundA, realA);
                 triangulate(boundB, realB);
             }  //check();  
-
-
 
             return true;
         }

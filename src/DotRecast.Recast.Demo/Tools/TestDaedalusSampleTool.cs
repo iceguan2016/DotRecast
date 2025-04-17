@@ -55,6 +55,11 @@ public class DrawInterfaceImplement : DrawInterface
         Debug.drawInterface = this;
     }
 
+    public Vector3 ToVec3(FixMath.F64Vec2 v)
+    {
+        return new Vector3(v.X.Float, MapHeight, v.Y.Float);
+    }
+
     public void DrawCube(Vector3 p, Vector3 size, UnityEngine.Color c)
     {
         if (m_draw != null)
