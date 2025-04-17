@@ -28,47 +28,47 @@ namespace DotRecast.Recast.Demo.Tools;
 
 public class PhysicsWorldGizmosDrawer : IGizmosDrawer
 {
-    private DrawInterface _draw = null;
+    private IDrawInterface _draw = null;
 
-    public PhysicsWorldGizmosDrawer(DrawInterface draw)
+    public PhysicsWorldGizmosDrawer(IDrawInterface draw)
     {
         this._draw = draw;
     }
 
     public void DrawArrow(VoltVector2 start, VoltVector2 end, VoltVector2 arrowSize, float lineWidth, Volatile.Color c)
     {
-        var _height = _draw.GetMapHeight();
+        var _height = _draw.TerrainHeight;
         _draw.DrawArrow(start.ToUnityVec3(_height), end.ToUnityVec3(_height), arrowSize.ToUnityVec2(), lineWidth, c.ToUnityColor());
     }
 
     public void DrawCircle(VoltVector2 p, float r, Volatile.Color c)
     {
-        var _height = _draw.GetMapHeight();
+        var _height = _draw.TerrainHeight;
         _draw.DrawCircle(p.ToUnityVec3(_height), r, c.ToUnityColor());
     }
 
     public void DrawCube(VoltVector2 p, VoltVector2 size, Volatile.Color c)
     {
-        var _height = _draw.GetMapHeight();
+        var _height = _draw.TerrainHeight;
         _draw.DrawCube(p.ToUnityVec3(_height),  size.ToUnityVec3(0.0f), c.ToUnityColor());
     }
 
     public void DrawLine(VoltVector2 a, VoltVector2 b, Volatile.Color c, float lineWidth = 1)
     {
-        var _height = _draw.GetMapHeight();
+        var _height = _draw.TerrainHeight;
         _draw.DrawLine(a.ToUnityVec3(_height),  b.ToUnityVec3(_height), c.ToUnityColor(), lineWidth);
     }
 
     public void DrawSolidCube(VoltVector2 p, Fix64 angle, VoltVector2 size, Volatile.Color c)
     {
-        var _height = _draw.GetMapHeight();
+        var _height = _draw.TerrainHeight;
         var rotation = UnityEngine.Quaternion.Euler(0.0f, (float)angle, 0.0f);
         _draw.DrawSolidCube(p.ToUnityVec3(_height), rotation, size.ToUnityVec3(0.0f), c.ToUnityColor());
     }
 
     public void DrawTriangle(VoltVector2 v0, VoltVector2 v1, VoltVector2 v2, Volatile.Color c)
     {
-        var _height = _draw.GetMapHeight();
+        var _height = _draw.TerrainHeight;
         _draw.DrawTriangle(v0.ToUnityVec3(_height),  v1.ToUnityVec3(_height), v1.ToUnityVec3(_height), c.ToUnityColor());
     }
 }
@@ -438,10 +438,10 @@ public class TestFixedCrowdTool : IRcToolable
             return;
         }
 
-        var old = draw.MapHeight;
+        var old = draw.TerrainHeight;
 
         // draw visited faces
-        draw.MapHeight += 0.5f;
+        draw.TerrainHeight += 0.5f;
         for (var i=0; i<_pathfinder.listFaces.Count; ++i)
         {
             var face = _pathfinder.listFaces[i];
@@ -449,22 +449,22 @@ public class TestFixedCrowdTool : IRcToolable
         }
 
         // draw path
-        draw.MapHeight += 0.1f;
+        draw.TerrainHeight += 0.1f;
         if (_path.Count > 0)
         {
-            var v0 = new UnityEngine.Vector3(_path[0].Float, draw.MapHeight, _path[1].Float);
+            var v0 = new UnityEngine.Vector3(_path[0].Float, draw.TerrainHeight, _path[1].Float);
             var PointSize = UnityEngine.Vector3.one * 0.2f;
             draw.DrawCube(v0, PointSize, UnityEngine.Color.red);
             for (var i = 2; i < _path.Count; i += 2)
             {
-                var v1 = new UnityEngine.Vector3(_path[i].Float, draw.MapHeight, _path[i + 1].Float);
+                var v1 = new UnityEngine.Vector3(_path[i].Float, draw.TerrainHeight, _path[i + 1].Float);
                 draw.DrawLine(v0, v1, UnityEngine.Color.green);
                 draw.DrawCube(v1, PointSize, UnityEngine.Color.red);
                 v0 = v1;
             }
         }
 
-        draw.MapHeight = old;
+        draw.TerrainHeight = old;
     }
     // end
 
@@ -726,8 +726,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
         var src = start;
         var dst = start + direction * 100.0f;
-        var bmin = new RcVec3f(-PlaneHalfSize, _draw.MapHeight, -PlaneHalfSize);
-        var bmax = new RcVec3f(PlaneHalfSize, _draw.MapHeight, PlaneHalfSize);
+        var bmin = new RcVec3f(-PlaneHalfSize, _draw.TerrainHeight, -PlaneHalfSize);
+        var bmax = new RcVec3f(PlaneHalfSize, _draw.TerrainHeight, PlaneHalfSize);
         if (!RcIntersections.IsectSegAABB(src, dst, bmin, bmax, out var btmin, out var btmax))
         {
             return false;
@@ -878,7 +878,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         // 同步地形高度
         if (_draw != null && _tool.EntityManager != null)
         {
-            _draw.MapHeight = _tool.EntityManager.Map.TerrainHeight.Float;
+            _draw.TerrainHeight = _tool.EntityManager.Map.TerrainHeight.Float;
         }
 
         // draw bounds
@@ -978,7 +978,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         { 
             var pos = Debug.locatePosition.inputPosition;
             _draw.DrawCube(
-                new UnityEngine.Vector3(pos.X.Float, _draw.MapHeight, pos.Y.Float), 
+                new UnityEngine.Vector3(pos.X.Float, _draw.TerrainHeight, pos.Y.Float), 
                 new UnityEngine.Vector3(0.1f, 5.0f, 0.1f), 
                 UnityEngine.Color.red);
 
@@ -1022,11 +1022,12 @@ public class TestFixedCrowdSampleTool : ISampleTool
             }
         }
 
+        if (_draw != null)
         {
-            var old = _draw.MapHeight;
-            _draw.MapHeight = old + 0.3f;
+            var old = _draw.TerrainHeight;
+            _draw.TerrainHeight = old + 0.3f;
             Debug.insertConstraintSegmentProcedure.draw(_draw);
-            _draw.MapHeight = old;
+            _draw.TerrainHeight = old;
         }
 
         // draw world axes

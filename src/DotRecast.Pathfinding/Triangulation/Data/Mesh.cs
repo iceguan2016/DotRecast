@@ -336,6 +336,8 @@ namespace Pathfinding.Triangulation.Data
             public bool isWatch = false;
             // 调试Entity索引
             public int watchStepIndex = -1;
+            // 绘制偏移
+            public float drawOffset = 0.1f;
 
             public class LoopProcedure
             {
@@ -359,7 +361,7 @@ namespace Pathfinding.Triangulation.Data
                 loopProcedures.Clear();
             }
 
-            public void draw(DrawInterface drawInterface)
+            public void draw(IDrawInterface drawInterface)
             {
                 if (drawInterface == null) return;
                 if (watchStepIndex < 0 || loopProcedures.Count <= 0) return;

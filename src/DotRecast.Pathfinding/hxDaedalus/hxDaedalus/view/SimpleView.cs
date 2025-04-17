@@ -5,9 +5,9 @@ namespace hxDaedalus.view
 {
     public class SimpleView
     {
-        DrawInterface _draw = null;
+        IDrawInterface _draw = null;
 
-        public SimpleView(DrawInterface draw) 
+        public SimpleView(IDrawInterface draw) 
         {
             _draw = draw;
         }
@@ -15,7 +15,7 @@ namespace hxDaedalus.view
         public void drawVertex(Vertex vertex)
 	    {
 		    var p = vertex.get_pos();
-            var dp = new UnityEngine.Vector3((float)p.x, _draw.GetMapHeight(), (float)p.y);
+            var dp = new UnityEngine.Vector3((float)p.x, _draw.TerrainHeight, (float)p.y);
 
             _draw.DrawCircle(dp, 0.1f, UnityEngine.Color.red);
         }
@@ -28,8 +28,8 @@ namespace hxDaedalus.view
             var p0 = v0.get_pos();
             var p1 = v1.get_pos();
 
-            var dp0 = new UnityEngine.Vector3((float)p0.x, _draw.GetMapHeight(), (float)p0.y);
-            var dp1 = new UnityEngine.Vector3((float)p1.x, _draw.GetMapHeight(), (float)p1.y);
+            var dp0 = new UnityEngine.Vector3((float)p0.x, _draw.TerrainHeight, (float)p0.y);
+            var dp1 = new UnityEngine.Vector3((float)p1.x, _draw.TerrainHeight, (float)p1.y);
 
             _draw.DrawLine(dp0, dp1, c, lineWidth);
         }
@@ -50,7 +50,7 @@ namespace hxDaedalus.view
                 }
 
                 var p = innerEdge.get_originVertex().get_pos();
-                var dp = new UnityEngine.Vector3((float)p.x, _draw.GetMapHeight(), (float)p.y);
+                var dp = new UnityEngine.Vector3((float)p.x, _draw.TerrainHeight, (float)p.y);
                 verts[index] = dp;
                 ++index;
             }

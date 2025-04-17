@@ -43,11 +43,11 @@ public class TestDaedalusToolMode
     }
 }
 
-public class DrawInterfaceImplement : DrawInterface
+public class DrawInterfaceImplement : IDrawInterface
 {
     private DebugDraw m_draw = null;
 
-    public float MapHeight { get; set; }
+    public float TerrainHeight { get; set; }
 
     public DrawInterfaceImplement(DebugDraw draw)
     {
@@ -57,7 +57,7 @@ public class DrawInterfaceImplement : DrawInterface
 
     public Vector3 ToVec3(FixMath.F64Vec2 v)
     {
-        return new Vector3(v.X.Float, MapHeight, v.Y.Float);
+        return new Vector3(v.X.Float, TerrainHeight, v.Y.Float);
     }
 
     public void DrawCube(Vector3 p, Vector3 size, UnityEngine.Color c)
@@ -171,11 +171,6 @@ public class DrawInterfaceImplement : DrawInterface
             m_draw.DebugDrawBox(min.x, min.y, min.z, max.x, max.y, max.z, fcol);
         }
     }
-
-    public float GetMapHeight()
-    {
-        return MapHeight;
-    }
 }
 
 // 问题记录：Unity使用左手坐标系，这里DebugDraw使用的是右手坐标系，会导致
@@ -255,7 +250,7 @@ public class TestDaedalusTool : IRcToolable, IPathwayQuerier, ILocalBoundaryQuer
 
     // annotation
     private EntityAnnotationServerice _annotationServerice = null;
-    public DrawInterface DrawInterface 
+    public IDrawInterface DrawInterface 
     { 
         set 
         {
@@ -911,8 +906,8 @@ public class TestDaedalusSampleTool : ISampleTool
 
         var src = start;
         var dst = start + direction * 100.0f;
-        var bmin = new RcVec3f(0.0f, _draw.MapHeight, 0.0f);
-        var bmax = new RcVec3f((float)_tool.Mesh._width, _draw.MapHeight, (float)_tool.Mesh._height);
+        var bmin = new RcVec3f(0.0f, _draw.TerrainHeight, 0.0f);
+        var bmax = new RcVec3f((float)_tool.Mesh._width, _draw.TerrainHeight, (float)_tool.Mesh._height);
         if (!RcIntersections.IsectSegAABB(src, dst, bmin, bmax, out var btmin, out var btmax))
         {
             return false;
@@ -1070,7 +1065,7 @@ public class TestDaedalusSampleTool : ISampleTool
         if (_draw == null)
         {
             _draw = new DrawInterfaceImplement(dd);
-            _draw.MapHeight = bound_max.Y + 0.5f;
+            _draw.TerrainHeight = bound_max.Y + 0.5f;
 
             _view = new hxDaedalus.view.SimpleView(_draw);
             _tool.MapHeight = bound_max.Y + 0.5f;
@@ -1097,12 +1092,12 @@ public class TestDaedalusSampleTool : ISampleTool
             // draw path
             if (_tool.Path.length > 0)
             {
-                var v0 = new UnityEngine.Vector3((float)_tool.Path[0], _draw.MapHeight, (float)_tool.Path[1]);
+                var v0 = new UnityEngine.Vector3((float)_tool.Path[0], _draw.TerrainHeight, (float)_tool.Path[1]);
                 var PointSize = UnityEngine.Vector3.one * 0.2f;
                 _draw.DrawCube(v0, PointSize, UnityEngine.Color.red);
                 for (var i = 2; i < _tool.Path.length; i += 2)
                 {
-                    var v1 = new UnityEngine.Vector3((float)_tool.Path[i], _draw.MapHeight, (float)_tool.Path[i + 1]);
+                    var v1 = new UnityEngine.Vector3((float)_tool.Path[i], _draw.TerrainHeight, (float)_tool.Path[i + 1]);
                     _draw.DrawLine(v0, v1, UnityEngine.Color.green);
                     _draw.DrawCube(v1, PointSize, UnityEngine.Color.red);
                     v0 = v1;

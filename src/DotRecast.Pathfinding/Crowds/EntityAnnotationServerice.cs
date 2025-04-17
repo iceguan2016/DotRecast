@@ -8,9 +8,9 @@ namespace Pathfinding.Crowds
 {
     public class EntityAnnotationServerice : IAnnotationService
     {
-        DrawInterface _draw = null;
+        IDrawInterface _draw = null;
 
-        public EntityAnnotationServerice(DrawInterface inDraw)
+        public EntityAnnotationServerice(IDrawInterface inDraw)
         {
             _draw = inDraw;
         }

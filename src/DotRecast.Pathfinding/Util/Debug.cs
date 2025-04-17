@@ -10,9 +10,9 @@ using static Pathfinding.Triangulation.Math.Geom2D;
 
 namespace Pathfinding.Util
 {
-    public interface DrawInterface
+    public interface IDrawInterface
     {
-        float GetMapHeight();
+        float TerrainHeight { get; set; }
 
         Vector3 ToVec3(FixMath.F64Vec2 v);
 
@@ -59,7 +59,7 @@ namespace Pathfinding.Util
         //    }
         //}
 
-        public static DrawInterface drawInterface = null;
+        public static IDrawInterface drawInterface = null;
 
         public static void Assert(bool condition, string desc="")
         { 
