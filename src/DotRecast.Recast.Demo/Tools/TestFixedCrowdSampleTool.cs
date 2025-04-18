@@ -23,6 +23,7 @@ using System.IO;
 using System.Threading.Channels;
 using DotRecast.Recast.Demo.UI;
 using System.Collections.Immutable;
+using DotRecast.Pathfinding.Util;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -1491,6 +1492,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
     public void SetSample(DemoSample sample)
     {
         _sample = sample;
+
+        Reduction.test_reduce_64();
 
         if (null != _tool) _tool.Destroy();
 

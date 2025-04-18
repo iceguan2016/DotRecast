@@ -686,15 +686,15 @@ namespace Pathfinding.Triangulation.Data
             if (vertexDown == null)
                 return null;
 
-            if (procedure.isWatch) Debug.insertVertex.isWatch = true;
+            // if (procedure.isWatch) Debug.insertVertex.isWatch = true;
             var vertexUp = insertVertex(newX2, newY2);
-            if (procedure.isWatch) Debug.insertVertex.isWatch = false;
-            if (procedure.isWatch)
-            {
-                // 
-                Debug.locatePosition.isError = true;
-                return null;
-            }
+            //if (procedure.isWatch) Debug.insertVertex.isWatch = false;
+            //if (procedure.isWatch)
+            //{
+            //    // 
+            //    Debug.locatePosition.isError = true;
+            //    return null;
+            //}
 
             if (vertexUp == null)
                 return null;

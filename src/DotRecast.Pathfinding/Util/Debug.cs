@@ -62,7 +62,8 @@ namespace Pathfinding.Util
         public static IDrawInterface drawInterface = null;
 
         public static void Assert(bool condition, string desc="")
-        { 
+        {
+            System.Diagnostics.Debug.Assert(condition);
         }
 
         public static void Log(string content)
