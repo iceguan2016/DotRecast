@@ -101,10 +101,9 @@ namespace Pathfinding.Crowds
                 matrix.translate(-obstacle._x, -obstacle._y);
                 matrix.rotate(-obstacle.get_rotation());
 
-                var local_p = p;
-                matrix.tranform(local_p);
+                var local_p = matrix.tranform(p);
 
-                if (FixMath.F64.Abs(local_p.X) < obstacle._scaleX && FixMath.F64.Abs(local_p.Y) < obstacle._scaleY)
+                if (FixMath.F64.Abs(local_p.X) <= obstacle._scaleX && FixMath.F64.Abs(local_p.Y) <= obstacle._scaleY)
                 {
                     return obstacle;
                 }

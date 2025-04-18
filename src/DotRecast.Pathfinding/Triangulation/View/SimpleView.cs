@@ -78,7 +78,7 @@ namespace Pathfinding.Triangulation.View
             {
                 var edge = edges[i];
                 
-                drawEdge(edge, edge.get_isConstrained() ? (edge._isReversed? UnityEngine.Color.green : UnityEngine.Color.red) : UnityEngine.Color.blue);
+                drawEdge(edge, edge.get_isConstrained() ? UnityEngine.Color.red : UnityEngine.Color.blue);
             }
         }
 
@@ -91,14 +91,18 @@ namespace Pathfinding.Triangulation.View
             var depthMap = new Dictionary<Face, int>();
             for (var i = 0; i < obstacles.Count; ++i)
             {
-                var shape = obstacles[i]._constraintShape;
+                var obstacle = obstacles[i];
+                var shape = obstacle._constraintShape;
                 var segments = shape.segments;
                 for (var j = 0; j < segments.Count; ++j)
                 {
                     var edges = segments[j]._edges;
                     for (var k = 0; k < edges.Count; ++k)
                     {
-                        var face = edges[k]._isReversed? edges[k].get_leftFace() : edges[k].get_rightFace();
+                        // Todo：这里选left或者right面，需要根据第3个点是否在shape内
+                        var v = edges[k].get_nextLeftEdge().get_destinationVertex();
+                        var contain = obstacle.contain_point(v._pos);
+                        var face = contain? edges[k].get_leftFace() : edges[k].get_rightFace();
                         if (visitedFaces.Add(face))
                         {
                             queue.Enqueue(face);

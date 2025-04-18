@@ -202,7 +202,7 @@ namespace Pathfinding.Triangulation.Data
             var n = coordinates.Count / 4;
             while (i < coordinates.Count)
             {
-            #if ENABLE_NAVMESH_DEBUG
+#if ENABLE_NAVMESH_DEBUG
                 var isWatch = Debug.insertObject.isWatchInsertSegment &&
                     Debug.insertObject.watchSegmentIndex >= 0 &&
                     (i / 4) == Debug.insertObject.watchSegmentIndex % n;
@@ -211,7 +211,7 @@ namespace Pathfinding.Triangulation.Data
                 {
                     int stop = 0;
                 }
-            #endif
+#endif
 
                 x1 = coordinates[i];
                 y1 = coordinates[i + 1];
@@ -225,7 +225,6 @@ namespace Pathfinding.Triangulation.Data
 #if ENABLE_NAVMESH_DEBUG
                 Debug.insertConstraintSegmentProcedure.isWatch = isWatch;
 #endif
-                var dir = new FixMath.F64Vec2(transfx2 - transfx1, transfy2 - transfy1);
                 segment = insertConstraintSegment(transfx1, transfy1, transfx2, transfy2);
 
 #if ENABLE_NAVMESH_DEBUG
@@ -240,14 +239,6 @@ namespace Pathfinding.Triangulation.Data
                 if (segment != null)
                 {
                     segment.fromShape = shape;
-                    // 标记该edge是否被翻转
-                    for (var e = 0; e < segment._edges.Count; ++e)
-                    {
-                        var edge = segment._edges[e];
-                        var edgeDir = edge.get_destinationVertex()._pos - edge.get_originVertex()._pos;
-                        edge._isReversed = FixMath.F64Vec2.Dot(dir, edgeDir) < 0;
-                    }
-
                     shape.segments.Add(segment);
                 }
 

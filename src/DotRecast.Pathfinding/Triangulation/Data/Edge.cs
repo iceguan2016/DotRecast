@@ -62,9 +62,6 @@ namespace Pathfinding.Triangulation.Data
 
         public bool _isConstrained;
 
-        // 如果是约束边，标记该edge是否和元素shape中的边反向
-        public bool _isReversed = false;
-
         public Vertex _originVertex;
 
         public Edge _oppositeEdge;
