@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Pathfinding.Triangulation.Iterators;
 using Pathfinding.Triangulation.Math;
+using Pathfinding.Triangulation.View;
 using Pathfinding.Util;
 
 namespace Pathfinding.Triangulation.Data
@@ -174,6 +175,7 @@ namespace Pathfinding.Triangulation.Data
         public class InsertObjectParams
         {
             public bool isWatchInsertSegment = false;
+            public int watchSegmentIndex = -1;
         }
         public void insertObject(Obstacle object_)
         {
@@ -197,10 +199,12 @@ namespace Pathfinding.Triangulation.Data
             FixMath.F64 transfy2;
 
             var i = 0;
+            var n = coordinates.Count / 4;
             while (i < coordinates.Count)
             {
                 var isWatch = Debug.insertObject.isWatchInsertSegment &&
-                    Debug.IsWatchingIndex(coordinates.Count / 4, i / 4);
+                    Debug.insertObject.watchSegmentIndex >= 0 &&
+                    (i / 4) == Debug.insertObject.watchSegmentIndex % n;
 
                 if (isWatch)
                 {
@@ -219,6 +223,8 @@ namespace Pathfinding.Triangulation.Data
                 Debug.insertConstraintSegmentProcedure.isWatch = isWatch;
                 var dir = new FixMath.F64Vec2(transfx2 - transfx1, transfy2 - transfy1);
                 segment = insertConstraintSegment(transfx1, transfy1, transfx2, transfy2);
+
+                Debug.insertConstraintSegmentProcedure.isWatch = false;
 
                 if (Debug.locatePosition.isError)
                 {
@@ -338,6 +344,8 @@ namespace Pathfinding.Triangulation.Data
             public int watchStepIndex = -1;
             // 绘制偏移
             public float drawOffset = 0.1f;
+            //
+            public int stepExec = -1;
 
             public class LoopProcedure
             {
@@ -666,21 +674,42 @@ namespace Pathfinding.Triangulation.Data
             newX2 = FixMath.F64.Clamp(newX2, _xmin, _xmax);
             newY2 = FixMath.F64.Clamp(newY2, _ymin, _ymax);
 
+            var procedure = Debug.insertConstraintSegmentProcedure;
+            if (procedure.isWatch)
+            {
+                procedure.reset();
+            }
+
+            //if (procedure.isWatch) Debug.insertVertex.isWatch = true;
             var vertexDown = insertVertex(newX1, newY1);
+            //if (procedure.isWatch) Debug.insertVertex.isWatch = false;
             if (vertexDown == null)
                 return null;
+
+            if (procedure.isWatch) Debug.insertVertex.isWatch = true;
             var vertexUp = insertVertex(newX2, newY2);
+            if (procedure.isWatch) Debug.insertVertex.isWatch = false;
+            if (procedure.isWatch)
+            {
+                // 
+                Debug.locatePosition.isError = true;
+                return null;
+            }
+
             if (vertexUp == null)
                 return null;
             if (vertexDown == vertexUp)
                 return null;
 
-            var procedure = Debug.insertConstraintSegmentProcedure;
             if (procedure.isWatch)
             {
-                procedure.reset();
                 procedure.downVertex = vertexDown;
                 procedure.upVertex = vertexUp;
+
+                if (procedure.stepExec == 1)
+                {
+                    return null;
+                }
             }
 
             // useful    //Debug.trace("vertices " + vertexDown.id + " " + vertexUp.id)  
@@ -1041,7 +1070,52 @@ namespace Pathfinding.Triangulation.Data
 
         }
 
+        public class InsertVertexProcedure
+        {
+            public class FlipEdgeProcedure
+            {
+                public Edge edge = null;
+                public Face left = null;
+                public Face right = null;
+            }
 
+            public bool isWatch = false;
+            public int watchFlipEdgeIndex = -1;
+            public int  flipEdgeStep = -1;
+
+            public Vertex vertex = null;
+            public List<FlipEdgeProcedure> flipEdgeProcedures = new List<FlipEdgeProcedure>();
+            public List<Edge> pendingFlipEdges = new List<Edge>();
+
+            public void reset()
+            {
+                flipEdgeProcedures.Clear();
+            }
+
+            public void draw(IDrawInterface drawInterface, SimpleView view)
+            {
+                if (watchFlipEdgeIndex < 0) return;
+
+                if (flipEdgeProcedures.Count > 0)
+                {
+                    var index = watchFlipEdgeIndex % flipEdgeProcedures.Count;
+                    var proc = flipEdgeProcedures[index];
+
+                    // draw edge
+                    //var p0 = drawInterface.ToVec3(proc.edge.get_originVertex().get_pos());
+                    //var p1 = drawInterface.ToVec3(proc.edge.get_destinationVertex().get_pos());
+                    //drawInterface.DrawArrow(p0, p1, new UnityEngine.Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.red);
+                }
+
+                for (var i = 0; i < pendingFlipEdges.Count; ++i)
+                {
+                    var edge = pendingFlipEdges[i];
+                    var p0 = drawInterface.ToVec3(edge.get_originVertex().get_pos());
+                    var p1 = drawInterface.ToVec3(edge.get_destinationVertex().get_pos());
+                    drawInterface.DrawArrow(p0, p1, new UnityEngine.Vector2(0.0f, 0.2f), 1.0f, UnityEngine.Color.white);
+                }
+            }
+        }
         public Vertex insertVertex(FixMath.F64 x, FixMath.F64 y)
         {
             if (isOutsideBounds(x, y))
@@ -1063,6 +1137,18 @@ namespace Pathfinding.Triangulation.Data
             else if (inObject is Intersection_EFace f)
             {
                 newVertex = this.splitFace(f.face, x, y);
+            }
+
+            if (Debug.insertVertex.isWatch)
+            {
+                Debug.insertVertex.reset();
+                Debug.insertVertex.vertex = newVertex;
+
+                if (Debug.insertVertex.flipEdgeStep == 0)
+                {
+                    Debug.insertVertex.pendingFlipEdges = new List<Edge> (__edgesToCheck);
+                    return newVertex;
+                }
             }
 
             this.restoreAsDelaunay();
@@ -1375,11 +1461,24 @@ namespace Pathfinding.Triangulation.Data
 
         public void restoreAsDelaunay()
         {
+            int edgeIndex = 0;
             Edge edge = null;
             while (__edgesToCheck.Count > 0)
             {
                 edge = __edgesToCheck[0];
                 __edgesToCheck.RemoveAt(0);
+
+                InsertVertexProcedure.FlipEdgeProcedure procedure = null;
+                if (Debug.insertVertex.isWatch)
+                {
+                    procedure = new InsertVertexProcedure.FlipEdgeProcedure();
+                    Debug.insertVertex.flipEdgeProcedures.Add(procedure);
+
+                    procedure.edge = edge;
+                    procedure.left = edge.get_leftFace();
+                    procedure.right = edge.get_rightFace();
+                }
+
                 if (edge._isReal && !edge._isConstrained && !Geom2D.isDelaunay(edge))
                 {
                     if (edge._nextLeftEdge.get_destinationVertex() == __centerVertex)
@@ -1393,6 +1492,16 @@ namespace Pathfinding.Triangulation.Data
                         __edgesToCheck.Add(edge.get_prevLeftEdge());
                     }
                     flipEdge(edge);
+                }
+
+                if (Debug.insertVertex.isWatch)
+                {
+                    if (Debug.insertVertex.watchFlipEdgeIndex >= 0 && 
+                        edgeIndex >= Debug.insertVertex.watchFlipEdgeIndex)
+                    {
+                        break;
+                    }
+                    ++edgeIndex;
                 }
             }
         }

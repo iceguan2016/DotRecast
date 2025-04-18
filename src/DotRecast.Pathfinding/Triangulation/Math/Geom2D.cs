@@ -593,6 +593,10 @@ namespace Pathfinding.Triangulation.Math
         // - if the (x, y) lies on a edge of the polygon, it will return this edge
         // - if the (x, y) lies inside the polygon, it will return the polygon
         // - if the (x, y) lies outside the polygon, it will return null
+        static FixMath.F64 CHECK_SIZE_TOLERANCE = FixMath.F64.FromDouble(40.0f);
+        static FixMath.F64 INV_SIZE_SCALE = FixMath.F64.FromDouble(0.1);
+        static FixMath.F64 SCALED_EPSILON = Constants.EPSILON * INV_SIZE_SCALE;
+        static FixMath.F64 SCALED_EPSILON_SQUARED = SCALED_EPSILON * SCALED_EPSILON;
         public static Intersection isInFace(FixMath.F64 x, FixMath.F64 y, Face polygon)
         {
             // remember polygons are triangle only,
@@ -616,6 +620,33 @@ namespace Pathfinding.Triangulation.Math
                 var x3 = v3._pos.X;
                 var y3 = v3._pos.Y;
 
+                var xmin = FixMath.F64.Min(FixMath.F64.Min(x1, x2), x3);
+                var xmax = FixMath.F64.Max(FixMath.F64.Max(x1, x2), x3);
+                var ymin = FixMath.F64.Min(FixMath.F64.Min(y1, y2), y3);
+                var ymax = FixMath.F64.Max(FixMath.F64.Max(y1, y2), y3);
+                var xsize = FixMath.F64.Abs(xmax - xmin);
+                var ysize = FixMath.F64.Abs(ymax - ymin);
+                var size = FixMath.F64.Max(xsize, ysize);
+
+                // 缩放坐标，防止溢出
+                if (size >= CHECK_SIZE_TOLERANCE)
+                {
+                    x1 *= INV_SIZE_SCALE;
+                    y1 *= INV_SIZE_SCALE;
+                    x2 *= INV_SIZE_SCALE;
+                    y2 *= INV_SIZE_SCALE;
+                    x3 *= INV_SIZE_SCALE;
+                    y3 *= INV_SIZE_SCALE;
+                    x  *= INV_SIZE_SCALE;
+                    y  *= INV_SIZE_SCALE;
+                }
+
+                // 这里定点数会溢出，所以先标准化再计算，例如
+                // v1 = {(68.04050915758125, -61.32258770847693)}
+                // v2 = { (70, 150)}
+                // v3 = { (70, -150)}
+                // v = { (70, -69.28000749181956) }
+                // v2_v3squaredLength应为4327534951.7051198124，实际上这里计算的值为90000，已经溢出了
                 var v_v1squaredLength = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y);
                 var v_v2squaredLength = (x2 - x) * (x2 - x) + (y2 - y) * (y2 - y);
                 var v_v3squaredLength = (x3 - x) * (x3 - x) + (y3 - y) * (y3 - y);
@@ -631,9 +662,9 @@ namespace Pathfinding.Triangulation.Math
                 var v_e2_3squaredLength = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
                 var v_e3_1squaredLength = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
 
-                var closeTo_e1_2 = v_e1_2squaredLength <= Constants.EPSILON_SQUARED;
-                var closeTo_e2_3 = v_e2_3squaredLength <= Constants.EPSILON_SQUARED;
-                var closeTo_e3_1 = v_e3_1squaredLength <= Constants.EPSILON_SQUARED;
+                var closeTo_e1_2 = v_e1_2squaredLength <= SCALED_EPSILON_SQUARED;
+                var closeTo_e2_3 = v_e2_3squaredLength <= SCALED_EPSILON_SQUARED;
+                var closeTo_e3_1 = v_e3_1squaredLength <= SCALED_EPSILON_SQUARED;
 
                 if (closeTo_e1_2)
                 {

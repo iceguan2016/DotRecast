@@ -201,6 +201,12 @@ public class TestFixedCrowdTool : IRcToolable
                 _pathfinder = new PathFinder();
                 _pathfinder.set_mesh(_entityManager.Map.NavMesh);
             }
+
+
+            // 默认调试参数
+            Debug.insertObject.watchSegmentIndex = 0;
+            Debug.recorderDebugParams.watchEntityIndex = 13;
+            Debug.insertConstraintSegmentProcedure.stepExec = 1;
         }
     }
 
@@ -1017,6 +1023,18 @@ public class TestFixedCrowdSampleTool : ISampleTool
                     if (face.get_id() == Debug.WatchFaceID)
                     {
                         _view.drawFace(face, UnityEngine.Color.yellow);
+
+                        // neighbor
+                        Edge innerEdge;
+                        var iterEdge = new FromFaceToInnerEdges();
+                        iterEdge.set_fromFace(face);
+                        while ((innerEdge = iterEdge.next()) != null)
+                        {
+                            if (innerEdge._isConstrained)
+                                continue;
+                            var neighbourFace = innerEdge.get_rightFace();
+                            _view.drawFace(neighbourFace, UnityEngine.Color.cyan);
+                        }
                     }
                 }
             }
@@ -1026,7 +1044,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
         {
             var old = _draw.TerrainHeight;
             _draw.TerrainHeight = old + 0.3f;
-            Debug.insertConstraintSegmentProcedure.draw(_draw);
+            // Debug.insertConstraintSegmentProcedure.draw(_draw);
+            Debug.insertVertex.draw(_draw, _view);
             _draw.TerrainHeight = old;
         }
 
@@ -1128,13 +1147,19 @@ public class TestFixedCrowdSampleTool : ISampleTool
     {
         ImGui.Text("Debug Insert Object");
         ImGui.Checkbox("Is Step Create Entity", ref Debug.recorderDebugParams.isStepCreateEntity);
-        ImGui.InputInt("Watch Entity Index", ref Debug.recorderDebugParams.watchEntityIndex);
+        ImGui.InputInt("Watch Obstacle Index", ref Debug.recorderDebugParams.watchEntityIndex);
+        ImGui.InputInt("Watch Segment Index", ref Debug.insertObject.watchSegmentIndex);
     }
 
     void Layout_DebugInsertConstraintSegment()
     {
         ImGui.Text("Debug Insert Constraint Segment");
         ImGui.InputInt("Watch Step Index", ref Debug.insertConstraintSegmentProcedure.watchStepIndex);
+        ImGui.InputInt("Exec Step Index", ref Debug.insertConstraintSegmentProcedure.stepExec);
+
+        ImGui.Text("Debug Insert Vertex");
+        ImGui.InputInt("Watch FlipEdge Index", ref Debug.insertVertex.watchFlipEdgeIndex);
+        ImGui.InputInt("Exec FlipEdge Step", ref Debug.insertVertex.flipEdgeStep);
     }
 
     void Layout_Replay()
