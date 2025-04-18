@@ -202,12 +202,6 @@ public class TestFixedCrowdTool : IRcToolable
                 _pathfinder = new PathFinder();
                 _pathfinder.set_mesh(_entityManager.Map.NavMesh);
             }
-
-
-            // 默认调试参数
-            Debug.insertObject.watchSegmentIndex = 0;
-            Debug.recorderDebugParams.watchEntityIndex = 13;
-            Debug.insertConstraintSegmentProcedure.stepExec = 1;
         }
     }
 
@@ -1501,5 +1495,10 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
         // 默认不设置Mesh
         //_sample.Update(null, ImmutableArray<RcBuilderResult>.Empty, null);
+
+        // 默认调试参数
+        Debug.insertObject.watchSegmentIndex = 0;
+        Debug.recorderDebugParams.watchEntityIndex = 13;
+        Debug.insertConstraintSegmentProcedure.stepExec = 1;
     }
 }

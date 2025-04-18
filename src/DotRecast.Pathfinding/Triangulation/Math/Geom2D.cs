@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using System.Drawing;
+using DotRecast.Pathfinding.Util;
 using Pathfinding.Triangulation.Data;
 using Pathfinding.Triangulation.Iterators;
 using Pathfinding.Util;
@@ -609,37 +610,43 @@ namespace Pathfinding.Triangulation.Math
             var e3_1 = e2_3._nextLeftEdge;
             if (getRelativePosition(x, y, e1_2) >= 0 && getRelativePosition(x, y, e2_3) >= 0 && getRelativePosition(x, y, e3_1) >= 0)
             {
+                var eplision = Constants.EPSILON;
+                var eplision_squared = Constants.EPSILON_SQUARED;
+
                 var v1 = e1_2._originVertex;
                 var v2 = e2_3._originVertex;
                 var v3 = e3_1._originVertex;
 
-                var x1 = v1._pos.X;
-                var y1 = v1._pos.Y;
-                var x2 = v2._pos.X;
-                var y2 = v2._pos.Y;
-                var x3 = v3._pos.X;
-                var y3 = v3._pos.Y;
+                var v1_pos = v1._pos;
+                var v2_pos = v2._pos;
+                var v3_pos = v3._pos;
 
-                var xmin = FixMath.F64.Min(FixMath.F64.Min(x1, x2), x3);
-                var xmax = FixMath.F64.Max(FixMath.F64.Max(x1, x2), x3);
-                var ymin = FixMath.F64.Min(FixMath.F64.Min(y1, y2), y3);
-                var ymax = FixMath.F64.Max(FixMath.F64.Max(y1, y2), y3);
-                var xsize = FixMath.F64.Abs(xmax - xmin);
-                var ysize = FixMath.F64.Abs(ymax - ymin);
-                var size = FixMath.F64.Max(xsize, ysize);
-
-                // 缩放坐标，防止溢出
-                if (size >= CHECK_SIZE_TOLERANCE)
+                var max = FixMath.F64.Max(v1._pos.abs_max_element(), v2._pos.abs_max_element());
+                max = FixMath.F64.Max(max, v3._pos.abs_max_element());
+                var shift = 0;
+                if (max >= CHECK_SIZE_TOLERANCE)
                 {
-                    x1 *= INV_SIZE_SCALE;
-                    y1 *= INV_SIZE_SCALE;
-                    x2 *= INV_SIZE_SCALE;
-                    y2 *= INV_SIZE_SCALE;
-                    x3 *= INV_SIZE_SCALE;
-                    y3 *= INV_SIZE_SCALE;
-                    x  *= INV_SIZE_SCALE;
-                    y  *= INV_SIZE_SCALE;
+                    // Reduct vector into (-2^A, 2^A)
+                    var A = 5; // (-32, 32)
+                    shift = max.reduction_shift(A);
+                    v1_pos = v1_pos.reduce_into(shift);
+                    v2_pos = v2_pos.reduce_into(shift);
+                    v3_pos = v3_pos.reduce_into(shift);
+
+                    // 
+                    x = x.reduce_into(shift);
+                    y = y.reduce_into(shift);
+
+                    eplision = eplision.reduce_into(shift);
+                    eplision_squared = eplision * eplision;
                 }
+
+                var x1 = v1_pos.X;
+                var y1 = v1_pos.Y;
+                var x2 = v2_pos.X;
+                var y2 = v2_pos.Y;
+                var x3 = v3_pos.X;
+                var y3 = v3_pos.Y;
 
                 // 这里定点数会溢出，所以先标准化再计算，例如
                 // v1 = {(68.04050915758125, -61.32258770847693)}
@@ -662,9 +669,9 @@ namespace Pathfinding.Triangulation.Math
                 var v_e2_3squaredLength = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
                 var v_e3_1squaredLength = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
 
-                var closeTo_e1_2 = v_e1_2squaredLength <= SCALED_EPSILON_SQUARED;
-                var closeTo_e2_3 = v_e2_3squaredLength <= SCALED_EPSILON_SQUARED;
-                var closeTo_e3_1 = v_e3_1squaredLength <= SCALED_EPSILON_SQUARED;
+                var closeTo_e1_2 = v_e1_2squaredLength <= eplision_squared;
+                var closeTo_e2_3 = v_e2_3squaredLength <= eplision_squared;
+                var closeTo_e3_1 = v_e3_1squaredLength <= eplision_squared;
 
                 if (closeTo_e1_2)
                 {
