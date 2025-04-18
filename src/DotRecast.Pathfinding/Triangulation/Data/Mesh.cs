@@ -202,6 +202,7 @@ namespace Pathfinding.Triangulation.Data
             var n = coordinates.Count / 4;
             while (i < coordinates.Count)
             {
+            #if ENABLE_NAVMESH_DEBUG
                 var isWatch = Debug.insertObject.isWatchInsertSegment &&
                     Debug.insertObject.watchSegmentIndex >= 0 &&
                     (i / 4) == Debug.insertObject.watchSegmentIndex % n;
@@ -210,6 +211,7 @@ namespace Pathfinding.Triangulation.Data
                 {
                     int stop = 0;
                 }
+            #endif
 
                 x1 = coordinates[i];
                 y1 = coordinates[i + 1];
@@ -220,16 +222,20 @@ namespace Pathfinding.Triangulation.Data
                 transfx2 = m.transformX(x2, y2);
                 transfy2 = m.transformY(x2, y2);
 
+#if ENABLE_NAVMESH_DEBUG
                 Debug.insertConstraintSegmentProcedure.isWatch = isWatch;
+#endif
                 var dir = new FixMath.F64Vec2(transfx2 - transfx1, transfy2 - transfy1);
                 segment = insertConstraintSegment(transfx1, transfy1, transfx2, transfy2);
 
+#if ENABLE_NAVMESH_DEBUG
                 Debug.insertConstraintSegmentProcedure.isWatch = false;
 
                 if (Debug.locatePosition.isError)
                 {
                     return;
                 }
+#endif
 
                 if (segment != null)
                 {
@@ -245,11 +251,13 @@ namespace Pathfinding.Triangulation.Data
                     shape.segments.Add(segment);
                 }
 
+#if ENABLE_NAVMESH_DEBUG
                 // 调试指定Segment
                 if (isWatch)
                 {
                     break;
                 }
+#endif
 
                 i += 4;
             }
@@ -674,11 +682,13 @@ namespace Pathfinding.Triangulation.Data
             newX2 = FixMath.F64.Clamp(newX2, _xmin, _xmax);
             newY2 = FixMath.F64.Clamp(newY2, _ymin, _ymax);
 
+#if ENABLE_NAVMESH_DEBUG
             var procedure = Debug.insertConstraintSegmentProcedure;
             if (procedure.isWatch)
             {
                 procedure.reset();
             }
+#endif
 
             //if (procedure.isWatch) Debug.insertVertex.isWatch = true;
             var vertexDown = insertVertex(newX1, newY1);
@@ -701,6 +711,7 @@ namespace Pathfinding.Triangulation.Data
             if (vertexDown == vertexUp)
                 return null;
 
+#if ENABLE_NAVMESH_DEBUG
             if (procedure.isWatch)
             {
                 procedure.downVertex = vertexDown;
@@ -711,6 +722,7 @@ namespace Pathfinding.Triangulation.Data
                     return null;
                 }
             }
+#endif
 
             // useful    //Debug.trace("vertices " + vertexDown.id + " " + vertexUp.id)  
             var iterVertexToOutEdges = new FromVertexToOutgoingEdges();
@@ -747,6 +759,7 @@ namespace Pathfinding.Triangulation.Data
                     break;
                 }
 
+#if ENABLE_NAVMESH_DEBUG
                 // 记录迭代信息
                 if (procedure.isWatch)
                 {
@@ -760,6 +773,7 @@ namespace Pathfinding.Triangulation.Data
                     loopProcedure.leftBoundingEdges = new List<Edge>(leftBoundingEdges);
                     loopProcedure.rightBoundingEdges = new List<Edge>(rightBoundingEdges);
                 }
+#endif
 
                 done = false;
 
@@ -1139,6 +1153,7 @@ namespace Pathfinding.Triangulation.Data
                 newVertex = this.splitFace(f.face, x, y);
             }
 
+#if ENABLE_NAVMESH_DEBUG
             if (Debug.insertVertex.isWatch)
             {
                 Debug.insertVertex.reset();
@@ -1150,6 +1165,7 @@ namespace Pathfinding.Triangulation.Data
                     return newVertex;
                 }
             }
+#endif
 
             this.restoreAsDelaunay();
             return newVertex;
@@ -1468,6 +1484,7 @@ namespace Pathfinding.Triangulation.Data
                 edge = __edgesToCheck[0];
                 __edgesToCheck.RemoveAt(0);
 
+#if ENABLE_NAVMESH_DEBUG
                 InsertVertexProcedure.FlipEdgeProcedure procedure = null;
                 if (Debug.insertVertex.isWatch)
                 {
@@ -1478,6 +1495,7 @@ namespace Pathfinding.Triangulation.Data
                     procedure.left = edge.get_leftFace();
                     procedure.right = edge.get_rightFace();
                 }
+#endif
 
                 if (edge._isReal && !edge._isConstrained && !Geom2D.isDelaunay(edge))
                 {
@@ -1494,6 +1512,7 @@ namespace Pathfinding.Triangulation.Data
                     flipEdge(edge);
                 }
 
+#if ENABLE_NAVMESH_DEBUG
                 if (Debug.insertVertex.isWatch)
                 {
                     if (Debug.insertVertex.watchFlipEdgeIndex >= 0 && 
@@ -1503,6 +1522,7 @@ namespace Pathfinding.Triangulation.Data
                     }
                     ++edgeIndex;
                 }
+#endif
             }
         }
 

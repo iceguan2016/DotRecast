@@ -192,7 +192,9 @@ namespace Pathfinding.Crowds
                 IsPauseReplay = false;
                 _tickElapsedTime = 0.0;
 
+#if ENABLE_NAVMESH_DEBUG
                 Debug.recorderDebugParams.reset();
+#endif
             }
             catch (Exception e)
             {
@@ -227,11 +229,13 @@ namespace Pathfinding.Crowds
                 var stopLoop = false;
                 while (!stopLoop && _tickElapsedTime > 0)
                 {
+#if ENABLE_NAVMESH_DEBUG
                     if (Debug.locatePosition.isError)
                     {
                         IsPauseReplay = true;
                         stopLoop = true;
                     }
+#endif
 
                     ReadReplayOperations(CACHE_REPLAY_OPERATION_COUNT);
 
@@ -258,6 +262,7 @@ namespace Pathfinding.Crowds
                             }
                         }
 
+#if ENABLE_NAVMESH_DEBUG
                         // 单步调试添加Entity
                         if (operation is OperationCreateEntity)
                         {
@@ -268,6 +273,7 @@ namespace Pathfinding.Crowds
                                 stopLoop = true;
                             }
                         }
+#endif
                     }
                     else
                     {

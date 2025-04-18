@@ -974,6 +974,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             });
         }
 
+#if ENABLE_NAVMESH_DEBUG
         // draw locatePosition infos
         if (Debug.locatePosition.isError)
         { 
@@ -1043,6 +1044,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             Debug.insertVertex.draw(_draw, _view);
             _draw.TerrainHeight = old;
         }
+#endif
 
         // draw world axes
         if (null != _draw)
@@ -1100,7 +1102,11 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
 
         ImGui.InputInt("Watch Index", ref Debug.WatchIndex, 1, 3);
+
+#if ENABLE_NAVMESH_DEBUG
         ImGui.InputInt("Face ID", ref Debug.WatchFaceID);
+#endif
+
         ImGui.NewLine();
     }
 
@@ -1140,14 +1146,17 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
     void Layout_DebugInsertObject()
     {
+#if ENABLE_NAVMESH_DEBUG
         ImGui.Text("Debug Insert Object");
         ImGui.Checkbox("Is Step Create Entity", ref Debug.recorderDebugParams.isStepCreateEntity);
         ImGui.InputInt("Watch Obstacle Index", ref Debug.recorderDebugParams.watchEntityIndex);
         ImGui.InputInt("Watch Segment Index", ref Debug.insertObject.watchSegmentIndex);
+#endif
     }
 
     void Layout_DebugInsertConstraintSegment()
     {
+#if ENABLE_NAVMESH_DEBUG
         ImGui.Text("Debug Insert Constraint Segment");
         ImGui.InputInt("Watch Step Index", ref Debug.insertConstraintSegmentProcedure.watchStepIndex);
         ImGui.InputInt("Exec Step Index", ref Debug.insertConstraintSegmentProcedure.stepExec);
@@ -1155,6 +1164,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         ImGui.Text("Debug Insert Vertex");
         ImGui.InputInt("Watch FlipEdge Index", ref Debug.insertVertex.watchFlipEdgeIndex);
         ImGui.InputInt("Exec FlipEdge Step", ref Debug.insertVertex.flipEdgeStep);
+#endif
     }
 
     void Layout_Replay()
@@ -1497,8 +1507,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
         //_sample.Update(null, ImmutableArray<RcBuilderResult>.Empty, null);
 
         // 默认调试参数
-        Debug.insertObject.watchSegmentIndex = 0;
-        Debug.recorderDebugParams.watchEntityIndex = 13;
-        Debug.insertConstraintSegmentProcedure.stepExec = 1;
+        //Debug.insertObject.watchSegmentIndex = 0;
+        //Debug.recorderDebugParams.watchEntityIndex = 13;
+        //Debug.insertConstraintSegmentProcedure.stepExec = 1;
     }
 }

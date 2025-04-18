@@ -213,10 +213,10 @@ namespace Pathfinding.Triangulation.Math
         {
             // jump and walk algorithm
 
-            if (null != Debug.locatePosition) 
-                Debug.locatePosition?.reset();
-            if (null != Debug.locatePosition)
-                Debug.locatePosition.inputPosition = new FixMath.F64Vec2(x, y);
+#if ENABLE_NAVMESH_DEBUG
+            Debug.locatePosition.reset();
+            Debug.locatePosition.inputPosition = new FixMath.F64Vec2(x, y);
+#endif
 
             if (_randGen == null)
                 _randGen = new RandGenerator();
@@ -254,8 +254,9 @@ namespace Pathfinding.Triangulation.Math
                 }
             }
 
-            if (null != Debug.locatePosition)
-                Debug.locatePosition.closedVertex = closedVertex;
+#if ENABLE_NAVMESH_DEBUG
+            Debug.locatePosition.closedVertex = closedVertex;
+#endif
 
             Face currFace;
             var iterFace = new FromVertexToHoldingFaces();
@@ -287,6 +288,7 @@ namespace Pathfinding.Triangulation.Math
                     break;
                 }
 
+#if ENABLE_NAVMESH_DEBUG
                 if (numIter >= Debug.locatePosition.maxIter)
                 {
                     break;
@@ -297,12 +299,16 @@ namespace Pathfinding.Triangulation.Math
                     Debug.locatePosition.numIter++;
                     Debug.locatePosition.visitedFaces.Add(currFace);
                 }
+#endif
 
                 numIter++;
                 if (numIter == 50)
                 {
                     Debug.LogError("WALK TAKE MORE THAN 50 LOOP");
+
+#if ENABLE_NAVMESH_DEBUG
                     Debug.locatePosition.isError = true;
+#endif
                     break;
                 }
 

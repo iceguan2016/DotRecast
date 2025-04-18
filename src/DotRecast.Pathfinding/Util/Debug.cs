@@ -80,7 +80,8 @@ namespace Pathfinding.Util
         {
 
         }
-        
+
+#if ENABLE_NAVMESH_DEBUG
         public static RecorderDebugParams recorderDebugParams = new RecorderDebugParams();
         // 调试LocatePositionProcedure
         public static LocatePositionProcedure locatePosition = new LocatePositionProcedure();
@@ -90,6 +91,7 @@ namespace Pathfinding.Util
         public static InsertVertexProcedure insertVertex = new InsertVertexProcedure();
 
         public static int WatchFaceID = -1;
+#endif
 
         // 测试单个neighbor
         public static int _drawVOIndex = 10;

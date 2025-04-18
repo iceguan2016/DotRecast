@@ -351,10 +351,16 @@ namespace Pathfinding.Crowds
         {
             if (recorder.IsReplaying)
             {
+#if ENABLE_NAVMESH_DEBUG
                 Debug.insertObject.isWatchInsertSegment = Debug.recorderDebugParams.isWatchNextEntity();
+#endif
+
                 var enityId = recorder.EntityManager.CreateEntity(_param);
+
+#if ENABLE_NAVMESH_DEBUG
                 Debug.recorderDebugParams.curEntityId = enityId;
                 Debug.insertObject.isWatchInsertSegment = false;
+#endif
             }
         }
 
