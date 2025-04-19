@@ -24,13 +24,15 @@ public class TestDaedalusToolMode
     public static readonly TestDaedalusToolMode ADD_CROWD_ENTITY = new TestDaedalusToolMode(2, "Add Crowd Entity");
     public static readonly TestDaedalusToolMode SELECT_CROWD_ENTITY = new TestDaedalusToolMode(3, "Select Crowd Entity");
     public static readonly TestDaedalusToolMode MOVE_CROWD_ENTITY = new TestDaedalusToolMode(4, "Move Crowd Entity");
+    public static readonly TestDaedalusToolMode SELECT_MESH_FACE = new TestDaedalusToolMode(5, "Select Mesh Face");
 
     public static readonly RcImmutableArray<TestDaedalusToolMode> Values = RcImmutableArray.Create(
             ADD_OBSTACLE,
             PATH_FINDER,
             ADD_CROWD_ENTITY,
             SELECT_CROWD_ENTITY,
-            MOVE_CROWD_ENTITY
+            MOVE_CROWD_ENTITY,
+            SELECT_MESH_FACE
         );
 
     public readonly int Idx;

@@ -24,6 +24,7 @@ using System.Threading.Channels;
 using DotRecast.Recast.Demo.UI;
 using System.Collections.Immutable;
 using DotRecast.Pathfinding.Util;
+using System.Drawing;
 
 namespace DotRecast.Recast.Demo.Tools;
 
@@ -753,15 +754,20 @@ public class TestFixedCrowdSampleTool : ISampleTool
 
         Intersection loc = Geom2D.locatePosition(FixMath.F64.FromFloat(hitPos.X), FixMath.F64.FromFloat(hitPos.Z), _tool.Mesh);
         if (loc is Intersection_EVertex v)
-        { 
+        {
+            Logger.Information($"HandleClickRay, hit vertex:{v.vertex._id}");
+            Debug.SelectedVertexID = v.vertex._id;
         }
         else if (loc is Intersection_EEdge e)
-        { 
+        {
+            Logger.Information($"HandleClickRay, hit edge:{e.edge._id}");
+            Debug.SelectedEdgeID = e.edge._id;
         }
         else if (loc is Intersection_EFace f)
         {
             Logger.Information($"HandleClickRay, hit face:{f.face._id}");
             _tool.HitFace = f.face;
+            Debug.SelectedFaceID = f.face._id;
         }
 
         if (m_mode == TestDaedalusToolMode.ADD_OBSTACLE)
@@ -770,7 +776,8 @@ public class TestFixedCrowdSampleTool : ISampleTool
             {
                 // Delete
                 var obstacle = _tool.HitObstacle(hitPos.X, hitPos.Z);
-                if (null != obstacle) _tool.RemoveObstacle(obstacle);
+                if (null != obstacle)
+                    _tool.RemoveObstacle(obstacle);
             }
             else
             {
@@ -829,8 +836,12 @@ public class TestFixedCrowdSampleTool : ISampleTool
             //}
         }
         else if (m_mode == TestDaedalusToolMode.MOVE_CROWD_ENTITY)
-        { 
+        {
             _tool.MoveCrowdEntity(hitPos.X, hitPos.Z);
+        }
+        else if (m_mode == TestDaedalusToolMode.SELECT_MESH_FACE)
+        {
+            
         }
     }
 
@@ -974,6 +985,114 @@ public class TestFixedCrowdSampleTool : ISampleTool
             });
         }
 
+        if (null != _draw)
+        {
+            var old = _draw.TerrainHeight;
+            _draw.TerrainHeight = old + 0.6f;
+
+            // draw position
+            {
+                var p = new UnityEngine.Vector3(Debug.WatchPosition.X, _draw.TerrainHeight, Debug.WatchPosition.Y);
+                _draw.DrawCircle(p, 0.15f, UnityEngine.Color.red);
+            }
+
+            // draw obstacle
+            var obstacleIds = new int[] { Debug.WatchObstacleID };
+            for (var index = 0; index < obstacleIds.Length; ++index)
+            {
+                var obstacleId = obstacleIds[index];
+                if (obstacleId < 0) continue;
+                var mesh = _tool.Mesh;
+                if (null != mesh)
+                {
+                    for (var i = 0; i < mesh._objects.Count; ++i)
+                    {
+                        var obj = mesh._objects[i];
+                        if (obj.get_id() == obstacleId)
+                        {
+                            _view.drawObstacle(obj, UnityEngine.Color.yellow);
+                        }
+                    }
+                }
+            }
+
+            // draw faces
+            var faceIds = new int[] { Debug.WatchFaceID, Debug.SelectedFaceID };
+            for (var index = 0; index < faceIds.Length; ++index)
+            {
+                var faceId = faceIds[index];
+                if (faceId < 0)
+                    continue;
+                var mesh = _tool.Mesh;
+                if (null != mesh)
+                {
+                    for (var i = 0; i < mesh._faces.Count; ++i)
+                    {
+                        var face = mesh._faces[i];
+                        if (face.get_id() == faceId)
+                        {
+                            _view.drawFace(face, UnityEngine.Color.yellow);
+
+                            // neighbor
+                            Edge innerEdge;
+                            var iterEdge = new FromFaceToInnerEdges();
+                            iterEdge.set_fromFace(face);
+                            while ((innerEdge = iterEdge.next()) != null)
+                            {
+                                if (innerEdge._isConstrained)
+                                    continue;
+                                var neighbourFace = innerEdge.get_rightFace();
+                                _view.drawFace(neighbourFace, UnityEngine.Color.cyan);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // draw edge
+            var edgeIds = new int[] { Debug.WatchEdgeID, Debug.SelectedEdgeID };
+            for (var index = 0; index < edgeIds.Length; ++index)
+            {
+                var edgeId = edgeIds[index];
+                if (edgeId < 0)
+                    continue;
+                var mesh = _tool.Mesh;
+                if (null != mesh)
+                {
+                    for (var i = 0; i < mesh._edges.Count; ++i)
+                    {
+                        var edge = mesh._edges[i];
+                        if (edge.get_id() == edgeId)
+                        {
+                            _view.drawEdge(edge, UnityEngine.Color.yellow);
+                        }
+                    }
+                }
+            }
+
+            // draw vertex
+            var vertexIds = new int[] { Debug.WatchVertexID, Debug.SelectedVertexID };
+            for (var index = 0; index < vertexIds.Length; ++index)
+            {
+                var vertexId = vertexIds[index];
+                if (vertexId < 0) continue;
+                var mesh = _tool.Mesh;
+                if (null != mesh)
+                {
+                    for (var i = 0; i < mesh._vertices.Count; ++i)
+                    {
+                        var v = mesh._vertices[i];
+                        if (v.get_id() == vertexId)
+                        {
+                            _view.drawVertex(v, 0.2f, UnityEngine.Color.yellow);
+                        }
+                    }
+                }
+            }
+
+            _draw.TerrainHeight = old;
+        }
+
 #if ENABLE_NAVMESH_DEBUG
         // draw locatePosition infos
         if (Debug.locatePosition.isError)
@@ -1003,35 +1122,6 @@ public class TestFixedCrowdSampleTool : ISampleTool
                         var neighbourFace = innerEdge.get_rightFace();
                         _view.drawFace(neighbourFace, UnityEngine.Color.cyan);
                     } 
-                }
-            }
-        }
-
-        // draw watch face
-        if (Debug.WatchFaceID > 0)
-        {
-            var mesh = _tool.Mesh;
-            if (null != mesh)
-            {
-                for (var i = 0; i < mesh._faces.Count; ++i)
-                {
-                    var face = mesh._faces[i];
-                    if (face.get_id() == Debug.WatchFaceID)
-                    {
-                        _view.drawFace(face, UnityEngine.Color.yellow);
-
-                        // neighbor
-                        Edge innerEdge;
-                        var iterEdge = new FromFaceToInnerEdges();
-                        iterEdge.set_fromFace(face);
-                        while ((innerEdge = iterEdge.next()) != null)
-                        {
-                            if (innerEdge._isConstrained)
-                                continue;
-                            var neighbourFace = innerEdge.get_rightFace();
-                            _view.drawFace(neighbourFace, UnityEngine.Color.cyan);
-                        }
-                    }
                 }
             }
         }
@@ -1085,7 +1175,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
         ImGui.Checkbox("Draw Selection Info", ref _tool.IsDrawSelectionInfo);
     }
 
-    void Layout_TickControl()
+    void Layout_GlobalInfos()
     {
         var isPaused = Debug.IsPaused();
         if (ImGui.Button(isPaused ? ">" : "||"))
@@ -1102,10 +1192,15 @@ public class TestFixedCrowdSampleTool : ISampleTool
         }
 
         ImGui.InputInt("Watch Index", ref Debug.WatchIndex, 1, 3);
+        ImGui.InputFloat2("Watch Position", ref Debug.WatchPosition);
+        ImGui.InputInt("Watch Obstacle ID", ref Debug.WatchObstacleID);
+        ImGui.InputInt("Watch Face ID", ref Debug.WatchFaceID);
+        ImGui.InputInt("Watch Edge ID", ref Debug.WatchEdgeID);
+        ImGui.InputInt("Watch Vertex ID", ref Debug.WatchVertexID);
 
-#if ENABLE_NAVMESH_DEBUG
-        ImGui.InputInt("Face ID", ref Debug.WatchFaceID);
-#endif
+        ImGui.LabelText("Selected Face ID", Debug.SelectedFaceID.ToString());
+        ImGui.LabelText("Selected Edge ID", Debug.SelectedEdgeID.ToString());
+        ImGui.LabelText("Selected Vertex ID", Debug.SelectedVertexID.ToString());
 
         ImGui.NewLine();
     }
@@ -1347,7 +1442,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             {
                 Layout_Toggles();
                 _tool.Layout();
-                Layout_TickControl();
+                Layout_GlobalInfos();
             }
         }
         else if (Debug.IsSimulationMode(eSimulationMode.Playback))
@@ -1469,7 +1564,7 @@ public class TestFixedCrowdSampleTool : ISampleTool
             else
             {
                 Layout_Toggles();
-                Layout_TickControl();
+                Layout_GlobalInfos();
                 _tool.Layout_Toggles();
                 Layout_Replay();
                 if (_tool.SelectEntities.Count > 0)

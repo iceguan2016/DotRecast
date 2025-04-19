@@ -16,12 +16,12 @@ namespace Pathfinding.Triangulation.View
             _draw = draw;
         }
 
-        public void drawVertex(Vertex vertex)
+        public void drawVertex(Vertex vertex, float size, UnityEngine.Color color)
         {
             var p = vertex.get_pos();
             var dp = new UnityEngine.Vector3(p.X.Float, _draw.TerrainHeight, p.Y.Float);
 
-            _draw.DrawCircle(dp, 0.1f, UnityEngine.Color.red);
+            _draw.DrawCircle(dp, size, color);
         }
 
         public void drawEdge(Edge edge, UnityEngine.Color c, float lineWidth = 1.0f)
@@ -35,7 +35,7 @@ namespace Pathfinding.Triangulation.View
             var dp0 = new UnityEngine.Vector3(p0.X.Float, _draw.TerrainHeight, p0.Y.Float);
             var dp1 = new UnityEngine.Vector3(p1.X.Float, _draw.TerrainHeight, p1.Y.Float);
 
-            _draw.DrawLine(dp0, dp1, c, lineWidth);
+            _draw.DrawArrow(dp0, dp1, new UnityEngine.Vector2(0.0f, 0.2f), lineWidth, c);
         }
 
         public void drawFace(Face face, UnityEngine.Color c)
@@ -65,13 +65,28 @@ namespace Pathfinding.Triangulation.View
             }
         }
 
+        public void drawObstacle(Obstacle obst, UnityEngine.Color c)
+        {
+            var shape = obst._constraintShape;
+            var segments = shape.segments;
+            for (int i = 0; i < segments.Count; ++i)
+            {
+                var segment = segments[i];
+                for (int j = 0; j < segment._edges.Count; ++j)
+                {
+                    var edge = segment._edges[j];
+                    drawEdge(edge, c);
+                }
+            }
+        }
+
         public void drawMesh(Mesh mesh)
         {
             var (vertices, edges) = mesh.getVerticesAndEdges();
 
             for (var i = 0; i < vertices.Count; ++i)
             {
-                drawVertex(vertices[i]);
+                drawVertex(vertices[i], 0.1f, UnityEngine.Color.red);
             }
 
             for (var i = 0; i < edges.Count; ++i)

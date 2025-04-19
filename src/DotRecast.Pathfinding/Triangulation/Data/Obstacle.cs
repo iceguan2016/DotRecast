@@ -277,12 +277,13 @@ namespace Pathfinding.Triangulation.Data
         {
             var matrix = new Matrix2D();
             matrix.identity();
-            matrix.translate(-this._x, this._y);
+            matrix.translate(-this._x, -this._y);
             matrix.rotate(-this._rotation);
 
             var local_p = matrix.tranform(p);
 
-            if (FixMath.F64.Abs(local_p.X) <= this._scaleX && FixMath.F64.Abs(local_p.Y) <= this._scaleY)
+            if (FixMath.F64.Abs(local_p.X) <= (this._scaleX + Constants.EPSILON) && 
+                FixMath.F64.Abs(local_p.Y) <= (this._scaleY + Constants.EPSILON))
             {
                 return true;
             }

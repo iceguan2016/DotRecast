@@ -103,7 +103,8 @@ namespace Pathfinding.Crowds
 
                 var local_p = matrix.tranform(p);
 
-                if (FixMath.F64.Abs(local_p.X) <= obstacle._scaleX && FixMath.F64.Abs(local_p.Y) <= obstacle._scaleY)
+                if (FixMath.F64.Abs(local_p.X) <= (obstacle._scaleX + Constants.EPSILON) && 
+                    FixMath.F64.Abs(local_p.Y) <= (obstacle._scaleY + Constants.EPSILON))
                 {
                     return obstacle;
                 }

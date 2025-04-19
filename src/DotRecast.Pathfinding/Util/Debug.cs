@@ -89,13 +89,22 @@ namespace Pathfinding.Util
         public static InsertObjectParams insertObject = new InsertObjectParams();
         public static InsertConstraintSegmentProcedure insertConstraintSegmentProcedure = new InsertConstraintSegmentProcedure();
         public static InsertVertexProcedure insertVertex = new InsertVertexProcedure();
-
-        public static int WatchFaceID = -1;
 #endif
 
         // 测试单个neighbor
         public static int _drawVOIndex = 10;
         public static int WatchIndex = 0;
+
+        public static System.Numerics.Vector2 WatchPosition = new System.Numerics.Vector2();
+
+        public static int WatchObstacleID = -1;
+        public static int WatchFaceID = -1;
+        public static int WatchEdgeID = -1;
+        public static int WatchVertexID = -1;
+
+        public static int SelectedFaceID = -1;
+        public static int SelectedEdgeID = -1;
+        public static int SelectedVertexID = -1;
         public static bool IsWatchingIndex(int count, int index)
         {
             return (WatchIndex % count) == index;
